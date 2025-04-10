@@ -421,35 +421,40 @@ export default {
 
     async callLLM(prompt) {
       try {
+        // 不再需要 Authorization header，由代理处理
         const headers = {
-          'Authorization': `Bearer ${this.apiConfig.apiKey}`,
           'Content-Type': 'application/json'
         };
 
+        // 请求代理服务的端点
+        const proxyEndpoint = '/api/llm-proxy'; 
+
+        // 数据只包含 prompt
         const data = {
-          model: this.apiConfig.model,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-          max_tokens: 1000,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0.2
+          prompt: prompt
         };
 
-        console.log(`正在调用模型: ${this.apiConfig.model}`);
-        const response = await axios.post(this.apiConfig.endpoint, data, { 
+        console.log(`正在调用代理服务: ${proxyEndpoint}`);
+        
+        // 调用代理服务
+        const response = await axios.post(proxyEndpoint, data, { 
           headers,
-          timeout: 30000 // 30秒超时
+          timeout: 45000 // 可以适当增加超时时间，因为涉及两次网络请求
         });
         
-        return response.data;
+        return response.data; // 代理会直接返回 LLM API 的原始响应数据结构
+
       } catch (error) {
-        console.error('LLM API调用失败:', error);
+        console.error('调用代理服务失败:', error);
         if (error.response) {
-          console.error('API响应:', error.response.data);
-          throw new Error(`API错误: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+          console.error('代理服务响应:', error.response.data);
+          // 尝试从代理的错误响应中提取更具体的信息
+          const errorMessage = error.response.data?.error || 
+                              (error.response.data?.details ? `代理错误: ${error.response.data.details}` : 
+                              `代理服务返回错误: ${error.response.status}`);
+          throw new Error(errorMessage);
         } else if (error.request) {
-          throw new Error('未收到API响应，请检查网络连接或API端点是否正确');
+          throw new Error('未收到代理服务响应，请检查网络连接或稍后重试');
         } else {
           throw new Error(`请求配置错误: ${error.message}`);
         }
