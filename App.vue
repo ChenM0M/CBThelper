@@ -49,6 +49,8 @@
       <p>&copy; {{ new Date().getFullYear() }} CBT Helper. All rights reserved.</p>
       <p class="disclaimer">本工具仅供信息参考和自我辅助，不能替代专业的心理咨询或治疗。如有严重心理困扰，请寻求专业帮助。</p>
     </footer>
+    
+    <SpeedInsights />
   </div>
 </template>
 
