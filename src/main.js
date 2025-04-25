@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
+import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights/vue';
 
 // Import global styles
 import '../assets/css/main.css';
@@ -57,6 +59,9 @@ const store = {
 }
 
 store.restoreState()
+
+injectSpeedInsights();
+inject();
 
 const app = createApp(App)
 app.use(router)
