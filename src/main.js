@@ -1,5 +1,9 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
+
+// Import global styles
+import '../assets/css/main.css';
+
 import App from '../App.vue'
 import ApiConfig from '../components/ApiConfig.vue'
 import ThoughtRecord from '../components/ThoughtRecord.vue'

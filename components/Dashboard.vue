@@ -7,7 +7,7 @@
       </p>
     </header>
 
-    <div class="dashboard-stats">
+    <section class="dashboard-grid stats-section">
       <div class="stat-card total-records">
         <div class="stat-icon">📊</div>
         <div class="stat-content">
@@ -33,9 +33,9 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="quick-actions">
+    <section class="dashboard-grid actions-section">
       <router-link 
         to="/record" 
         class="action-card new-record"
@@ -59,11 +59,11 @@
           <p class="action-desc" v-else>请先记录你的想法</p>
         </div>
       </router-link>
-    </div>
+    </section>
 
-    <div class="recent-records" v-if="hasRecords">
+    <section class="recent-records" v-if="hasRecords">
       <h2 class="section-title">🕒 最近记录</h2>
-      <div class="records-list">
+      <div class="dashboard-grid records-section">
         <div 
           v-for="(record, index) in recentRecords" 
           :key="index"
@@ -89,18 +89,18 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="stats-grid">
-      <div class="stat-card emotion-stats">
-        <div class="stat-card-header">
+    <section class="dashboard-grid charts-section">
+      <div class="chart-card emotion-stats">
+        <div class="chart-card-header">
           <h5><span class="stat-icon-small">📊</span> 情绪分布</h5>
           <div class="stat-card-actions" v-if="hasRecords">
             <div class="emotion-count-badge">{{ Object.keys(emotionDistribution).length }}种情绪</div>
           </div>
-        </div>
-        
-        <div class="emotion-chart" v-if="Object.keys(emotionDistribution).length > 0">
+    </div>
+
+        <div class="chart-content emotion-chart" v-if="Object.keys(emotionDistribution).length > 0">
           <div 
             v-for="(count, emotion) in sortedEmotions"
             :key="emotion"
@@ -108,7 +108,7 @@
           >
             <div class="chart-label">
               <span class="emotion-emoji">{{ getEmotionEmoji(emotion) }}</span>
-              <span class="emotion-label">{{ emotion }}</span>
+              <span class="emotion-name">{{ emotion }}</span>
             </div>
             <div class="chart-bar-container">
               <div 
@@ -125,15 +125,15 @@
         </div>
       </div>
 
-      <div class="stat-card bias-stats">
-        <div class="stat-card-header">
+      <div class="chart-card bias-stats">
+        <div class="chart-card-header">
           <h5><span class="stat-icon-small">⚠️</span> 常见认知偏差</h5>
           <div class="stat-card-actions" v-if="topBiases.length > 0">
             <div class="bias-count-badge">共{{ getBiasesTotal() }}次</div>
           </div>
         </div>
         
-        <div class="bias-chart" v-if="topBiases.length > 0">
+        <div class="chart-content bias-chart" v-if="topBiases.length > 0">
           <div 
             v-for="(bias, index) in topBiases" 
             :key="index"
@@ -141,7 +141,7 @@
           >
             <div class="chart-label">
               <span class="bias-icon" :style="{ backgroundColor: getBiasColor(bias.type) }"></span>
-              <span class="bias-label">{{ bias.type }}</span>
+              <span class="bias-name">{{ bias.type }}</span>
             </div>
             <div class="chart-bar-container">
               <div 
@@ -160,7 +160,7 @@
           暂无认知偏差数据，请完成分析
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -219,28 +219,20 @@ export default {
       ).length;
     },
     moodTrend() {
-      // 简单的情绪趋势计算
       const records = this.$store.state.thoughtRecords.slice(0, 5);
       if (records.length < 2) {
         return { label: '数据不足', class: 'neutral' };
       }
-      
-      // 计算近期记录的平均情绪强度
       const recentAvg = records.slice(0, Math.ceil(records.length/2))
         .reduce((sum, r) => sum + (r.intensity || 50), 0) / Math.ceil(records.length/2);
-      
-      // 计算较早记录的平均情绪强度
       const earlierAvg = records.slice(Math.ceil(records.length/2))
         .reduce((sum, r) => sum + (r.intensity || 50), 0) / Math.floor(records.length/2);
-      
       const diff = recentAvg - earlierAvg;
-      
       if (diff < -5) return { label: '向好发展', class: 'positive' };
       if (diff > 5) return { label: '略有波动', class: 'negative' };
       return { label: '保持稳定', class: 'neutral' };
     },
     sortedEmotions() {
-      // 按出现次数排序情绪
       return Object.entries(this.emotionDistribution)
         .sort((a, b) => b[1] - a[1])
         .reduce((obj, [key, value]) => {
@@ -287,45 +279,26 @@ export default {
     },
     goToAnalysis(index) {
       this.$router.push('/analysis');
-      // 需要传递所选记录的索引，这里将记录索引存储在store中
       this.$store.selectedRecordIndex = index;
     },
     getEmotionEmoji(emotion) {
       const emojis = {
-        '焦虑': '😰',
-        '沮丧': '😔',
-        '愤怒': '😠',
-        '悲伤': '😢',
-        '羞愧': '😳',
-        '兴奋': '😃',
-        '平静': '😌',
-        '恐惧': '😨',
-        '失落': '😞',
-        '担忧': '😟',
-        '自责': '😓',
-        '困惑': '🤔',
-        '无助': '🥺'
+        '焦虑': '😰', '沮丧': '😔', '愤怒': '😠', '悲伤': '😢', '羞愧': '😳', 
+        '兴奋': '😃', '平静': '😌', '恐惧': '😨', '失落': '😞', '担忧': '😟',
+        '自责': '😓', '困惑': '🤔', '无助': '🥺'
       };
       return emojis[emotion] || '😶';
     },
     getBiasColor(biasType) {
       const colors = {
-        '灾难化': '#ff6b6b',
-        '非黑即白': '#4ecdc4',
-        '过度概括': '#45b7d1',
-        '情绪推理': '#96ceb4',
-        '应该陈述': '#ffeead',
-        '心理过滤': '#ffb347',
-        '个人化': '#c06c84',
-        '控制谬误': '#7579e7',
-        '贴标签': '#84b1ed',
-        '读心术': '#d183c9'
+        '灾难化': '#ff6b6b', '非黑即白': '#4ecdc4', '过度概括': '#45b7d1', 
+        '情绪推理': '#96ceb4', '应该陈述': '#ffeead', '心理过滤': '#ffb347', 
+        '个人化': '#c06c84', '控制谬误': '#7579e7', '贴标签': '#84b1ed', '读心术': '#d183c9'
       };
       return colors[biasType] || '#6c757d';
     },
     getBiasColorLight(biasType) {
       const color = this.getBiasColor(biasType);
-      // 添加透明度来创建浅色版本
       return color.replace(')', ', 0.3)').replace('rgb', 'rgba');
     },
     getBiasesTotal() {
@@ -337,400 +310,300 @@ export default {
 
 <style scoped>
 .dashboard {
-  padding: 2rem 15px;
-  max-width: 1200px;
-  margin: 0 auto;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  /* Max width and centering handled by .app-content in App.vue */
 }
 
 .welcome-header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 .welcome-header h1 {
-  color: var(--primary-color);
-  font-weight: 700;
-  font-size: 2rem;
+  /* Styles inherited from main.css */
   margin-bottom: 0.5rem;
 }
 
 .last-record {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   background: rgba(66, 184, 131, 0.1);
   display: inline-block;
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
 }
 
-.dashboard-stats {
+.dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 2.5rem;
+  gap: 1rem;
 }
 
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  transition: transform 0.3s, box-shadow 0.3s;
+/* Grid column setup */
+.stats-section,
+.actions-section,
+.records-section,
+.charts-section {
+  grid-template-columns: 1fr; /* Mobile default: single column */
 }
 
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+/* Styles for individual cards */
+.action-card, .stat-card, .record-card, .chart-card {
+  background-color: white; /* Fallback */
+  background-color: var(--card-bg, white); /* Use variable or white */
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow-sm); /* Lighter shadow for grid items */
+  padding: 1rem; /* Base padding, might be overridden */
+  transition: var(--transition-default);
+  display: flex;
+  flex-direction: column;
 }
 
-.total-records {
-  border-left: 4px solid #42b883;
+.action-card:hover, .record-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--box-shadow-md);
+  cursor: pointer;
 }
 
-.analyzed-records {
-  border-left: 4px solid #2c3e50;
+/* Specific styling for action cards - keep radius, revert background */
+.action-card {
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  /* color: var(--text-primary); Reverted below for specific cards */
+  border-radius: 16px; /* Keep increased border radius */
+  /* background-color: var(--background-medium); /* Removed light gray background */
+  padding: 1.5rem 1rem; /* Restore original padding */
 }
 
-.mood-trend {
-  border-left: 4px solid #ff6b6b;
+/* Restore original gradient backgrounds */
+.new-record {
+  background: linear-gradient(135deg, var(--primary-color), #2c5a89);
+  color: white; /* Ensure text is readable */
+}
+.view-analysis {
+  background: linear-gradient(135deg, var(--secondary-color), #35a070);
+  color: white; /* Ensure text is readable */
 }
 
+.action-card.disabled,
+.view-analysis.disabled { /* Ensure disabled style is specific enough */
+  opacity: 0.7; /* Use opacity for disabled state */
+  cursor: not-allowed;
+  transform: none; /* Reset hover transform */
+  box-shadow: var(--box-shadow-sm);
+  background: linear-gradient(135deg, #a0a0a0, #b0b0b0); /* Keep disabled background */
+  color: #e0e0e0; /* Lighter text for disabled */
+  pointer-events: none; /* Prevent clicks */
+}
+
+/* Stat Cards Specifics - Adjust padding and gap */
 .stat-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Align icon top-left for mobile */
+  gap: 1rem; /* Increased gap */
+  border-left: 4px solid transparent; /* Colored border indicator */
+  padding: 1.2rem; /* Increased padding */
 }
+.total-records { border-left-color: var(--secondary-color); }
+.analyzed-records { border-left-color: var(--primary-color); }
+.mood-trend { border-left-color: var(--accent-color); }
 
 .stat-icon {
-  font-size: 2.5rem;
-  margin-right: 1.5rem;
-  opacity: 0.8;
+  font-size: 1.8rem; /* Adjust icon size */
+  opacity: 0.7;
+  line-height: 1; /* Better alignment */
+  flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
 .stat-content {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allow content to shrink if needed */
 }
 
 .stat-content h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #666;
+  /* Use h4 styles from main.css */
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500; /* Slightly less emphasis */
 }
 
 .stat-number {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin-top: 5px;
   color: var(--primary-color);
+  line-height: 1.2;
 }
 
 .trend-indicator {
-  margin-top: 5px;
   font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
   display: inline-block;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
 }
+.trend-indicator.positive { background: rgba(66, 184, 131, 0.15); color: #2a9d62; }
+.trend-indicator.negative { background: rgba(255, 107, 107, 0.15); color: #e35555; }
+.trend-indicator.neutral { background: rgba(44, 62, 80, 0.1); color: var(--text-secondary); }
 
-.trend-indicator.positive {
-  background: rgba(66, 184, 131, 0.15);
-  color: #2a9d62;
-}
-
-.trend-indicator.negative {
-  background: rgba(255, 107, 107, 0.15);
-  color: #e35555;
-}
-
-.trend-indicator.neutral {
-  background: rgba(44, 62, 80, 0.1);
-  color: #2c3e50;
-}
-
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 3rem;
-}
-
-.action-card {
-  display: block;
-  padding: 2rem;
-  border-radius: 12px;
-  text-decoration: none;
-  color: white;
-  transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.action-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-}
-
-.new-record {
-  background: linear-gradient(135deg, var(--primary-color), #3a546b);
-}
-
-.view-analysis {
-  background: linear-gradient(135deg, var(--secondary-color), #349e70);
-}
-
-.view-analysis.disabled {
-  background: linear-gradient(135deg, #a0a0a0, #c0c0c0);
-  pointer-events: none;
-}
-
-.action-content {
-  text-align: center;
-}
-
+/* Action Cards Specifics */
 .action-content .icon {
-  font-size: 3rem;
+  font-size: 2rem;
   display: block;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  /* Icon color will inherit from .action-card color (white) */
 }
 
 .action-content h3 {
-  margin-bottom: 10px;
-  font-size: 1.5rem;
+  /* Use h3 styles from main.css */
+  color: inherit; /* Inherit color (white) from .action-card */
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem; /* Adjust size */
 }
 
 .action-desc {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   opacity: 0.8;
+  margin: 0;
+  color: inherit; /* Inherit color (white) */
 }
 
+/* Recent Records Section Title */
 .section-title {
-  margin: 2rem 0 1.5rem;
-  font-size: 1.5rem;
-  color: var(--primary-color);
-  border-bottom: 2px solid rgba(44, 62, 80, 0.1);
-  padding-bottom: 10px;
+  /* Use h2 styles from main.css */
+  margin: 1.5rem 0 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
 }
 
-.recent-records {
-  margin-bottom: 3rem;
-}
-
-.records-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
+/* Record Card Specifics */
 .record-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.record-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  /* Base styles from .card */
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .record-date {
-  font-size: 0.85rem;
-  color: #666;
-  background: #f0f0f0;
-  padding: 3px 8px;
-  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--background-medium);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  white-space: nowrap;
 }
 
 .record-emotions {
   display: flex;
-  gap: 5px;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
-.emotion-tag {
-  background: rgba(66, 184, 131, 0.1);
-  color: var(--secondary-color);
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+.emotion-tag, .emotion-more {
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
 }
-
-.emotion-more {
-  background: #f0f0f0;
-  color: #666;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-}
+.emotion-tag { background: rgba(66, 184, 131, 0.1); color: var(--secondary-color); }
+.emotion-more { background: var(--background-medium); color: var(--text-secondary); }
 
 .record-thought {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   line-height: 1.5;
   color: var(--text-primary);
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  /* Removed min-height */
 }
 
 .record-status {
   display: inline-block;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
   font-weight: 500;
 }
+/* Status colors same as CognitiveAnalysis */
+.status-completed { background: rgba(66, 184, 131, 0.15); color: #2a9d62; }
+.status-progress { background: rgba(255, 193, 7, 0.15); color: #b98900; }
+.status-pending { background: rgba(44, 62, 80, 0.1); color: var(--text-secondary); }
 
-.status-completed {
-  background: rgba(66, 184, 131, 0.15);
-  color: #2a9d62;
-}
-
-.status-progress {
-  background: rgba(255, 193, 7, 0.15);
-  color: #cc9900;
-}
-
-.status-pending {
-  background: rgba(44, 62, 80, 0.1);
-  color: #2c3e50;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 2rem;
-}
-
-.emotion-chart {
-  margin-top: 1.5rem;
-}
-
-.chart-bar {
-  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-  margin: 8px 0;
-  padding: 10px;
-  border-radius: 6px;
+/* Chart Cards Specifics */
+.chart-card {
   display: flex;
-  justify-content: space-between;
-  color: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  min-width: 40px;
-  transition: width 0.5s ease;
+  flex-direction: column;
+  /* Base styles from .card */
 }
 
-.bias-list {
-  list-style: none;
-  padding-left: 0;
-  margin-top: 1.5rem;
-}
-
-.bias-list li {
-  padding: 12px;
-  margin: 10px 0;
-  background: #f8f9fa;
-  border-radius: 8px;
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  display: flex;
-  justify-content: space-between;
-}
-
-.bias-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  background: rgba(66, 184, 131, 0.15);
-  z-index: -1;
-  border-radius: 8px;
-  transition: width 0.5s ease;
-}
-
-.bias-type {
-  font-weight: 500;
-}
-
-.bias-count {
-  color: var(--secondary-color);
-  font-weight: 600;
-}
-
-.no-data {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-  font-style: italic;
-}
-
-.stat-card-header {
+.chart-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.stat-card-header h5 {
+.chart-card-header h5 {
+  /* Use h5 styles from main.css */
   display: flex;
   align-items: center;
   margin: 0;
-  font-size: 1.1rem;
-  color: var(--text-primary);
 }
 
 .stat-icon-small {
-  margin-right: 8px;
-  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+  opacity: 0.7;
 }
 
 .stat-card-actions {
   display: flex;
-  gap: 10px;
+  gap: 0.5rem;
 }
 
 .emotion-count-badge, .bias-count-badge {
-  font-size: 0.8rem;
-  padding: 3px 8px;
-  border-radius: 20px;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
   background-color: rgba(58, 110, 165, 0.1);
   color: var(--primary-color);
+  white-space: nowrap;
 }
 
-.emotion-stats, .bias-stats {
-  display: flex;
-  flex-direction: column;
-}
-
-.emotion-chart, .bias-chart {
+.chart-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.6rem;
 }
 
 .chart-item {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  max-width: 100%;
-  overflow: hidden;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .chart-label {
+  flex: 0 0 80px; /* Fixed width for labels */
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
+  gap: 0.4rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -738,151 +611,108 @@ export default {
 }
 
 .emotion-emoji {
-  font-size: 1.1rem;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .bias-icon {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.emotion-name, .bias-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chart-bar-container {
+  flex: 1;
   position: relative;
-  height: 22px;
-  background-color: #f2f2f2;
-  border-radius: 4px;
+  height: 18px;
+  background-color: var(--background-medium);
+  border-radius: var(--border-radius-sm);
   overflow: hidden;
-  width: 100%;
 }
 
 .chart-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
   height: 100%;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.5s ease-out;
+}
+
+.chart-bar.bias-bar {
+  background: none; /* Handled by inline style */
 }
 
 .chart-value {
   position: absolute;
-  right: 8px;
+  right: 5px;
   top: 0;
   height: 100%;
   display: flex;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-primary);
+  /* Mix blend mode can make text visible on dark bars, but might need adjustment */
+  /* mix-blend-mode: difference; */
+  /* color: white; */
 }
 
 .no-data {
+  /* Use .alert styles? Or keep specific */
   text-align: center;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  padding: 1.5rem;
+  background-color: var(--background-light);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-sm);
   color: var(--text-secondary);
   font-style: italic;
   margin-top: 0.5rem;
+  font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
-  .dashboard-stats,
-  .quick-actions,
-  .records-list,
-  .stats-grid {
-    grid-template-columns: 1fr;
+/* Tablet and Desktop Grid Adjustments */
+@media (min-width: 600px) {
+  .stats-section {
+    grid-template-columns: repeat(3, 1fr); /* Restore equal fractions */
   }
-  
-  .welcome-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .stat-icon {
-    font-size: 2rem;
-  }
-  
-  .stat-number {
-    font-size: 1.5rem;
-  }
-  
-  .record-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .record-emotions {
-    margin-top: 5px;
-  }
-  
-  .chart-bar {
-    padding: 8px;
-    font-size: 0.9rem;
-  }
-  
-  .action-card {
-    padding: 1.5rem;
-  }
-  
-  .record-thought, 
-  .emotion-label, 
-  .bias-label {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  .actions-section {
+    grid-template-columns: repeat(2, 1fr);
 }
-
-@media (max-width: 480px) {
-  .dashboard {
-    padding: 1rem 10px;
+  .charts-section {
+    grid-template-columns: repeat(2, 1fr);
   }
-  
   .stat-card {
-    padding: 1rem;
-  }
-  
-  .action-content .icon {
-    font-size: 2.5rem;
-  }
-  
-  .action-content h3 {
-    font-size: 1.2rem;
-  }
-  
-  .record-card {
-    padding: 1rem;
-  }
-  
-  .record-thought {
-    font-size: 0.9rem;
-  }
-  
-  .section-title {
-    font-size: 1.3rem;
+    align-items: center; /* Align icon center on larger screens */
+    padding: 1.5rem; /* Slightly more padding on larger screens */
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 768px) {
   .dashboard {
-    padding: 1.5rem 10px;
+    padding: 1.5rem;
+    gap: 2rem;
   }
-  
-  .dashboard-stats {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  .dashboard-grid {
+    gap: 1.5rem;
   }
-  
-  .records-list {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-bar-container {
-    width: 100%;
-    max-width: 100%;
+  .records-section {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
+
+@media (min-width: 1024px) {
+  .records-section {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+}
+
+/* Remove old specific media query styles if covered */
 </style>

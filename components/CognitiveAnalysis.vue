@@ -378,7 +378,7 @@ export default {
         // 保存分析结果
         this.$store.state.thoughtRecords[this.selectedRecordIndex].analysisResult = this.analysisResult;
         this.$store.saveState();
-        
+
         // 第三步：生成初始替代想法
         this.loadingStage = '生成替代想法';
         this.loadingProgress = 75;
@@ -393,14 +393,14 @@ export default {
         this.loadingStage = '分析完成';
         this.loadingTip = null;
         setTimeout(() => {
-          this.isLoading = false;
+        this.isLoading = false;
         }, 500);
       }
     },
 
     async generateAlternativeThought() {
       if (!this.isLoading) {
-        this.isLoading = true;
+      this.isLoading = true;
         this.loadingProgress = 0;
         this.loadingStage = '生成替代想法';
       }
@@ -414,7 +414,7 @@ export default {
         console.error('生成替代想法失败:', error);
       } finally {
         setTimeout(() => {
-          this.isLoading = false;
+        this.isLoading = false;
         }, 500);
       }
     },
@@ -422,15 +422,15 @@ export default {
     async callLLM(prompt) {
       try {
         // 不再需要 Authorization header，由代理处理
-        const headers = {
-          'Content-Type': 'application/json'
-        };
+      const headers = {
+        'Content-Type': 'application/json'
+      };
 
         // 请求代理服务的端点
         const proxyEndpoint = '/api/llm-proxy'; 
 
         // 数据只包含 prompt
-        const data = {
+      const data = {
           prompt: prompt
         };
 
@@ -589,7 +589,7 @@ export default {
               if (extractedJson && extractedJson.biases) {
                 return extractedJson.biases;
               }
-            } catch (e) {
+      } catch (e) {
               console.error('提取JSON后解析仍然失败:', e);
             }
           }
@@ -623,7 +623,7 @@ export default {
               if (Array.isArray(extractedArray)) {
                 return extractedArray;
               }
-            } catch (e) {
+      } catch (e) {
               console.error('提取数组后解析仍然失败:', e);
             }
           }
@@ -664,23 +664,22 @@ export default {
 <style scoped>
 .analysis-container {
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 15px;
+  margin: 1rem auto;
+  padding: 0 1rem;
 }
 
 .section-title {
-  color: var(--primary-color);
-  margin-bottom: 1.5rem;
   text-align: center;
-  font-size: 1.8rem;
-  font-weight: 700;
+  margin-bottom: 1.5rem;
+  /* Use heading styles from main.css */
 }
 
 .history-selector {
   background: white;
   padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow-sm);
+  margin-bottom: 1.5rem; /* Use utility mb-3 or mb-4 if preferred */
 }
 
 .history-header {
@@ -688,91 +687,99 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  flex-wrap: wrap; /* Allow wrap on small screens */
+  gap: 0.5rem;
 }
 
-.form-select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  background-color: #f8f9fa;
-  font-size: 0.95rem;
+.history-header label {
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-/* 历史记录管理器样式 */
+/* form-select is handled globally */
+
+/* History Manager Modal Styles */
 .history-manager {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1001; /* Ensure above header */
+  padding: 1rem;
 }
 
 .history-manager-content {
   background: white;
-  border-radius: 12px;
-  width: 90%;
+  border-radius: var(--border-radius-md);
+  width: 100%;
   max-width: 600px;
-  max-height: 80vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+  box-shadow: var(--box-shadow-md);
+  overflow: hidden;
 }
 
 .history-manager-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #eee;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .history-manager-header h3 {
   margin: 0;
   color: var(--primary-color);
+  /* Use h3 styles from main.css */
 }
 
 .btn-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   cursor: pointer;
-  color: #666;
+  color: var(--text-secondary);
+  padding: 0.2rem 0.5rem;
+  line-height: 1;
+}
+.btn-close:hover {
+  color: var(--text-primary);
 }
 
 .history-manager-body {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
 }
 
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.75rem;
 }
 
 .history-item {
   display: flex;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 0.8rem;
   align-items: center;
+  gap: 1rem;
+  background: var(--background-light);
+  border-radius: var(--border-radius-sm);
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border-color);
   transition: var(--transition-default);
 }
 
 .history-item:hover {
-  background: #f0f0f0;
-  transform: translateX(3px);
+  background: var(--background-medium);
+  border-color: var(--primary-color);
 }
 
 .history-item-content {
   flex: 1;
+  overflow: hidden; /* Prevent long text pushing out button */
 }
 
 .history-item-date {
@@ -784,14 +791,18 @@ export default {
 .history-item-thought {
   margin-bottom: 0.25rem;
   color: var(--text-primary);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .history-item-status {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 20px;
+  padding: 0.15rem 0.6rem;
+  border-radius: 10px;
   font-size: 0.75rem;
   font-weight: 500;
+  margin-top: 0.25rem;
 }
 
 .status-completed {
@@ -801,34 +812,19 @@ export default {
 
 .status-progress {
   background: rgba(255, 193, 7, 0.15);
-  color: #cc9900;
+  color: #b98900;
 }
 
 .status-pending {
   background: rgba(44, 62, 80, 0.1);
-  color: #2c3e50;
+  color: var(--text-secondary);
 }
 
 .history-item-actions {
   display: flex;
-  gap: 5px;
 }
 
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-.btn-outline-danger {
-  color: #dc3545;
-  border-color: #dc3545;
-  background: white;
-}
-
-.btn-outline-danger:hover {
-  color: white;
-  background-color: #dc3545;
-}
+/* btn-sm, btn-outline-danger handled globally */
 
 .no-records {
   text-align: center;
@@ -838,25 +834,63 @@ export default {
 }
 
 .history-manager-footer {
-  padding: 1rem;
-  border-top: 1px solid #eee;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
   text-align: right;
 }
 
+/* Use .card base styles for the main analysis area */
+.card {
+  margin-bottom: 1.5rem;
+}
+
 .analysis-section {
-  margin-bottom: 2rem;
   padding: 1.5rem;
-  border-radius: 12px;
-  background-color: white;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  border-left: 4px solid var(--primary-color);
+  margin-bottom: 1.5rem;
+  /* Remove redundant background, shadow, border - handled by .card */
+  /* Keep specific margin/padding if needed, or remove if .card padding is sufficient */
+}
+.analysis-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0; /* Adjust if buttons inside need padding */
+}
+
+.analysis-section h5 {
+  margin-bottom: 1rem;
+  /* Use h5 styles from main.css */
 }
 
 .thought-text {
-  font-size: 1.2rem;
-  color: var(--text-primary);
+  font-size: 1.1rem; /* Base size, adjusted by media query in main.css */
   font-style: italic;
   margin-bottom: 0.5rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.situation-box {
+  background-color: rgba(58, 110, 165, 0.05);
+  border-radius: var(--border-radius-sm);
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+  border-left: 3px solid var(--primary-color);
+}
+
+.situation-box h6 {
+  /* Use h6 styles from main.css */
+  color: var(--primary-color);
+  margin-bottom: 0.4rem;
+}
+
+.situation-text {
+  font-size: 0.95rem; /* Base size */
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .meta-info {
@@ -865,25 +899,27 @@ export default {
   align-items: center;
   margin-top: 1rem;
   font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .date-tag {
-  background-color: #f0f0f0;
-  padding: 4px 8px;
-  border-radius: 4px;
-  color: #666;
+  background-color: var(--background-medium);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
 }
 
 .emotion-badges {
   display: flex;
-  gap: 5px;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
 .emotion-badge {
-  background-color: #e9ecef;
-  color: #495057;
-  padding: 3px 8px;
+  background-color: var(--background-medium);
+  color: var(--text-secondary);
+  padding: 0.2rem 0.6rem;
   border-radius: 10px;
   font-size: 0.8rem;
 }
@@ -891,151 +927,140 @@ export default {
 .bias-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.6rem;
   margin-top: 1rem;
 }
 
 .badge {
   color: white;
-  padding: 8px 12px;
-  font-size: 0.95rem;
-  border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 15px;
+  box-shadow: var(--box-shadow-sm);
   cursor: pointer;
   transition: var(--transition-default);
 }
 
 .badge:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
 .confidence {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   opacity: 0.9;
+  margin-left: 0.2rem;
 }
 
-.no-biases, .no-questions {
+.no-biases,
+.no-questions {
+  /* Consider using .alert .alert-info from main.css */
   text-align: center;
   padding: 1rem;
   color: var(--text-secondary);
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  background-color: var(--background-light);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-sm);
   margin-top: 1rem;
   font-style: italic;
+  font-size: 0.9rem;
+}
+.no-biases ul.bias-tips {
+  list-style: inside;
+  padding-left: 0;
+  margin-top: 0.5rem;
+  text-align: left;
+  font-style: normal;
+}
+.no-biases ul.bias-tips li {
+  margin-bottom: 0.3rem;
 }
 
 .bias-evidence {
   margin-top: 1rem;
   padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-sm);
   border-left: 3px solid var(--secondary-color);
 }
 
 .evidence-header h6 {
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   color: var(--primary-color);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  /* Use h6 styles from main.css */
 }
 
 .evidence-text {
   margin: 0;
   font-style: italic;
   color: var(--text-secondary);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .question-list {
   list-style-type: none;
   padding-left: 0;
+  margin: 0;
 }
 
 .question-list li {
-  padding: 12px 15px;
-  margin-bottom: 10px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.75rem;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-sm);
   border-left: 3px solid var(--secondary-color);
-  transition: transform 0.2s;
+  transition: var(--transition-default);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .question-list li:hover {
-  transform: translateX(5px);
+  background-color: var(--background-medium);
 }
 
-.form-control {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 1rem;
-  transition: border 0.3s, box-shadow 0.3s;
-}
-
-.form-control:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(44,62,80,0.15);
-  outline: none;
-}
+/* form-control for textarea handled globally */
 
 .alternative-thought {
-  font-size: 1.2rem;
+  font-size: 1.1rem; /* Base size */
   color: var(--secondary-color);
   font-weight: 500;
-  padding: 15px;
-  background: #f0f7f4;
-  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(66, 184, 131, 0.05);
+  border-radius: var(--border-radius-sm);
   border-left: 3px solid var(--secondary-color);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  margin-bottom: 1rem; /* Add space before feedback buttons */
 }
 
 .feedback-buttons {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap; /* Allow wrap on small screens */
+  gap: 0.75rem;
 }
 
-.btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.btn-success {
-  background-color: var(--secondary-color);
-  border: none;
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
-  border: none;
-}
-
-.btn .icon {
-  margin-right: 8px;
-}
+/* .btn, .btn-success, .btn-outline-secondary handled globally */
 
 .action-buttons {
   text-align: center;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
+/* Loading Indicator */
 .loading-container {
   margin: 2rem 0;
   text-align: center;
 }
 
 .progress {
-  height: 20px;
-  border-radius: 10px;
-  background-color: #e9ecef;
-  margin-bottom: 10px;
+  height: 1rem;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--background-medium);
+  margin-bottom: 0.75rem;
   overflow: hidden;
 }
 
@@ -1043,34 +1068,29 @@ export default {
   background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
   color: white;
   text-align: center;
-  line-height: 20px;
+  font-size: 0.75rem;
+  line-height: 1rem;
   transition: width 0.6s ease;
-  border-radius: 10px;
+  white-space: nowrap;
 }
 
 .progress-bar-animated {
   animation: pulse 1.5s ease-in-out infinite;
   background-size: 200% 200%;
   background-image: linear-gradient(
-    45deg, 
-    var(--primary-color) 0%, 
-    var(--secondary-color) 25%, 
-    var(--primary-color) 50%, 
-    var(--secondary-color) 75%, 
+    45deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 25%,
+    var(--primary-color) 50%,
+    var(--secondary-color) 75%,
     var(--primary-color) 100%
   );
 }
 
 @keyframes pulse {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .loading-text {
@@ -1080,114 +1100,25 @@ export default {
 
 .loading-tips {
   font-style: italic;
-  color: #666;
-  margin-top: 10px;
-  font-size: 0.9rem;
-}
-
-.api-error {
-  margin-top: 20px;
-  font-size: 0.95rem;
-}
-
-.ml-2 {
-  margin-left: 0.5rem;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .analysis-section {
-    padding: 1rem;
-  }
-  
-  .feedback-buttons {
-    flex-direction: column;
-  }
-  
-  .bias-tags {
-    gap: 8px;
-  }
-  
-  .badge {
-    padding: 6px 10px;
-    font-size: 0.85rem;
-  }
-  
-  .thought-text {
-    font-size: 1rem;
-  }
-  
-  .alternative-thought {
-    font-size: 1rem;
-    padding: 12px;
-  }
-  
-  .question-list li {
-    padding: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .analysis-container {
-    padding: 0 10px;
-  }
-  
-  .section-title {
-    font-size: 1.5rem;
-  }
-  
-  .meta-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .emotion-badges {
-    margin-top: 5px;
-  }
-  
-  .history-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .history-header button {
-    width: 100%;
-  }
-}
-
-.situation-box {
-  background-color: rgba(58, 110, 165, 0.05);
-  border-radius: 8px;
-  padding: 10px 15px;
-  margin: 10px 0;
-  border-left: 3px solid var(--primary-color);
-}
-
-.situation-box h6 {
-  font-size: 0.9rem;
-  color: var(--primary-color);
-  margin-bottom: 6px;
-  font-weight: 600;
-}
-
-.situation-text {
-  font-size: 0.95rem;
   color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
 }
 
-.bias-tips {
-  text-align: left;
-  color: #666;
-  margin: 10px 0;
-  padding-left: 20px;
+/* .api-error uses .alert .alert-danger from main.css */
+.api-error p {
+  margin-bottom: 0.5rem;
+}
+.api-error p:last-child {
+  margin-bottom: 0;
+}
+.api-error .btn-sm {
+  margin-right: 0.5rem;
 }
 
-.bias-tips li {
-  margin-bottom: 8px;
-  line-height: 1.4;
+.ml-2 { /* Replaced with gap or specific margins */
+  /* margin-left: 0.5rem; */
 }
+
+/* Remove old media queries, rely on base responsive styles + component flex/grid wrap */
 </style>
