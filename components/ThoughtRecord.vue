@@ -1,13 +1,13 @@
 <template>
-  <div class="record-container">
-    <h2 class="section-title">📝 记录你的想法</h2>
+  <div class="record-container fade-in-up">
+    <h2 class="section-title gradient-text">✨ 记录你的想法</h2>
     
-    <div class="card thought-form">
+    <div class="card thought-form glass-effect fade-in-scale">
       <form @submit.prevent="saveRecord">
-        <div class="form-group">
-          <label class="form-label">情境描述</label>
+        <div class="form-group fade-in-scale" style="animation-delay: 0.1s">
+          <label class="form-label">🔍 情境描述</label>
           <div class="input-icon-wrapper">
-            <span class="input-icon">🔍</span>
+            <span class="input-icon pulse-animation">🔍</span>
           <textarea
             class="form-control"
             rows="3"
@@ -17,10 +17,10 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">自动思维 <span class="required">*</span></label>
+        <div class="form-group fade-in-scale" style="animation-delay: 0.2s">
+          <label class="form-label">💭 自动思维 <span class="required">*</span></label>
           <div class="input-icon-wrapper">
-            <span class="input-icon">💭</span>
+            <span class="input-icon pulse-animation">💭</span>
           <textarea
             class="form-control"
             rows="3"
@@ -31,8 +31,8 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">情绪体验</label>
+        <div class="form-group fade-in-scale" style="animation-delay: 0.3s">
+          <label class="form-label">🎭 情绪体验</label>
           <div class="emotion-tags">
             <button
               type="button"
@@ -68,8 +68,8 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">情绪强度 <span class="intensity-value">{{ newRecord.intensity }}%</span></label>
+        <div class="form-group fade-in-scale" style="animation-delay: 0.4s">
+          <label class="form-label">📊 情绪强度 <span class="intensity-value gradient-text">{{ newRecord.intensity }}%</span></label>
           <div class="intensity-slider">
             <span class="intensity-min">😌 轻微</span>
           <input
@@ -84,10 +84,10 @@
           </div>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions fade-in-scale" style="animation-delay: 0.5s">
         <button 
           type="submit" 
-            class="btn btn-primary submit-btn"
+            class="btn btn-primary submit-btn breathing-light"
           :disabled="!isFormValid"
         >
             <span class="btn-icon">💾</span>
@@ -315,27 +315,49 @@ input.form-control {
 }
 
 .emotion-tag-btn {
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  background-color: transparent;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: var(--background-primary);
   cursor: pointer;
-  transition: var(--transition-default);
+  transition: var(--transition-bounce);
   font-size: 0.85rem;
   color: var(--text-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.emotion-tag-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--secondary-gradient);
+  transition: var(--transition-default);
+  z-index: -1;
 }
 
 .emotion-tag-btn:hover {
-  background-color: var(--background-medium);
+  background: var(--background-secondary);
   border-color: var(--secondary-color);
   color: var(--secondary-color);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .emotion-tag-btn.active {
-  background-color: var(--secondary-color);
+  background: var(--secondary-gradient);
   border-color: var(--secondary-color);
   color: white;
-  font-weight: 500;
+  font-weight: 600;
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.emotion-tag-btn.active::before {
+  left: 0;
 }
 
 .custom-emotion {

@@ -1,31 +1,31 @@
 <template>
-  <div class="dashboard">
+  <div class="dashboard fade-in-up">
     <header class="welcome-header">
-      <h1>👋 欢迎回来，心理健康伙伴！</h1>
-      <p class="last-record" v-if="latestRecord">
-        上次记录：{{ formatDate(latestRecord.timestamp) }}
+      <h1 class="gradient-text float-animation">✨ 欢迎回来，心理健康伙伴！</h1>
+      <p class="last-record fade-in-scale" v-if="latestRecord">
+        💫 上次记录：{{ formatDate(latestRecord.timestamp) }}
       </p>
     </header>
 
     <section class="dashboard-grid stats-section">
-      <div class="stat-card total-records">
-        <div class="stat-icon">📊</div>
+      <div class="stat-card total-records breathing-light fade-in-scale" style="animation-delay: 0.1s">
+        <div class="stat-icon pulse-animation">📊</div>
         <div class="stat-content">
           <h4>已记录思想</h4>
-          <div class="stat-number">{{ $store.state.thoughtRecords.length }}</div>
+          <div class="stat-number gradient-text">{{ $store.state.thoughtRecords.length }}</div>
         </div>
       </div>
       
-      <div class="stat-card analyzed-records">
-        <div class="stat-icon">🧠</div>
+      <div class="stat-card analyzed-records breathing-light fade-in-scale" style="animation-delay: 0.2s">
+        <div class="stat-icon pulse-animation">🧠</div>
         <div class="stat-content">
           <h4>完成分析</h4>
-          <div class="stat-number">{{ analyzedRecordsCount }}</div>
+          <div class="stat-number gradient-text">{{ analyzedRecordsCount }}</div>
         </div>
       </div>
       
-      <div class="stat-card mood-trend">
-        <div class="stat-icon">😊</div>
+      <div class="stat-card mood-trend breathing-light fade-in-scale" style="animation-delay: 0.3s">
+        <div class="stat-icon pulse-animation">😊</div>
         <div class="stat-content">
           <h4>情绪趋势</h4>
           <div class="trend-indicator" :class="moodTrend.class">
@@ -38,10 +38,11 @@
     <section class="dashboard-grid actions-section">
       <router-link 
         to="/record" 
-        class="action-card new-record"
+        class="action-card new-record interactive-card fade-in-scale"
+        style="animation-delay: 0.4s"
       >
         <div class="action-content">
-          <span class="icon">📝</span>
+          <span class="icon float-animation">✍️</span>
           <h3>新建记录</h3>
           <p class="action-desc">记录你的自动思维和情绪体验</p>
         </div>
@@ -49,11 +50,12 @@
 
       <router-link 
         to="/analysis" 
-        class="action-card view-analysis"
+        class="action-card view-analysis interactive-card fade-in-scale"
         :class="{ disabled: !hasRecords }"
+        style="animation-delay: 0.5s"
       >
         <div class="action-content">
-          <span class="icon">🔍</span>
+          <span class="icon float-animation">🔍</span>
           <h3>查看分析</h3>
           <p class="action-desc" v-if="hasRecords">{{ analysisSummary }}</p>
           <p class="action-desc" v-else>请先记录你的想法</p>
@@ -67,7 +69,8 @@
         <div 
           v-for="(record, index) in recentRecords" 
           :key="index"
-          class="record-card"
+          class="record-card interactive-card fade-in-scale"
+          :style="{ animationDelay: `${0.6 + index * 0.1}s` }"
           @click="goToAnalysis(index)"
         >
           <div class="record-header">
@@ -319,21 +322,27 @@ export default {
 
 .welcome-header {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
+  position: relative;
 }
 
 .welcome-header h1 {
-  /* Styles inherited from main.css */
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  position: relative;
 }
 
 .last-record {
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  background: rgba(66, 184, 131, 0.1);
+  font-size: 0.9rem;
+  background: var(--secondary-gradient);
+  color: white;
   display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
 }
 
 .dashboard-grid {
@@ -349,22 +358,42 @@ export default {
   grid-template-columns: 1fr; /* Mobile default: single column */
 }
 
-/* Styles for individual cards */
+/* Styles for individual cards - 增强视觉层次 */
 .action-card, .stat-card, .record-card, .chart-card {
-  background-color: white; /* Fallback */
-  background-color: var(--card-bg, white); /* Use variable or white */
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  box-shadow: var(--box-shadow-sm); /* Lighter shadow for grid items */
-  padding: 1rem; /* Base padding, might be overridden */
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
   transition: var(--transition-default);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before, .stat-card::before, .record-card::before, .chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary-gradient);
+  opacity: 0.8;
+  transition: var(--transition-default);
 }
 
 .action-card:hover, .record-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--box-shadow-md);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: var(--shadow-lg);
   cursor: pointer;
+  border-color: var(--primary-color);
+}
+
+.action-card:hover::before, .record-card:hover::before {
+  height: 5px;
+  opacity: 1;
 }
 
 /* Specific styling for action cards - keep radius, revert background */
@@ -378,14 +407,29 @@ export default {
   padding: 1.5rem 1rem; /* Restore original padding */
 }
 
-/* Restore original gradient backgrounds */
+/* 增强的渐变背景 */
 .new-record {
-  background: linear-gradient(135deg, var(--primary-color), #2c5a89);
-  color: white; /* Ensure text is readable */
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
 }
+
+.new-record:hover {
+  background: linear-gradient(135deg, #5a7bc8 0%, #667eea 100%);
+  box-shadow: var(--shadow-glow);
+}
+
 .view-analysis {
-  background: linear-gradient(135deg, var(--secondary-color), #35a070);
-  color: white; /* Ensure text is readable */
+  background: var(--secondary-gradient);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-md);
+}
+
+.view-analysis:hover {
+  background: linear-gradient(135deg, #4bb3a0 0%, #7fdbda 100%);
+  box-shadow: 0 0 25px rgba(127, 219, 218, 0.5);
 }
 
 .action-card.disabled,
