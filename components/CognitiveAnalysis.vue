@@ -1,728 +1,966 @@
 <template>
-  <div class="analysis-container">
-    <h2 class="section-title">🔍 认知分析</h2>
-    
-    <!-- 历史记录选择器 -->
-    <div class="history-selector mb-4">
-      <div class="history-header">
-        <label for="recordSelect">选择记录:</label>
-        <button class="btn btn-sm btn-outline-secondary" @click="showHistoryManager = true">
-          <span class="btn-icon">📋</span> 管理历史记录
-        </button>
+  <div class="mind-greenhouse">
+    <!-- 温室背景 -->
+    <div class="greenhouse-background">
+      <div class="greenhouse-glass"></div>
+      <div class="floating-pollen">
+        <div v-for="i in 8" :key="i" class="pollen-particle" :style="getPollenStyle(i)"></div>
       </div>
-      <select id="recordSelect" class="form-select" v-model="selectedRecordIndex" @change="loadSelectedRecord">
-        <option v-for="(record, index) in $store.state.thoughtRecords" :key="index" :value="index">
-          {{ formatTimestamp(record.timestamp) }} - {{ truncateText(record.automaticThought, 30) }}
-        </option>
-      </select>
     </div>
-    
-    <!-- 历史记录管理器弹窗 -->
-    <div class="history-manager" v-if="showHistoryManager">
-      <div class="history-manager-content">
-        <div class="history-manager-header">
-          <h3>管理历史记录</h3>
-          <button class="btn-close" @click="showHistoryManager = false">&times;</button>
-        </div>
-        <div class="history-manager-body">
-          <div class="history-list">
-            <div 
-              v-for="(record, index) in $store.state.thoughtRecords" 
-              :key="index"
-              class="history-item"
-            >
-              <div class="history-item-content">
-                <div class="history-item-date">{{ formatTimestamp(record.timestamp) }}</div>
-                <div class="history-item-thought">{{ truncateText(record.automaticThought, 60) }}</div>
-                <div class="history-item-status" :class="getRecordStatusClass(record)">
-                  {{ getRecordStatus(record) }}
+
+    <!-- 浮动返回按钮 -->
+    <button @click="goBack" class="floating-back-btn">
+      <span>🏡</span>
+    </button>
+
+    <!-- 主温室区域 -->
+    <div class="greenhouse-main">
+      
+      <!-- 选择种子界面 -->
+      <div v-if="!selectedRecord" class="seed-selector">
+        <div class="selector-card">
+          <div class="greenhouse-title">
+            <h2>🏡 心灵温室</h2>
+            <p>选择一颗想法种子，看它如何在智慧中绽放</p>
+          </div>
+          
+          <div class="seed-garden">
+            <h3>花园中的种子</h3>
+            <div class="seed-grid">
+              <div 
+                v-for="(record, index) in $store.state.thoughtRecords" 
+                :key="record.id || index"
+                @click="selectSeed(index)"
+                class="seed-item"
+                :class="{ 'fresh': index === 0 }"
+              >
+                <div class="seed-emotion">
+                  <span class="emotion-bubble" v-if="record.emotions">
+                    {{ Array.isArray(record.emotions) ? record.emotions[0] : record.emotions.split(',')[0] }}
+                  </span>
+                </div>
+                <div class="seed-content">
+                  <div class="seed-time">{{ formatTime(record.timestamp) }}</div>
+                  <div class="seed-thought">{{ truncateText(record.automaticThought, 60) }}</div>
+                </div>
+                <div class="seed-status">
+                  <span v-if="record.completed" class="status-bloomed">🌸</span>
+                  <span v-else class="status-budding">🌱</span>
                 </div>
               </div>
-              <div class="history-item-actions">
-                <button 
-                  class="btn btn-sm btn-outline-danger" 
-                  @click="deleteRecord(index)"
-                  title="删除记录"
-                >
-                  🗑️
-                </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 温室花朵界面 -->
+      <div v-else class="greenhouse-flower">
+        
+        <!-- 中心花朵区域 -->
+        <div class="flower-center">
+          <div class="flower-container" @click="triggerAnalysis">
+            <!-- 花朵本体 -->
+            <div class="flower-bloom" :style="flowerStyle" :class="{ 'analyzing': isAnalyzing, 'bloomed': hasAnalysis }">
+              <div class="flower-petals">
+                <div v-for="i in 8" :key="i" class="petal" :style="getPetalStyle(i)"></div>
+              </div>
+              <div class="flower-center-dot"></div>
+            </div>
+            
+            <!-- 情绪思索气泡 -->
+            <div class="emotion-bubbles">
+              <div 
+                v-for="(emotion, index) in getRecordEmotions(selectedRecord)" 
+                :key="index"
+                class="emotion-bubble floating"
+                :style="getBubblePosition(index)"
+              >
+                {{ emotion }}
               </div>
             </div>
-            <div class="no-records" v-if="$store.state.thoughtRecords.length === 0">
-              暂无历史记录
+          </div>
+          
+          <div class="flower-hint" v-if="!hasAnalysis">
+            <p>轻触花朵，让智慧伙伴为你分析...</p>
+          </div>
+        </div>
+
+        <!-- 分析结果展示区 -->
+        <div v-if="analysisResult" class="analysis-display">
+          <div class="analysis-tags">
+            <div 
+              v-for="(bias, index) in analysisResult.cognitiveBiases" 
+              :key="index"
+              class="bias-tag"
+            >
+              <span class="bias-label">{{ bias.label }}</span>
+              <p class="bias-description">{{ bias.description }}</p>
+            </div>
+          </div>
+          
+          <div class="guiding-questions" v-if="analysisResult.guidingQuestions">
+            <h4>💭 温柔的探索</h4>
+            <div class="question-list">
+              <div 
+                v-for="(question, index) in analysisResult.guidingQuestions" 
+                :key="index"
+                class="question-bubble"
+              >
+                <span class="question-mark">?</span>
+                <p>{{ question }}</p>
+              </div>
             </div>
           </div>
         </div>
-        <div class="history-manager-footer">
-          <button class="btn btn-outline-secondary" @click="showHistoryManager = false">关闭</button>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card" v-if="currentRecord">
-      <!-- 自动思维展示 -->
-      <div class="analysis-section">
-        <h5>📌 你的自动思维</h5>
-        <p class="thought-text">"{{ currentRecord.automaticThought }}"</p>
-        
-        <!-- 添加情境描述显示 -->
-        <div class="situation-box" v-if="currentRecord.situation">
-          <h6>🔍 情境描述</h6>
-          <p class="situation-text">{{ currentRecord.situation }}</p>
+
+        <!-- 底部对话触发器 -->
+        <div class="chat-trigger" v-if="isWisdomCompanionEnabled">
+          <div class="chat-hint" @click="openChatDialog">
+            <span class="chat-icon">💬</span>
+            <span class="chat-text">与智慧伙伴深度对话</span>
+          </div>
         </div>
         
-        <div class="meta-info">
-          <span class="date-tag">{{ formatTimestamp(currentRecord.timestamp) }}</span>
-          <div class="emotion-badges">
-            <span v-for="(emotion, idx) in currentRecord.emotions" :key="idx" 
-                  class="emotion-badge">{{ emotion }}</span>
+        <!-- 智慧伙伴关闭提示 -->
+        <div v-else class="companion-disabled-hint">
+          <div class="disabled-message">
+            <span class="rest-icon">🌙</span>
+            <p>{{ getDisabledMessage() }}</p>
           </div>
         </div>
-      </div>
 
-      <!-- 认知偏差分析 -->
-      <div class="analysis-section">
-        <h5>🧠 识别到的认知偏差</h5>
-        <div class="bias-tags" v-if="analysisResult.cognitiveBiases && analysisResult.cognitiveBiases.length > 0">
-          <span 
-            class="badge badge-pill"
-            v-for="bias in analysisResult.cognitiveBiases"
-            :key="bias.type"
-            :style="{ backgroundColor: getBiasColor(bias.type) }"
-            @click="selectBias(bias)"
-          >
-            {{ bias.type }} <span class="confidence">({{ bias.confidence }}%)</span>
-          </span>
-        </div>
-        <div class="no-biases" v-else>
-          <p v-if="analyzedOnce">系统未检测到明显的认知偏差，但这并不意味着思维完全没有问题。
-          请继续浏览下方的引导性问题，思考自己的想法是否存在这些情况：</p>
-          <ul v-if="analyzedOnce" class="bias-tips">
-            <li>你是否在考虑最糟糕的可能性？</li>
-            <li>你是否在用"非黑即白"的方式看待情况？</li>
-            <li>你是否从单一事件得出了普遍性结论？</li>
-            <li>你是否用情绪而非事实在做判断？</li>
-            <li>你是否给自己或他人设置了过高标准？</li>
-          </ul>
-          <p v-else>暂未识别到认知偏差，请点击"开始分析"进行分析。</p>
-        </div>
-        <div class="bias-evidence" v-if="selectedBias">
-          <div class="evidence-header">
-            <h6>{{ selectedBias.type }} 的识别依据：</h6>
-          </div>
-          <p class="evidence-text">{{ selectedBias.evidence }}</p>
-        </div>
-      </div>
-
-      <!-- 引导性问题 -->
-      <div class="analysis-section">
-        <h5>💡 引导性问题</h5>
-        <ul class="question-list">
-          <li v-for="(question, index) in analysisResult.guidingQuestions" :key="index">
-            {{ question }}
-          </li>
-        </ul>
-        <div class="no-questions" v-if="!analysisResult.guidingQuestions || analysisResult.guidingQuestions.length === 0">
-          暂无引导性问题，请点击"开始分析"生成问题。
-        </div>
-      </div>
-
-      <!-- 用户回答输入 -->
-      <div class="analysis-section">
-        <h5>📝 你的思考记录</h5>
-        <textarea
-          class="form-control"
-          rows="4"
-          v-model="userResponse"
-          placeholder="请写下你对这些问题的思考..."
-        ></textarea>
-      </div>
-
-      <!-- 替代想法生成 -->
-      <div class="analysis-section" v-if="alternativeThought">
-        <h5>🌈 建议的替代想法</h5>
-        <p class="alternative-thought">"{{ alternativeThought }}"</p>
-        <div class="feedback-buttons">
-          <button 
-            class="btn btn-success mr-2"
-            @click="saveAlternativeThought"
-          >
-            👍 保存这个想法
-          </button>
-          <button 
-            class="btn btn-outline-secondary"
-            @click="generateAlternativeThought"
-          >
-            🔄 重新生成
-          </button>
-        </div>
-      </div>
-
-      <!-- 分析操作按钮 -->
-      <div class="action-buttons" v-if="!isLoading">
-        <button class="btn btn-primary" @click="analyzeThought">
-          <span class="icon">🧠</span> 开始分析
-        </button>
-      </div>
-
-      <!-- 加载进度条 -->
-      <div class="loading-container" v-if="isLoading">
-        <div class="progress">
-          <div class="progress-bar" 
-               :style="{ width: `${loadingProgress}%` }" 
-               :class="{'progress-bar-animated': isLoading}">
-            {{ loadingStage }}
-          </div>
-        </div>
-        <p class="loading-text">{{ loadingStage }} ({{ loadingProgress }}%)</p>
-        <p class="loading-tips" v-if="loadingTip">{{ loadingTip }}</p>
-      </div>
-      
-      <!-- 显示API错误信息 -->
-      <div class="api-error alert alert-danger" v-if="apiError">
-        <p><strong>分析过程中发生错误</strong></p>
-        <p>{{ apiError }}</p>
-        <p class="mt-2">
-          <button class="btn btn-sm btn-outline-danger" @click="apiError = null">关闭</button>
-          <router-link to="/config" class="btn btn-sm btn-primary ml-2">检查API设置</router-link>
-        </p>
       </div>
     </div>
 
-    <div class="alert alert-warning" v-else>
-      ⚠️ 请先完成至少一条思想记录
+    <!-- 对话弹窗 -->
+    <div v-if="showChatDialog" class="chat-dialog-overlay" @click="closeChatDialog">
+      <div class="chat-dialog" @click.stop>
+        <div class="dialog-header">
+          <h3>🤖 智慧伙伴对话</h3>
+          <button @click="closeChatDialog" class="close-btn">×</button>
+        </div>
+        
+        <div class="dialog-content">
+          <div class="chat-messages">
+            <div 
+              v-for="(message, index) in chatMessages" 
+              :key="index"
+              class="chat-message"
+              :class="message.type"
+            >
+              <div class="message-content">{{ message.content }}</div>
+            </div>
+          </div>
+          
+          <div class="chat-input-area">
+            <input 
+              v-model="userInput"
+              @keyup.enter="sendMessage"
+              type="text" 
+              placeholder="分享你的想法..."
+              class="chat-input"
+            >
+            <button @click="sendMessage" class="send-btn" :disabled="!userInput.trim()">
+              发送
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
+  name: 'CognitiveAnalysis',
   data() {
     return {
-      selectedRecordIndex: 0,
-      currentRecord: null,
-      analysisResult: {
-        cognitiveBiases: [],
-        guidingQuestions: []
-      },
-      userResponse: '',
-      alternativeThought: '',
-      isLoading: false,
-      loadingProgress: 0,
-      loadingStage: '准备分析',
-      loadingTip: '',
-      apiError: null,
-      showHistoryManager: false,
-      selectedBias: null,
-      analyzedOnce: false,
-      loadingTips: [
-        '认知偏差是我们思维中的盲点，识别它们是治疗的第一步...',
-        '苏格拉底式提问帮助我们挑战自己的想法，促进更深入的思考...',
-        '替代性思维不是简单地积极思考，而是寻找更平衡的视角...',
-        '认知行为疗法强调思维、情绪和行为之间的联系...',
-        '改变想法不是一蹴而就的，需要持续的练习和耐心...'
-      ]
-    };
+      selectedRecord: null,
+      isAnalyzing: false,
+      analysisResult: null,
+      showChatDialog: false,
+      userInput: '',
+      chatMessages: [],
+      randomFlowerColor: this.generateRandomFlowerColor()
+    }
   },
   computed: {
-    apiConfig() {
-      return this.$store.state.apiConfig;
-    }
-  },
-  mounted() {
-    // 检查是否有从store传递过来的记录索引
-    if (this.$store.selectedRecordIndex !== undefined) {
-      this.selectedRecordIndex = this.$store.selectedRecordIndex;
-      // 使用完后清除，避免影响后续操作
-      this.$store.selectedRecordIndex = undefined;
-    } else if (this.$store.state.thoughtRecords.length > 0) {
-      this.selectedRecordIndex = 0;
-    }
+    hasAnalysis() {
+      return !!this.analysisResult
+    },
     
-    this.loadSelectedRecord();
+    flowerStyle() {
+      return {
+        '--flower-color': this.randomFlowerColor,
+        '--flower-secondary': this.adjustColorBrightness(this.randomFlowerColor, -20)
+      }
+    },
+    
+    isWisdomCompanionEnabled() {
+      return this.$store.state.appConfig?.features?.wisdomCompanionEnabled ?? true
+    }
   },
   methods: {
-    formatTimestamp(timestamp) {
-      if (!timestamp) return '未知时间';
+    goBack() {
+      this.$router.push('/')
+    },
+    
+    selectSeed(index) {
+      this.selectedRecord = this.$store.state.thoughtRecords[index]
+      this.$store.state.selectedRecordIndex = index
+      this.analysisResult = null
+      this.randomFlowerColor = this.generateRandomFlowerColor()
+    },
+    
+    async triggerAnalysis() {
+      if (this.isAnalyzing || this.hasAnalysis) return
+      
+      this.isAnalyzing = true
+      
+      try {
+        // 模拟分析过程
+        await this.sleep(2000)
+        
+        // 调用LLM分析API
+        this.analysisResult = await this.performCBTAnalysis()
+        
+      } catch (error) {
+        console.error('分析过程出错:', error)
+        this.showError('分析时遇到了小问题，请稍后再试')
+      } finally {
+        this.isAnalyzing = false
+      }
+    },
+    
+    async performCBTAnalysis() {
+      const config = this.$store.state.appConfig
+      
+      if (!config?.features?.autoAnalysisEnabled) {
+        throw new Error('自动分析功能已关闭')
+      }
+      
+      // 构建分析请求
+      const prompt = this.buildAnalysisPrompt()
+      
+      try {
+        const response = await fetch('/api/llm-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: config.llm.modelName,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: config.llm.maxTokens,
+            temperature: config.llm.temperature
+          })
+        })
+        
+        const data = await response.json()
+        return this.parseAnalysisResponse(data.choices[0].message.content)
+        
+      } catch (error) {
+        // 返回默认分析结果
+        return this.getDefaultAnalysis()
+      }
+    },
+    
+    buildAnalysisPrompt() {
+      const record = this.selectedRecord
+      const emotions = this.getRecordEmotions(record).join(', ')
+      
+      return `作为心灵花园的智慧伙伴，请分析以下思维记录，用温暖、希望的语言：
+
+情况: ${record.situation || '未详细描述'}
+想法: ${record.automaticThought}
+情绪: ${emotions}
+
+请识别可能的认知偏差类型，并提供3-4个温和的引导性问题。
+格式要求：JSON格式，包含cognitiveBiases数组和guidingQuestions数组。`
+    },
+    
+    // 获取记录的情绪列表，兼容多种格式
+    getRecordEmotions(record) {
+      if (!record) return []
+      
+      // 如果是数组格式
+      if (Array.isArray(record.emotions)) {
+        return record.emotions
+      }
+      
+      // 如果是字符串格式（逗号分隔）
+      if (typeof record.emotions === 'string') {
+        return record.emotions.split(',').map(e => e.trim()).filter(e => e)
+      }
+      
+      // 如果有单个情绪对象
+      if (record.emotion && record.emotion.name) {
+        return [record.emotion.name]
+      }
+      
+      return []
+    },
+    
+    parseAnalysisResponse(content) {
+      try {
+        const parsed = JSON.parse(content)
+        return {
+          cognitiveBiases: parsed.cognitiveBiases || this.getDefaultBiases(),
+          guidingQuestions: parsed.guidingQuestions || this.getDefaultQuestions()
+        }
+      } catch {
+        return this.getDefaultAnalysis()
+      }
+    },
+    
+    getDefaultAnalysis() {
+      const biases = this.$store.state.appConfig?.cognitiveDistortions || []
+      return {
+        cognitiveBiases: [biases[Math.floor(Math.random() * biases.length)] || {
+          label: '💭 思维迷雾',
+          description: '想法中可能藏着一些小小的偏差'
+        }],
+        guidingQuestions: [
+          '有没有其他的角度来看待这件事？',
+          '如果朋友遇到同样的情况，你会怎么安慰TA？',
+          '这个想法对你有帮助吗？'
+        ]
+      }
+    },
+    
+    getDefaultBiases() {
+      return [{
+        label: '💭 思维迷雾',
+        description: '想法中可能藏着一些小小的偏差'
+      }]
+    },
+    
+    getDefaultQuestions() {
+      return [
+        '有没有其他的角度来看待这件事？',
+        '如果朋友遇到同样的情况，你会怎么安慰TA？',
+        '这个想法对你有帮助吗？'
+      ]
+    },
+    
+    openChatDialog() {
+      if (!this.isWisdomCompanionEnabled) return
+      
+      this.showChatDialog = true
+      
+      // 初始化对话
+      if (this.chatMessages.length === 0) {
+        this.chatMessages.push({
+          type: 'companion',
+          content: '你好！我是你的智慧伙伴。关于刚才的想法，你还有什么想聊的吗？'
+        })
+      }
+    },
+    
+    closeChatDialog() {
+      this.showChatDialog = false
+    },
+    
+    async sendMessage() {
+      if (!this.userInput.trim()) return
+      
+      const userMessage = this.userInput.trim()
+      this.chatMessages.push({
+        type: 'user',
+        content: userMessage
+      })
+      
+      this.userInput = ''
+      
+      // 模拟AI回复
+      setTimeout(() => {
+        this.chatMessages.push({
+          type: 'companion',
+          content: '谢谢你的分享。' + this.generateCompanionResponse(userMessage)
+        })
+      }, 1000)
+    },
+    
+    generateCompanionResponse(userMessage) {
+      const responses = [
+        '我能理解你的感受。',
+        '这听起来确实不容易。',
+        '你的想法很有道理。',
+        '换个角度看，可能会有不同的感受。'
+      ]
+      return responses[Math.floor(Math.random() * responses.length)]
+    },
+    
+    getDisabledMessage() {
+      const messages = this.$store.state.appConfig?.messages?.companionDisabled || [
+        "智慧伙伴暂时在花园里休息，请稍后再来 🌙"
+      ]
+      return messages[Math.floor(Math.random() * messages.length)]
+    },
+    
+    generateRandomFlowerColor() {
+      const colors = ['#FF9B85', '#FFC857', '#84A98C', '#7B9BB3', '#9384A8', '#FF6B6B']
+      return colors[Math.floor(Math.random() * colors.length)]
+    },
+    
+    adjustColorBrightness(hex, percent) {
+      const num = parseInt(hex.replace("#",""), 16)
+      const amt = Math.round(2.55 * percent)
+      const R = (num >> 16) + amt
+      const G = (num >> 8 & 0x00FF) + amt
+      const B = (num & 0x0000FF) + amt
+      return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + 
+        (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1)
+    },
+    
+    getPetalStyle(index) {
+      return {
+        transform: `rotate(${index * 45}deg)`,
+        animationDelay: `${index * 0.1}s`
+      }
+    },
+    
+    getBubblePosition(index) {
+      const angle = (index * 60) - 30
+      const distance = 120 + (index * 20)
+      const x = Math.cos(angle * Math.PI / 180) * distance
+      const y = Math.sin(angle * Math.PI / 180) * distance
+      
+      return {
+        left: `calc(50% + ${x}px)`,
+        top: `calc(50% + ${y}px)`
+      }
+    },
+    
+    getPollenStyle(index) {
+      const angle = index * 45
+      const distance = 100 + Math.random() * 300
+      const x = Math.cos(angle * Math.PI / 180) * distance
+      const y = Math.sin(angle * Math.PI / 180) * distance
+      
+      return {
+        left: `calc(50% + ${x}px)`,
+        top: `calc(50% + ${y}px)`,
+        animationDelay: `${Math.random() * 4}s`,
+        animationDuration: `${6 + Math.random() * 4}s`
+      }
+    },
+    
+    formatTime(timestamp) {
       return new Date(timestamp).toLocaleString('zh-CN', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-      });
+      })
     },
     
-    truncateText(text, maxLength) {
-      if (!text) return '';
-      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    truncateText(text, length) {
+      return text.length > length ? text.substring(0, length) + '...' : text
     },
     
-    loadSelectedRecord() {
-      if (this.$store.state.thoughtRecords.length === 0) {
-        this.currentRecord = null;
-        return;
-      }
-      
-      const record = this.$store.state.thoughtRecords[this.selectedRecordIndex];
-      this.currentRecord = record;
-      
-      // 如果记录中已经有分析结果和替代想法，则加载它们
-      if (record.analysisResult) {
-        this.analysisResult = record.analysisResult;
-      } else {
-        this.analysisResult = {
-          cognitiveBiases: [],
-          guidingQuestions: []
-        };
-      }
-      
-      if (record.userResponse) {
-        this.userResponse = record.userResponse;
-      } else {
-        this.userResponse = '';
-      }
-      
-      this.alternativeThought = record.alternativeThought || '';
-      this.selectedBias = null;
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
     },
     
-    getBiasColor(biasType) {
-      const colors = {
-        '灾难化': '#ff6b6b',
-        '非黑即白': '#4ecdc4',
-        '过度概括': '#45b7d1',
-        '情绪推理': '#96ceb4',
-        '应该陈述': '#ffeead',
-        '心理过滤': '#ffb347',
-        '个人化': '#c06c84',
-        '控制谬误': '#7579e7',
-        '贴标签': '#84b1ed',
-        '读心术': '#d183c9'
-      };
-      return colors[biasType] || '#6c757d';
-    },
-    
-    selectBias(bias) {
-      if (this.selectedBias === bias) {
-        this.selectedBias = null;
-      } else {
-        this.selectedBias = bias;
-      }
-    },
-    
-    getRecordStatus(record) {
-      if (record.alternativeThought) {
-        return '已完成分析';
-      } else if (record.analysisResult && record.analysisResult.cognitiveBiases) {
-        return '分析进行中';
-      } else {
-        return '待分析';
-      }
-    },
-    
-    getRecordStatusClass(record) {
-      if (record.alternativeThought) {
-        return 'status-completed';
-      } else if (record.analysisResult && record.analysisResult.cognitiveBiases) {
-        return 'status-progress';
-      } else {
-        return 'status-pending';
-      }
-    },
-    
-    deleteRecord(index) {
-      if (confirm('确定要删除这条记录吗？删除后无法恢复。')) {
-        this.$store.state.thoughtRecords.splice(index, 1);
-        this.$store.saveState();
-        
-        // 如果删除的是当前选中的记录，重新加载
-        if (this.selectedRecordIndex === index) {
-          this.selectedRecordIndex = 0;
-          this.loadSelectedRecord();
-        } 
-        // 如果删除的记录索引小于当前选中的索引，需要调整选中索引
-        else if (this.selectedRecordIndex > index) {
-          this.selectedRecordIndex--;
-        }
-      }
-    },
-
-    async analyzeThought() {
-      this.isLoading = true;
-      this.loadingProgress = 0;
-      this.loadingStage = '初始化分析';
-      this.apiError = null;
-      this.loadingTip = this.getRandomTip();
-      
-      try {
-        // 第一步：识别认知偏差
-        this.loadingStage = '识别认知偏差';
-        this.loadingProgress = 25;
-        this.loadingTip = this.getRandomTip();
-        const biasResponse = await this.callLLM(this.getBiasPrompt());
-        this.analysisResult.cognitiveBiases = this.parseBiasResponse(biasResponse);
-        this.analyzedOnce = true;
-
-        // 第二步：生成引导问题
-        this.loadingStage = '生成引导问题';
-        this.loadingProgress = 50;
-        this.loadingTip = this.getRandomTip();
-        const questionsResponse = await this.callLLM(this.getQuestionPrompt());
-        this.analysisResult.guidingQuestions = this.parseQuestionResponse(questionsResponse);
-
-        // 保存用户回应
-        this.$store.state.thoughtRecords[this.selectedRecordIndex].userResponse = this.userResponse;
-        
-        // 保存分析结果
-        this.$store.state.thoughtRecords[this.selectedRecordIndex].analysisResult = this.analysisResult;
-        this.$store.saveState();
-
-        // 第三步：生成初始替代想法
-        this.loadingStage = '生成替代想法';
-        this.loadingProgress = 75;
-        this.loadingTip = this.getRandomTip();
-        await this.generateAlternativeThought();
-        
-      } catch (error) {
-        console.error('分析失败:', error);
-        this.apiError = error.message || '分析过程中发生未知错误，请重试';
-      } finally {
-        this.loadingProgress = 100;
-        this.loadingStage = '分析完成';
-        this.loadingTip = null;
-        setTimeout(() => {
-        this.isLoading = false;
-        }, 500);
-      }
-    },
-
-    async generateAlternativeThought() {
-      if (!this.isLoading) {
-      this.isLoading = true;
-        this.loadingProgress = 0;
-        this.loadingStage = '生成替代想法';
-      }
-      
-      try {
-        this.loadingProgress = 50;
-        const response = await this.callLLM(this.getAlternativeThoughtPrompt());
-        this.alternativeThought = response.choices[0].message.content;
-        this.loadingProgress = 100;
-      } catch (error) {
-        console.error('生成替代想法失败:', error);
-      } finally {
-        setTimeout(() => {
-        this.isLoading = false;
-        }, 500);
-      }
-    },
-
-    async callLLM(prompt) {
-      try {
-        // 不再需要 Authorization header，由代理处理
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-
-        // 请求代理服务的端点
-        const proxyEndpoint = '/api/llm-proxy'; 
-
-        // 数据只包含 prompt
-      const data = {
-          prompt: prompt
-        };
-
-        console.log(`正在调用代理服务: ${proxyEndpoint}`);
-        
-        // 调用代理服务
-        const response = await axios.post(proxyEndpoint, data, { 
-          headers,
-          timeout: 45000 // 可以适当增加超时时间，因为涉及两次网络请求
-        });
-        
-        return response.data; // 代理会直接返回 LLM API 的原始响应数据结构
-
-      } catch (error) {
-        console.error('调用代理服务失败:', error);
-        if (error.response) {
-          console.error('代理服务响应:', error.response.data);
-          // 尝试从代理的错误响应中提取更具体的信息
-          const errorMessage = error.response.data?.error || 
-                              (error.response.data?.details ? `代理错误: ${error.response.data.details}` : 
-                              `代理服务返回错误: ${error.response.status}`);
-          throw new Error(errorMessage);
-        } else if (error.request) {
-          throw new Error('未收到代理服务响应，请检查网络连接或稍后重试');
-        } else {
-          throw new Error(`请求配置错误: ${error.message}`);
-        }
-      }
-    },
-
-    getBiasPrompt() {
-      // 构建提示词，包含情境描述（如果有）
-      let prompt = `请作为一名专业的认知行为治疗师，仔细分析以下内容中可能存在的认知偏差。
-  
-认知偏差是人们在思考过程中出现的系统性错误或模式，往往导致非理性判断和决策。`;
-
-      if (this.currentRecord.situation) {
-        prompt += `\n\n情境描述：${this.currentRecord.situation}`;
-      }
-      
-      prompt += `\n\n自动思维："${this.currentRecord.automaticThought}"`;
-      
-      if (this.currentRecord.emotions && this.currentRecord.emotions.length > 0) {
-        prompt += `\n\n伴随情绪：${this.currentRecord.emotions.join('、')}（强度：${this.currentRecord.intensity}%）`;
-      }
-      
-      prompt += `\n\n请识别出上述内容中存在的认知偏差，并严格按照以下JSON格式返回（不要有任何额外文字）：
-{
-  "biases": [
-    {
-      "type": "偏差类型名称",
-      "confidence": 置信度百分比（例如85，不要带%符号）,
-      "evidence": "详细说明为什么这属于该种偏差的文本依据"
+    showError(message) {
+      // 简单的错误提示
+      alert(message)
     }
-  ]
-}
-
-常见的认知偏差类型包括：
-1. 灾难化：过分夸大负面事件的后果
-2. 非黑即白：将事物简化为两个极端类别
-3. 过度概括：从单一事件中得出普遍结论
-4. 情绪推理：根据情绪状态而非客观事实做判断
-5. 应该陈述：用刚性的规则要求自己或他人
-6. 心理过滤：只关注负面细节而忽视积极方面
-7. 个人化：不合理地将外部事件归因于自己
-8. 控制谬误：认为应当能控制所有事情
-9. 贴标签：用简单标签概括复杂情况
-10. 读心术：假设知道他人的想法或感受
-
-如果没有发现明显的认知偏差，请返回空数组：{"biases": []}`;
-
-      return prompt;
-    },
-
-    getQuestionPrompt() {
-      // 构建提示词，包含情境描述（如果有）
-      let prompt = `作为一名专业的认知行为治疗师，请针对以下内容设计3个有效的苏格拉底式引导问题，帮助当事人质疑和挑战自己的思维模式。`;
-      
-      if (this.currentRecord.situation) {
-        prompt += `\n\n情境描述：${this.currentRecord.situation}`;
+  },
+  
+  mounted() {
+    // 如果有预选的记录索引，自动加载
+    if (this.$store.state.selectedRecordIndex !== undefined) {
+      const index = this.$store.state.selectedRecordIndex
+      if (this.$store.state.thoughtRecords[index]) {
+        this.selectSeed(index)
       }
-      
-      prompt += `\n\n自动思维："${this.currentRecord.automaticThought}"`;
-      
-      if (this.currentRecord.emotions && this.currentRecord.emotions.length > 0) {
-        prompt += `\n\n伴随情绪：${this.currentRecord.emotions.join('、')}`;
-      }
-      
-      // 如果有分析结果，将偏差信息也包含进来
-      if (this.analysisResult.cognitiveBiases && this.analysisResult.cognitiveBiases.length > 0) {
-        prompt += `\n\n识别到的认知偏差：${this.analysisResult.cognitiveBiases.map(b => b.type).join('、')}`;
-      }
-      
-      prompt += `\n\n请设计3个开放式的苏格拉底式问题，这些问题应该：
-1. 鼓励深度思考而非简单的是/否回答
-2. 帮助挑战非理性信念
-3. 引导探索替代性解释
-4. 使用温和而尊重的语气
-5. 针对当事人的具体情况而非泛泛而谈
-
-请只返回问题本身的JSON数组格式（不要有任何额外说明）：
-["问题1", "问题2", "问题3"]`;
-
-      return prompt;
-    },
-
-    getAlternativeThoughtPrompt() {
-      // 构建提示词，包含情境描述（如果有）
-      let prompt = `作为一名认知行为治疗师，请根据以下信息，生成一个更加平衡、理性的替代思维。`;
-      
-      if (this.currentRecord.situation) {
-        prompt += `\n\n情境描述：${this.currentRecord.situation}`;
-      }
-      
-      prompt += `\n\n原始自动思维："${this.currentRecord.automaticThought}"`;
-      
-      if (this.currentRecord.emotions && this.currentRecord.emotions.length > 0) {
-        prompt += `\n\n伴随情绪：${this.currentRecord.emotions.join('、')}`;
-      }
-      
-      // 如果有分析结果，将偏差信息也包含进来
-      if (this.analysisResult.cognitiveBiases && this.analysisResult.cognitiveBiases.length > 0) {
-        prompt += `\n\n识别到的认知偏差：${this.analysisResult.cognitiveBiases.map(b => b.type).join('、')}`;
-      }
-      
-      prompt += `\n\n用户对引导问题的思考：${this.userResponse || '(用户尚未填写)'}`;
-      
-      prompt += `\n\n请生成一个更加平衡和理性的替代思维，应该：
-1. 用第一人称表达，就像当事人自己在说话
-2. 使用口语化、自然的中文表达
-3. 保持温暖、支持和鼓励的语气
-4. 承认事实，但提供更加平衡和有建设性的视角
-5. 长度适中，通常为2-4句话
-
-请直接返回替代思维内容，不要包含任何额外的解释或说明。`;
-
-      return prompt;
-    },
-
-    parseBiasResponse(response) {
-      try {
-        const content = response.choices[0].message.content;
-        // 尝试解析JSON格式
-        try {
-          const parsed = JSON.parse(content);
-          if (parsed && parsed.biases) {
-            return parsed.biases;
-          }
-        } catch (jsonError) {
-          console.error('解析偏差JSON失败:', jsonError);
-          // 如果解析失败，尝试使用正则表达式提取JSON部分
-          const jsonMatch = content.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            try {
-              const extractedJson = JSON.parse(jsonMatch[0]);
-              if (extractedJson && extractedJson.biases) {
-                return extractedJson.biases;
-              }
-      } catch (e) {
-              console.error('提取JSON后解析仍然失败:', e);
-            }
-          }
-        }
-        
-        // 如果上述方法都失败，返回空数组
-        console.warn('无法从LLM响应中解析出认知偏差数据，原始响应:', content);
-        return [];
-      } catch (error) {
-        console.error('解析偏差响应失败:', error);
-        return [];
-      }
-    },
-
-    parseQuestionResponse(response) {
-      try {
-        const content = response.choices[0].message.content;
-        // 尝试直接解析JSON
-        try {
-          const questions = JSON.parse(content);
-          if (Array.isArray(questions)) {
-            return questions;
-          }
-        } catch (jsonError) {
-          console.error('解析问题JSON失败:', jsonError);
-          // 尝试提取JSON数组部分
-          const arrayMatch = content.match(/\[[\s\S]*\]/);
-          if (arrayMatch) {
-            try {
-              const extractedArray = JSON.parse(arrayMatch[0]);
-              if (Array.isArray(extractedArray)) {
-                return extractedArray;
-              }
-      } catch (e) {
-              console.error('提取数组后解析仍然失败:', e);
-            }
-          }
-        }
-        
-        // 如果无法解析为JSON，尝试基于行分割
-        if (content.includes('\n')) {
-          const lines = content.split('\n').filter(line => 
-            line.trim() && !line.startsWith('[') && !line.startsWith(']') && !line.startsWith('```')
-          );
-          if (lines.length > 0) {
-            return lines.map(line => line.replace(/^[0-9]+[\.\)]\s*/, '').trim()).filter(q => q);
-          }
-        }
-        
-        console.warn('无法从LLM响应中解析出问题数据，原始响应:', content);
-        return [];
-      } catch (error) {
-        console.error('解析问题响应失败:', error);
-        return [];
-      }
-    },
-
-    saveAlternativeThought() {
-      this.$store.state.thoughtRecords[this.selectedRecordIndex].alternativeThought = this.alternativeThought;
-      this.$store.state.thoughtRecords[this.selectedRecordIndex].userResponse = this.userResponse;
-      this.$store.saveState();
-      alert('替代想法已保存！');
-    },
-
-    getRandomTip() {
-      return this.loadingTips[Math.floor(Math.random() * this.loadingTips.length)];
     }
   }
-};
+}
 </script>
 
 <style scoped>
-.analysis-container {
-  max-width: 800px;
-  margin: 1rem auto;
-  padding: 0 1rem;
+.mind-greenhouse {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #E8F4F8 0%, #F0E5D8 50%, #CAD2C5 100%);
 }
 
-.section-title {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  /* Use heading styles from main.css */
-}
-
-.history-selector {
-  background: white;
-  padding: 1rem;
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--box-shadow-sm);
-  margin-bottom: 1.5rem; /* Use utility mb-3 or mb-4 if preferred */
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap; /* Allow wrap on small screens */
-  gap: 0.5rem;
-}
-
-.history-header label {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* form-select is handled globally */
-
-/* History Manager Modal Styles */
-.history-manager {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1001; /* Ensure above header */
-  padding: 1rem;
-}
-
-.history-manager-content {
-  background: white;
-  border-radius: var(--border-radius-md);
+/* 温室背景 */
+.greenhouse-background {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.greenhouse-glass {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  backdrop-filter: blur(1px);
+}
+
+.floating-pollen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pollen-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #FFC857 0%, #E6B84A 70%, transparent 100%);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: pollenFloat 8s ease-in-out infinite;
+}
+
+@keyframes pollenFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-30px) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+/* 浮动返回按钮 */
+.floating-back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(84, 169, 140, 0.3);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.floating-back-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 35px rgba(84, 169, 140, 0.4);
+}
+
+/* 主温室区域 */
+.greenhouse-main {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* 种子选择界面 */
+.seed-selector {
   max-width: 600px;
-  max-height: 85vh;
+  width: 100%;
+}
+
+.selector-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 2rem;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.greenhouse-title h2 {
+  color: var(--life-moss);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.greenhouse-title p {
+  color: var(--life-olive);
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+
+.seed-garden h3 {
+  color: var(--life-moss);
+  margin-bottom: 1rem;
+}
+
+.seed-grid {
   display: flex;
   flex-direction: column;
-  box-shadow: var(--box-shadow-md);
-  overflow: hidden;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-.history-manager-header {
+.seed-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.seed-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: var(--life-olive);
+}
+
+.seed-item.fresh {
+  border-color: var(--bloom-coral);
+  background: rgba(255, 155, 133, 0.1);
+}
+
+.seed-emotion {
+  flex-shrink: 0;
+}
+
+.emotion-bubble {
+  background: var(--secondary-gradient);
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.seed-content {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.seed-time {
+  font-size: 0.8rem;
+  color: var(--earth-clay);
+  margin-bottom: 0.3rem;
+}
+
+.seed-thought {
+  color: var(--life-moss);
+  font-weight: 500;
+}
+
+.seed-status {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+/* 温室花朵界面 */
+.greenhouse-flower {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 中心花朵区域 */
+.flower-center {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.flower-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  cursor: pointer;
+}
+
+.flower-bloom {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  transition: all 0.5s ease;
+}
+
+.flower-bloom.analyzing {
+  animation: analyzing-pulse 2s ease-in-out infinite;
+}
+
+.flower-bloom.bloomed {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+@keyframes analyzing-pulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1); 
+    filter: brightness(1);
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.1); 
+    filter: brightness(1.2);
+  }
+}
+
+.flower-petals {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.petal {
+  position: absolute;
+  width: 40px;
+  height: 80px;
+  background: var(--flower-color, #FF9B85);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  top: 50%;
+  left: 50%;
+  transform-origin: 50% 90%;
+  animation: petalGrow 0.8s ease-out forwards;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+@keyframes petalGrow {
+  0% {
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.flower-center-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, #FFC857, #E6B84A);
+  border-radius: 50%;
+  z-index: 10;
+}
+
+/* 情绪气泡 */
+.emotion-bubbles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.emotion-bubble.floating {
+  position: absolute;
+  background: rgba(132, 169, 140, 0.9);
+  color: white;
+  padding: 0.5rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  animation: bubbleFloat 3s ease-in-out infinite;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+@keyframes bubbleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.flower-hint {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--life-olive);
+  font-style: italic;
+}
+
+/* 分析结果展示 */
+.analysis-display {
+  max-width: 600px;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.analysis-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.bias-tag {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  padding: 1rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  max-width: 200px;
+}
+
+.bias-label {
+  display: block;
+  font-weight: 600;
+  color: var(--life-moss);
+  margin-bottom: 0.5rem;
+}
+
+.bias-description {
+  color: var(--life-olive);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.guiding-questions {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.guiding-questions h4 {
+  color: var(--life-moss);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.question-bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  background: rgba(132, 169, 140, 0.1);
+  border-radius: 12px;
+}
+
+.question-mark {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  background: var(--secondary-gradient);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.question-bubble p {
+  color: var(--life-moss);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* 对话触发器 */
+.chat-trigger, .companion-disabled-hint {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.chat-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--primary-gradient);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(84, 169, 140, 0.3);
+}
+
+.chat-hint:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(84, 169, 140, 0.4);
+}
+
+.disabled-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--life-olive);
+  padding: 1rem 2rem;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* 对话弹窗 */
+.chat-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.chat-dialog {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  height: 70%;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -730,395 +968,139 @@ export default {
   border-bottom: 1px solid var(--border-color);
 }
 
-.history-manager-header h3 {
+.dialog-header h3 {
+  color: var(--life-moss);
   margin: 0;
-  color: var(--primary-color);
-  /* Use h3 styles from main.css */
 }
 
-.btn-close {
+.close-btn {
   background: none;
   border: none;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0.2rem 0.5rem;
-  line-height: 1;
-}
-.btn-close:hover {
-  color: var(--text-primary);
+  color: var(--text-muted);
+  transition: color 0.3s ease;
 }
 
-.history-manager-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem 1.5rem;
+.close-btn:hover {
+  color: var(--life-moss);
 }
 
-.history-list {
+.dialog-content {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-}
-
-.history-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: var(--background-light);
-  border-radius: var(--border-radius-sm);
-  padding: 0.8rem 1rem;
-  border: 1px solid var(--border-color);
-  transition: var(--transition-default);
-}
-
-.history-item:hover {
-  background: var(--background-medium);
-  border-color: var(--primary-color);
-}
-
-.history-item-content {
-  flex: 1;
-  overflow: hidden; /* Prevent long text pushing out button */
-}
-
-.history-item-date {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.25rem;
-}
-
-.history-item-thought {
-  margin-bottom: 0.25rem;
-  color: var(--text-primary);
-  overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.history-item-status {
-  display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: 10px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-top: 0.25rem;
-}
-
-.status-completed {
-  background: rgba(66, 184, 131, 0.15);
-  color: #2a9d62;
-}
-
-.status-progress {
-  background: rgba(255, 193, 7, 0.15);
-  color: #b98900;
-}
-
-.status-pending {
-  background: rgba(44, 62, 80, 0.1);
-  color: var(--text-secondary);
-}
-
-.history-item-actions {
-  display: flex;
-}
-
-/* btn-sm, btn-outline-danger handled globally */
-
-.no-records {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.history-manager-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
-  text-align: right;
-}
-
-/* Use .card base styles for the main analysis area */
-.card {
-  margin-bottom: 1.5rem;
-}
-
-.analysis-section {
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  /* Remove redundant background, shadow, border - handled by .card */
-  /* Keep specific margin/padding if needed, or remove if .card padding is sufficient */
-}
-.analysis-section:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0; /* Adjust if buttons inside need padding */
-}
-
-.analysis-section h5 {
-  margin-bottom: 1rem;
-  /* Use h5 styles from main.css */
-}
-
-.thought-text {
-  font-size: 1.1rem; /* Base size, adjusted by media query in main.css */
-  font-style: italic;
-  margin-bottom: 0.5rem;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.situation-box {
-  background-color: rgba(58, 110, 165, 0.05);
-  border-radius: var(--border-radius-sm);
-  padding: 0.8rem 1rem;
-  margin: 1rem 0;
-  border-left: 3px solid var(--primary-color);
-}
-
-.situation-box h6 {
-  /* Use h6 styles from main.css */
-  color: var(--primary-color);
-  margin-bottom: 0.4rem;
-}
-
-.situation-text {
-  font-size: 0.95rem; /* Base size */
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.meta-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.date-tag {
-  background-color: var(--background-medium);
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--border-radius-sm);
-  color: var(--text-secondary);
-}
-
-.emotion-badges {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.emotion-badge {
-  background-color: var(--background-medium);
-  color: var(--text-secondary);
-  padding: 0.2rem 0.6rem;
-  border-radius: 10px;
-  font-size: 0.8rem;
-}
-
-.bias-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
-}
-
-.badge {
-  color: white;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.9rem;
-  border-radius: 15px;
-  box-shadow: var(--box-shadow-sm);
-  cursor: pointer;
-  transition: var(--transition-default);
-}
-
-.badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-}
-
-.confidence {
-  font-size: 0.75rem;
-  opacity: 0.9;
-  margin-left: 0.2rem;
-}
-
-.no-biases,
-.no-questions {
-  /* Consider using .alert .alert-info from main.css */
-  text-align: center;
-  padding: 1rem;
-  color: var(--text-secondary);
-  background-color: var(--background-light);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--border-radius-sm);
-  margin-top: 1rem;
-  font-style: italic;
-  font-size: 0.9rem;
-}
-.no-biases ul.bias-tips {
-  list-style: inside;
-  padding-left: 0;
-  margin-top: 0.5rem;
-  text-align: left;
-  font-style: normal;
-}
-.no-biases ul.bias-tips li {
-  margin-bottom: 0.3rem;
-}
-
-.bias-evidence {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: var(--background-light);
-  border-radius: var(--border-radius-sm);
-  border-left: 3px solid var(--secondary-color);
-}
-
-.evidence-header h6 {
-  margin: 0 0 0.5rem 0;
-  color: var(--primary-color);
-  /* Use h6 styles from main.css */
-}
-
-.evidence-text {
-  margin: 0;
-  font-style: italic;
-  color: var(--text-secondary);
-  overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-.question-list {
-  list-style-type: none;
-  padding-left: 0;
-  margin: 0;
-}
-
-.question-list li {
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.75rem;
-  background-color: var(--background-light);
-  border-radius: var(--border-radius-sm);
-  border-left: 3px solid var(--secondary-color);
-  transition: var(--transition-default);
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.question-list li:hover {
-  background-color: var(--background-medium);
-}
-
-/* form-control for textarea handled globally */
-
-.alternative-thought {
-  font-size: 1.1rem; /* Base size */
-  color: var(--secondary-color);
-  font-weight: 500;
-  padding: 1rem;
-  background: rgba(66, 184, 131, 0.05);
-  border-radius: var(--border-radius-sm);
-  border-left: 3px solid var(--secondary-color);
-  overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: pre-wrap;
-  margin-bottom: 1rem; /* Add space before feedback buttons */
-}
-
-.feedback-buttons {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap; /* Allow wrap on small screens */
-  gap: 0.75rem;
-}
-
-/* .btn, .btn-success, .btn-outline-secondary handled globally */
-
-.action-buttons {
-  text-align: center;
-  margin: 1.5rem 0;
-}
-
-/* Loading Indicator */
-.loading-container {
-  margin: 2rem 0;
-  text-align: center;
-}
-
-.progress {
-  height: 1rem;
-  border-radius: var(--border-radius-sm);
-  background-color: var(--background-medium);
-  margin-bottom: 0.75rem;
   overflow: hidden;
 }
 
-.progress-bar {
-  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-message {
+  max-width: 80%;
+  padding: 0.8rem 1rem;
+  border-radius: 15px;
+  word-wrap: break-word;
+}
+
+.chat-message.user {
+  background: var(--primary-gradient);
   color: white;
-  text-align: center;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  transition: width 0.6s ease;
-  white-space: nowrap;
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
 }
 
-.progress-bar-animated {
-  animation: pulse 1.5s ease-in-out infinite;
-  background-size: 200% 200%;
-  background-image: linear-gradient(
-    45deg,
-    var(--primary-color) 0%,
-    var(--secondary-color) 25%,
-    var(--primary-color) 50%,
-    var(--secondary-color) 75%,
-    var(--primary-color) 100%
-  );
+.chat-message.companion {
+  background: var(--background-light);
+  color: var(--life-moss);
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
 }
 
-@keyframes pulse {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+.chat-input-area {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
-.loading-text {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+.chat-input {
+  flex-grow: 1;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 15px;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
-.loading-tips {
-  font-style: italic;
-  color: var(--text-secondary);
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
+.chat-input:focus {
+  border-color: var(--life-olive);
 }
 
-/* .api-error uses .alert .alert-danger from main.css */
-.api-error p {
-  margin-bottom: 0.5rem;
-}
-.api-error p:last-child {
-  margin-bottom: 0;
-}
-.api-error .btn-sm {
-  margin-right: 0.5rem;
-}
-
-.ml-2 { /* Replaced with gap or specific margins */
-  /* margin-left: 0.5rem; */
+.send-btn {
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-/* Remove old media queries, rely on base responsive styles + component flex/grid wrap */
+.send-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(84, 169, 140, 0.3);
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .greenhouse-main {
+    padding: 1rem;
+  }
+  
+  .flower-container {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .flower-bloom {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .chat-dialog {
+    width: 95%;
+    height: 80%;
+  }
+  
+  .floating-back-btn {
+    top: 15px;
+    left: 15px;
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .analysis-tags {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .bias-tag {
+    max-width: 100%;
+  }
+}
 </style>

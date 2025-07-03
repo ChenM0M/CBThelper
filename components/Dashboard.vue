@@ -1,189 +1,278 @@
 <template>
-  <div class="dashboard fade-in-up">
-    <header class="welcome-header">
-      <h1 class="gradient-text float-animation">✨ 欢迎回来，心理健康伙伴！</h1>
-      <p class="last-record fade-in-scale" v-if="latestRecord">
-        💫 上次记录：{{ formatDate(latestRecord.timestamp) }}
-      </p>
-    </header>
-
-    <section class="dashboard-grid stats-section">
-      <div class="stat-card total-records breathing-light fade-in-scale" style="animation-delay: 0.1s">
-        <div class="stat-icon pulse-animation">📊</div>
-        <div class="stat-content">
-          <h4>已记录思想</h4>
-          <div class="stat-number gradient-text">{{ $store.state.thoughtRecords.length }}</div>
-        </div>
+  <div class="growth-garden">
+    <!-- 背景层 -->
+    <div class="garden-background">
+      <div class="blooming-particles">
+        <div v-for="i in 15" :key="i" class="bloom-particle" :style="getBloomParticleStyle(i)"></div>
       </div>
-      
-      <div class="stat-card analyzed-records breathing-light fade-in-scale" style="animation-delay: 0.2s">
-        <div class="stat-icon pulse-animation">🧠</div>
-        <div class="stat-content">
-          <h4>完成分析</h4>
-          <div class="stat-number gradient-text">{{ analyzedRecordsCount }}</div>
-        </div>
-      </div>
-      
-      <div class="stat-card mood-trend breathing-light fade-in-scale" style="animation-delay: 0.3s">
-        <div class="stat-icon pulse-animation">😊</div>
-        <div class="stat-content">
-          <h4>情绪趋势</h4>
-          <div class="trend-indicator" :class="moodTrend.class">
-            {{ moodTrend.label }}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="dashboard-grid actions-section">
-      <router-link 
-        to="/record" 
-        class="action-card new-record interactive-card fade-in-scale"
-        style="animation-delay: 0.4s"
-      >
-        <div class="action-content">
-          <span class="icon float-animation">✍️</span>
-          <h3>新建记录</h3>
-          <p class="action-desc">记录你的自动思维和情绪体验</p>
-        </div>
-      </router-link>
-
-      <router-link 
-        to="/analysis" 
-        class="action-card view-analysis interactive-card fade-in-scale"
-        :class="{ disabled: !hasRecords }"
-        style="animation-delay: 0.5s"
-      >
-        <div class="action-content">
-          <span class="icon float-animation">🔍</span>
-          <h3>查看分析</h3>
-          <p class="action-desc" v-if="hasRecords">{{ analysisSummary }}</p>
-          <p class="action-desc" v-else>请先记录你的想法</p>
-        </div>
-      </router-link>
-    </section>
-
-    <section class="recent-records" v-if="hasRecords">
-      <h2 class="section-title">🕒 最近记录</h2>
-      <div class="dashboard-grid records-section">
-        <div 
-          v-for="(record, index) in recentRecords" 
-          :key="index"
-          class="record-card interactive-card fade-in-scale"
-          :style="{ animationDelay: `${0.6 + index * 0.1}s` }"
-          @click="goToAnalysis(index)"
-        >
-          <div class="record-header">
-            <div class="record-date">{{ formatDate(record.timestamp) }}</div>
-            <div class="record-emotions">
-              <span 
-                v-for="(emotion, idx) in record.emotions.slice(0, 2)" 
-                :key="idx"
-                class="emotion-tag"
-              >
-                {{ emotion }}
-              </span>
-              <span v-if="record.emotions.length > 2" class="emotion-more">+{{ record.emotions.length - 2 }}</span>
-            </div>
-          </div>
-          <div class="record-thought">{{ truncateText(record.automaticThought, 80) }}</div>
-          <div class="record-status" :class="getRecordStatusClass(record)">
-            {{ getRecordStatus(record) }}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="dashboard-grid charts-section">
-      <div class="chart-card emotion-stats">
-        <div class="chart-card-header">
-          <h5><span class="stat-icon-small">📊</span> 情绪分布</h5>
-          <div class="stat-card-actions" v-if="hasRecords">
-            <div class="emotion-count-badge">{{ Object.keys(emotionDistribution).length }}种情绪</div>
-          </div>
     </div>
 
-        <div class="chart-content emotion-chart" v-if="Object.keys(emotionDistribution).length > 0">
-          <div 
-            v-for="(count, emotion) in sortedEmotions"
-            :key="emotion"
-            class="chart-item"
-          >
-            <div class="chart-label">
-              <span class="emotion-emoji">{{ getEmotionEmoji(emotion) }}</span>
-              <span class="emotion-name">{{ emotion }}</span>
-            </div>
-            <div class="chart-bar-container">
-              <div 
-                class="chart-bar"
-                :style="{ width: `${(count / maxEmotionCount) * 100}%` }"
-              ></div>
-              <span class="chart-value">{{ count }}</span>
-            </div>
+    <!-- 顶部导航 -->
+    <header class="garden-header">
+      <button @click="goBack" class="back-button">
+        <span class="back-icon">🏡</span>
+        回到花园
+      </button>
+      <div class="header-title">
+        <span class="header-icon">🌸</span>
+        <h1>成长足迹展示</h1>
+      </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <div class="garden-content">
+      
+      <!-- 欢迎区域 -->
+      <div class="welcome-section">
+        <div class="welcome-card">
+          <div class="welcome-avatar">
+            <div class="avatar-bloom">🌱</div>
           </div>
-        </div>
-        
-        <div class="no-data" v-else>
-          暂无情绪数据，请记录你的情绪体验
+          <h2 class="welcome-title">看看你心灵花园的美丽绽放</h2>
+          <p class="welcome-subtitle" v-if="latestRecord">
+            最近一次成长记录：{{ formatRelativeTime(latestRecord.timestamp) }}
+          </p>
+          <p class="welcome-subtitle" v-else>
+            你的成长之旅即将开始，每一步都值得记录
+          </p>
         </div>
       </div>
 
-      <div class="chart-card bias-stats">
-        <div class="chart-card-header">
-          <h5><span class="stat-icon-small">⚠️</span> 常见认知偏差</h5>
-          <div class="stat-card-actions" v-if="topBiases.length > 0">
-            <div class="bias-count-badge">共{{ getBiasesTotal() }}次</div>
-          </div>
-        </div>
-        
-        <div class="chart-content bias-chart" v-if="topBiases.length > 0">
-          <div 
-            v-for="(bias, index) in topBiases" 
-            :key="index"
-            class="chart-item"
-          >
-            <div class="chart-label">
-              <span class="bias-icon" :style="{ backgroundColor: getBiasColor(bias.type) }"></span>
-              <span class="bias-name">{{ bias.type }}</span>
-            </div>
-            <div class="chart-bar-container">
-              <div 
-                class="chart-bar bias-bar"
-                :style="{ 
-                  width: `${(bias.count / maxBiasCount) * 100}%`,
-                  background: `linear-gradient(to right, ${getBiasColorLight(bias.type)}, ${getBiasColor(bias.type)})`
-                }"
-              ></div>
-              <span class="chart-value">{{ bias.count }}</span>
+      <!-- 成长统计花园 -->
+      <div class="stats-garden">
+        <h3 class="section-title">🌿 成长的收获</h3>
+        <div class="stats-grid">
+          
+          <!-- 种子播种数 -->
+          <div class="stat-bloom total-seeds">
+            <div class="bloom-icon seeds">🌱</div>
+            <div class="bloom-content">
+              <div class="bloom-number">{{ $store.state.thoughtRecords.length }}</div>
+              <div class="bloom-label">播下的思维种子</div>
             </div>
           </div>
-        </div>
-        
-        <div class="no-data" v-else>
-          暂无认知偏差数据，请完成分析
+          
+          <!-- 花朵绽放数 -->
+          <div class="stat-bloom bloomed-flowers">
+            <div class="bloom-icon flowers">🌸</div>
+            <div class="bloom-content">
+              <div class="bloom-number">{{ analyzedRecordsCount }}</div>
+              <div class="bloom-label">绽放的智慧花朵</div>
+            </div>
+          </div>
+          
+          <!-- 情绪花园状态 -->
+          <div class="stat-bloom garden-health">
+            <div class="bloom-icon health">{{ moodTrend.emoji }}</div>
+            <div class="bloom-content">
+              <div class="bloom-status" :class="moodTrend.class">{{ moodTrend.label }}</div>
+              <div class="bloom-label">花园的生机状态</div>
+            </div>
+          </div>
+
         </div>
       </div>
-    </section>
+
+      <!-- 快速行动花园 -->
+      <div class="action-garden">
+        <h3 class="section-title">🌿 继续培育心灵</h3>
+        <div class="action-grid">
+          
+          <!-- 播种新想法 -->
+          <router-link to="/record" class="action-bloom plant-seed">
+            <div class="action-icon">🌱</div>
+            <div class="action-content">
+              <h4>播种新的想法</h4>
+              <p>记录今天心中萌芽的思绪</p>
+            </div>
+          </router-link>
+
+          <!-- 与智慧伙伴聊天 -->
+          <router-link 
+            to="/analysis" 
+            class="action-bloom wise-companion"
+            :class="{ 'action-disabled': !hasRecords }"
+          >
+            <div class="action-icon">🤖</div>
+            <div class="action-content">
+              <h4>与智慧伙伴对话</h4>
+              <p v-if="hasRecords">探索{{ pendingAnalysisCount }}个待分析的想法</p>
+              <p v-else>先播下一些想法的种子吧</p>
+            </div>
+          </router-link>
+
+        </div>
+      </div>
+
+      <!-- 成长记录花园 -->
+      <div class="records-garden" v-if="hasRecords">
+        <h3 class="section-title">🌸 最近的成长记录</h3>
+        <div class="records-grid">
+          <div 
+            v-for="(record, index) in recentRecords" 
+            :key="index"
+            class="record-bloom"
+            @click="goToAnalysis(index)"
+          >
+            <div class="record-header">
+              <div class="record-time">{{ formatRelativeTime(record.timestamp) }}</div>
+              <div class="record-growth-stage" :class="getGrowthStageClass(record)">
+                {{ getGrowthStage(record) }}
+              </div>
+            </div>
+            
+            <div class="record-emotion-garden" v-if="record.initialEmotion">
+              <div class="initial-emotion" :style="{ background: record.initialEmotion.gradient }">
+                {{ record.initialEmotion.emoji || '💭' }}
+              </div>
+              <div class="emotion-label">{{ record.initialEmotion.name }}</div>
+            </div>
+            
+            <div class="record-thought-snippet">
+              "{{ truncateText(record.automaticThought, 60) }}"
+            </div>
+            
+            <div class="record-growth-indicator">
+              <div class="growth-progress" :class="getGrowthProgressClass(record)">
+                <span class="progress-icon">{{ getGrowthIcon(record) }}</span>
+                <span class="progress-text">{{ getGrowthProgressText(record) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 心灵花园洞察 -->
+      <div class="insights-garden">
+        <h3 class="section-title">🌻 花园的智慧洞察</h3>
+        <div class="insights-grid">
+          
+          <!-- 情绪花朵分布 -->
+          <div class="insight-bloom emotion-distribution">
+            <div class="insight-header">
+              <h4>💐 情绪花朵的色彩</h4>
+              <div class="insight-badge" v-if="hasRecords">
+                {{ Object.keys(emotionDistribution).length }}种色彩
+              </div>
+            </div>
+            
+            <div class="insight-content" v-if="Object.keys(emotionDistribution).length > 0">
+              <div class="emotion-flowers">
+                <div 
+                  v-for="([emotion, count], index) in Object.entries(sortedEmotions).slice(0, 5)"
+                  :key="emotion"
+                  class="emotion-flower"
+                >
+                  <div class="flower-icon">{{ getEmotionEmoji(emotion) }}</div>
+                  <div class="flower-info">
+                    <div class="flower-name">{{ emotion }}</div>
+                    <div class="flower-count">绽放了{{ count }}次</div>
+                  </div>
+                  <div class="flower-bloom-bar">
+                    <div 
+                      class="bloom-progress"
+                      :style="{ width: `${(count / maxEmotionCount) * 100}%` }"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="insight-empty" v-else>
+              <div class="empty-icon">🌱</div>
+              <p>还没有情绪记录，开始播种你的感受吧</p>
+            </div>
+          </div>
+
+          <!-- 成长智慧总结 -->
+          <div class="insight-bloom growth-wisdom">
+            <div class="insight-header">
+              <h4>✨ 智慧伙伴的发现</h4>
+              <div class="insight-badge" v-if="analyzedRecordsCount > 0">
+                {{ analyzedRecordsCount }}次深度对话
+              </div>
+            </div>
+            
+            <div class="insight-content" v-if="analyzedRecordsCount > 0">
+              <div class="wisdom-summary">
+                <div class="wisdom-stat">
+                  <div class="stat-icon">🔍</div>
+                  <div class="stat-text">
+                    <span class="stat-number">{{ getCommonBiasesCount() }}</span>
+                    <span class="stat-label">个思维模式被发现</span>
+                  </div>
+                </div>
+                <div class="wisdom-stat">
+                  <div class="stat-icon">🌟</div>
+                  <div class="stat-text">
+                    <span class="stat-number">{{ getAlternativeThoughtsCount() }}</span>
+                    <span class="stat-label">个新视角被采纳</span>
+                  </div>
+                </div>
+                <div class="wisdom-encouragement">
+                  <p>{{ getEncouragementMessage() }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="insight-empty" v-else>
+              <div class="empty-icon">🤖</div>
+              <p>开始与智慧伙伴对话，发现内心的智慧</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 每日鼓励 -->
+      <div class="daily-encouragement" v-if="dailyEncouragement">
+        <div class="encouragement-card">
+          <div class="encouragement-icon">🌈</div>
+          <div class="encouragement-content">
+            <h4>今日的花园寄语</h4>
+            <p>{{ dailyEncouragement }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </template>
 
 <script>
 export default {
+  name: 'Dashboard',
+  data() {
+    return {
+      dailyEncouragement: ''
+    }
+  },
   computed: {
     latestRecord() {
       return this.$store.state.thoughtRecords[0];
     },
     hasRecords() {
-      return this.$store.state.thoughtRecords.length > 0;
-    },
-    analysisSummary() {
-      const count = this.$store.state.thoughtRecords.length;
-      return count ? `已有${count}条记录` : '暂无记录';
+      return this.$store.state.thoughtRecords && this.$store.state.thoughtRecords.length > 0;
     },
     recentRecords() {
-      return this.$store.state.thoughtRecords.slice(0, 3);
+      return this.$store.state.thoughtRecords ? this.$store.state.thoughtRecords.slice(0, 6) : [];
+    },
+    analyzedRecordsCount() {
+      if (!this.$store.state.thoughtRecords) return 0
+      return this.$store.state.thoughtRecords.filter(
+        record => record.completed || record.alternativeThought
+      ).length;
+    },
+    pendingAnalysisCount() {
+      if (!this.$store.state.thoughtRecords) return 0
+      return this.$store.state.thoughtRecords.filter(
+        record => !record.completed && !record.alternativeThought
+      ).length;
     },
     emotionDistribution() {
+      if (!this.$store.state.thoughtRecords || !Array.isArray(this.$store.state.thoughtRecords)) {
+        return {}
+      }
       const emotions = this.$store.state.thoughtRecords
         .flatMap(record => record.emotions || []);
       return emotions.reduce((acc, emotion) => {
@@ -194,47 +283,6 @@ export default {
     maxEmotionCount() {
       return Math.max(...Object.values(this.emotionDistribution || {}), 1);
     },
-    topBiases() {
-      const biases = this.$store.state.thoughtRecords
-        .flatMap(record => 
-          (record.analysisResult || {}).cognitiveBiases || []
-        )
-        .map(bias => bias.type);
-      
-      return Object.entries(
-        biases.reduce((acc, type) => {
-          acc[type] = (acc[type] || 0) + 1;
-          return acc;
-        }, {})
-      )
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([type, count]) => ({ type, count }));
-    },
-    maxBiasCount() {
-      return this.topBiases.length > 0 
-        ? Math.max(...this.topBiases.map(b => b.count), 1) 
-        : 1;
-    },
-    analyzedRecordsCount() {
-      return this.$store.state.thoughtRecords.filter(
-        record => record.alternativeThought
-      ).length;
-    },
-    moodTrend() {
-      const records = this.$store.state.thoughtRecords.slice(0, 5);
-      if (records.length < 2) {
-        return { label: '数据不足', class: 'neutral' };
-      }
-      const recentAvg = records.slice(0, Math.ceil(records.length/2))
-        .reduce((sum, r) => sum + (r.intensity || 50), 0) / Math.ceil(records.length/2);
-      const earlierAvg = records.slice(Math.ceil(records.length/2))
-        .reduce((sum, r) => sum + (r.intensity || 50), 0) / Math.floor(records.length/2);
-      const diff = recentAvg - earlierAvg;
-      if (diff < -5) return { label: '向好发展', class: 'positive' };
-      if (diff > 5) return { label: '略有波动', class: 'negative' };
-      return { label: '保持稳定', class: 'neutral' };
-    },
     sortedEmotions() {
       return Object.entries(this.emotionDistribution)
         .sort((a, b) => b[1] - a[1])
@@ -242,521 +290,855 @@ export default {
           obj[key] = value;
           return obj;
         }, {});
+    },
+    moodTrend() {
+      const records = this.$store.state.thoughtRecords.slice(0, 5);
+      if (records.length < 2) {
+        return { 
+          label: '刚刚起步', 
+          class: 'neutral',
+          emoji: '🌱'
+        };
+      }
+      const recentAvg = records.slice(0, Math.ceil(records.length/2))
+        .reduce((sum, r) => sum + (r.intensity || 50), 0) / Math.ceil(records.length/2);
+      const earlierAvg = records.slice(Math.ceil(records.length/2))
+        .reduce((sum, r) => sum + (r.intensity || 50), 0) / Math.floor(records.length/2);
+      const diff = recentAvg - earlierAvg;
+      
+      if (diff < -10) return { 
+        label: '蓬勃向上', 
+        class: 'positive',
+        emoji: '🌸'
+      };
+      if (diff < -5) return { 
+        label: '温和成长', 
+        class: 'positive',
+        emoji: '🌿'
+      };
+      if (diff > 10) return { 
+        label: '需要关注', 
+        class: 'attention',
+        emoji: '🌧️'
+      };
+      if (diff > 5) return { 
+        label: '略有波动', 
+        class: 'neutral',
+        emoji: '🌤️'
+      };
+      return { 
+        label: '平静如水', 
+        class: 'stable',
+        emoji: '🌊'
+      };
     }
   },
   methods: {
-    formatDate(isoString) {
-      if (!isoString) return '未知时间';
-      return new Date(isoString).toLocaleDateString('zh-CN', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    goBack() {
+      this.$router.push('/')
     },
+
+    formatRelativeTime(timestamp) {
+      if (!timestamp) return '未知时间'
+      const now = new Date()
+      const date = new Date(timestamp)
+      const diffMs = now - date
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+      const diffDays = Math.floor(diffHours / 24)
+      
+      if (diffHours < 1) return '刚刚'
+      if (diffHours < 24) return `${diffHours}小时前`
+      if (diffDays < 7) return `${diffDays}天前`
+      return date.toLocaleDateString('zh-CN', { 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    },
+
     truncateText(text, length) {
-      if (!text) return '';
-      return text.length > length ? text.slice(0, length) + '...' : text;
+      if (!text) return ''
+      return text.length > length ? text.slice(0, length) + '...' : text
     },
-    getRecordStatus(record) {
-      if (record.alternativeThought) {
-        return '已完成分析';
-      } else if (record.analysisResult && 
-                ((record.analysisResult.cognitiveBiases && record.analysisResult.cognitiveBiases.length > 0) || 
-                 (record.analysisResult.guidingQuestions && record.analysisResult.guidingQuestions.length > 0))) {
-        return '分析进行中';
-      } else {
-        return '待分析';
-      }
+
+    getGrowthStage(record) {
+      if (record.completed) return '已完成成长'
+      if (record.alternativeThought) return '智慧绽放中'
+      return '种子萌芽中'
     },
-    getRecordStatusClass(record) {
-      if (record.alternativeThought) {
-        return 'status-completed';
-      } else if (record.analysisResult && 
-                ((record.analysisResult.cognitiveBiases && record.analysisResult.cognitiveBiases.length > 0) || 
-                 (record.analysisResult.guidingQuestions && record.analysisResult.guidingQuestions.length > 0))) {
-        return 'status-progress';
-      } else {
-        return 'status-pending';
-      }
+
+    getGrowthStageClass(record) {
+      if (record.completed) return 'stage-completed'
+      if (record.alternativeThought) return 'stage-blooming'
+      return 'stage-growing'
     },
+
+    getGrowthIcon(record) {
+      if (record.completed) return '🌸'
+      if (record.alternativeThought) return '🌿'
+      return '🌱'
+    },
+
+    getGrowthProgressClass(record) {
+      if (record.completed) return 'progress-completed'
+      if (record.alternativeThought) return 'progress-blooming'
+      return 'progress-growing'
+    },
+
+    getGrowthProgressText(record) {
+      if (record.completed) return '成长完成'
+      if (record.alternativeThought) return '智慧萌发'
+      return '等待探索'
+    },
+
     goToAnalysis(index) {
-      this.$router.push('/analysis');
-      this.$store.selectedRecordIndex = index;
+      this.$store.state.selectedRecordIndex = index
+      this.$router.push('/analysis')
     },
+
     getEmotionEmoji(emotion) {
-      const emojis = {
-        '焦虑': '😰', '沮丧': '😔', '愤怒': '😠', '悲伤': '😢', '羞愧': '😳', 
-        '兴奋': '😃', '平静': '😌', '恐惧': '😨', '失落': '😞', '担忧': '😟',
-        '自责': '😓', '困惑': '🤔', '无助': '🥺'
-      };
-      return emojis[emotion] || '😶';
+      const emojiMap = {
+        '愉悦阳光': '😊',
+        '平静如水': '😌', 
+        '有些低落': '😔',
+        '焦虑不安': '😰',
+        '充满希望': '🌟',
+        '疲惫倦怠': '😴',
+        '愤怒': '😡',
+        '困惑': '🤔',
+        // 其他可能的情绪
+        '开心': '😊',
+        '难过': '😢',
+        '紧张': '😟',
+        '兴奋': '😆',
+        '担心': '😰',
+        '失望': '😞'
+      }
+      return emojiMap[emotion] || '💭'
     },
-    getBiasColor(biasType) {
-      const colors = {
-        '灾难化': '#ff6b6b', '非黑即白': '#4ecdc4', '过度概括': '#45b7d1', 
-        '情绪推理': '#96ceb4', '应该陈述': '#ffeead', '心理过滤': '#ffb347', 
-        '个人化': '#c06c84', '控制谬误': '#7579e7', '贴标签': '#84b1ed', '读心术': '#d183c9'
-      };
-      return colors[biasType] || '#6c757d';
+
+    getCommonBiasesCount() {
+      const biases = this.$store.state.thoughtRecords
+        .filter(record => record.completed)
+        .flatMap(record => record.biases || [])
+      return new Set(biases.map(bias => bias.type)).size
     },
-    getBiasColorLight(biasType) {
-      const color = this.getBiasColor(biasType);
-      return color.replace(')', ', 0.3)').replace('rgb', 'rgba');
+
+    getAlternativeThoughtsCount() {
+      return this.$store.state.thoughtRecords
+        .filter(record => record.alternativeThought).length
     },
-    getBiasesTotal() {
-      return this.topBiases.reduce((sum, bias) => sum + bias.count, 0);
+
+    getEncouragementMessage() {
+      const messages = [
+        '每一次探索都让你更了解自己',
+        '你正在成为更智慧的自己',
+        '成长的路上，你从不孤单',
+        '你的勇敢让内心的花园更加美丽',
+        '每个想法都值得被温柔对待'
+      ]
+      const completed = this.analyzedRecordsCount
+      return messages[Math.min(completed, messages.length - 1)]
+    },
+
+    loadDailyEncouragement() {
+      const encouragements = [
+        '你的心灵花园正在悄悄绽放，每一天都有新的可能',
+        '成长不是一蹴而就，而是每个当下的温柔坚持',
+        '允许自己慢慢来，花朵都有自己的绽放时节',
+        '今天的勇敢，就是明天智慧的种子',
+        '在心的花园里，每一份情绪都有它的意义',
+        '你比想象中更坚强，也比想象中更值得被爱',
+        '每一次深呼吸，都是给心灵的温柔拥抱',
+        '成长路上的每一步，都在为更好的自己铺路'
+      ]
+      
+      const today = new Date()
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24))
+      this.dailyEncouragement = encouragements[dayOfYear % encouragements.length]
+    },
+
+    getBloomParticleStyle(index) {
+      const angle = (index * 24) + Math.random() * 24
+      const distance = 150 + Math.random() * 200
+      const x = Math.cos(angle * Math.PI / 180) * distance
+      const y = Math.sin(angle * Math.PI / 180) * distance
+      const delay = Math.random() * 5
+      const duration = 8 + Math.random() * 4
+      
+      return {
+        left: `calc(50% + ${x}px)`,
+        top: `calc(50% + ${y}px)`,
+        animationDelay: `${delay}s`,
+        animationDuration: `${duration}s`
+      }
     }
+  },
+
+  mounted() {
+    this.loadDailyEncouragement()
   }
-};
+}
 </script>
 
 <style scoped>
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem;
-  /* Max width and centering handled by .app-content in App.vue */
-}
-
-.welcome-header {
-  text-align: center;
-  margin-bottom: 2rem;
+.growth-garden {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E8F4F8 0%, #F0E5D8 50%, #CAD2C5 100%);
   position: relative;
 }
 
-.welcome-header h1 {
-  margin-bottom: 1rem;
-  font-size: 2.5rem;
-  font-weight: 700;
-  position: relative;
+/* 背景层 */
+.garden-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.last-record {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  background: var(--secondary-gradient);
-  color: white;
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px);
-}
-
-.dashboard-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-/* Grid column setup */
-.stats-section,
-.actions-section,
-.records-section,
-.charts-section {
-  grid-template-columns: 1fr; /* Mobile default: single column */
-}
-
-/* Styles for individual cards - 增强视觉层次 */
-.action-card, .stat-card, .record-card, .chart-card {
-  background: var(--background-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: 1.5rem;
-  transition: var(--transition-default);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-.action-card::before, .stat-card::before, .record-card::before, .chart-card::before {
-  content: '';
+.blooming-particles {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--primary-gradient);
-  opacity: 0.8;
-  transition: var(--transition-default);
+  width: 100%;
+  height: 100%;
 }
 
-.action-card:hover, .record-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: var(--shadow-lg);
-  cursor: pointer;
-  border-color: var(--primary-color);
+.bloom-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(255, 155, 133, 0.4), transparent);
+  border-radius: 50%;
+  animation: bloom-float 10s ease-in-out infinite;
 }
 
-.action-card:hover::before, .record-card:hover::before {
-  height: 5px;
-  opacity: 1;
+@keyframes bloom-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+  50% { transform: translateY(-25px) rotate(180deg); opacity: 0.8; }
 }
 
-/* Specific styling for action cards - keep radius, revert background */
-.action-card {
+/* 顶部导航 */
+.garden-header {
+  position: relative;
+  z-index: 10;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  text-align: center;
-  text-decoration: none;
-  /* color: var(--text-primary); Reverted below for specific cards */
-  border-radius: 16px; /* Keep increased border radius */
-  /* background-color: var(--background-medium); /* Removed light gray background */
-  padding: 1.5rem 1rem; /* Restore original padding */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(132, 169, 140, 0.2);
 }
 
-/* 增强的渐变背景 */
-.new-record {
-  background: var(--primary-gradient);
-  color: white;
-  border: none;
-  box-shadow: var(--shadow-md);
-}
-
-.new-record:hover {
-  background: linear-gradient(135deg, #5a7bc8 0%, #667eea 100%);
-  box-shadow: var(--shadow-glow);
-}
-
-.view-analysis {
+.back-button {
   background: var(--secondary-gradient);
   color: white;
   border: none;
-  box-shadow: var(--shadow-md);
-}
-
-.view-analysis:hover {
-  background: linear-gradient(135deg, #4bb3a0 0%, #7fdbda 100%);
-  box-shadow: 0 0 25px rgba(127, 219, 218, 0.5);
-}
-
-.action-card.disabled,
-.view-analysis.disabled { /* Ensure disabled style is specific enough */
-  opacity: 0.7; /* Use opacity for disabled state */
-  cursor: not-allowed;
-  transform: none; /* Reset hover transform */
-  box-shadow: var(--box-shadow-sm);
-  background: linear-gradient(135deg, #a0a0a0, #b0b0b0); /* Keep disabled background */
-  color: #e0e0e0; /* Lighter text for disabled */
-  pointer-events: none; /* Prevent clicks */
-}
-
-/* Stat Cards Specifics - Adjust padding and gap */
-.stat-card {
-  display: flex;
-  align-items: flex-start; /* Align icon top-left for mobile */
-  gap: 1rem; /* Increased gap */
-  border-left: 4px solid transparent; /* Colored border indicator */
-  padding: 1.2rem; /* Increased padding */
-}
-.total-records { border-left-color: var(--secondary-color); }
-.analyzed-records { border-left-color: var(--primary-color); }
-.mood-trend { border-left-color: var(--accent-color); }
-
-.stat-icon {
-  font-size: 1.8rem; /* Adjust icon size */
-  opacity: 0.7;
-  line-height: 1; /* Better alignment */
-  flex-shrink: 0; /* Prevent icon from shrinking */
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  min-width: 0; /* Allow content to shrink if needed */
-}
-
-.stat-content h4 {
-  /* Use h4 styles from main.css */
-  margin: 0 0 0.25rem 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  font-weight: 500; /* Slightly less emphasis */
-}
-
-.stat-number {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  line-height: 1.2;
-}
-
-.trend-indicator {
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  border-radius: 10px;
-  display: inline-block;
-  font-size: 0.8rem;
-  margin-top: 0.2rem;
-}
-.trend-indicator.positive { background: rgba(66, 184, 131, 0.15); color: #2a9d62; }
-.trend-indicator.negative { background: rgba(255, 107, 107, 0.15); color: #e35555; }
-.trend-indicator.neutral { background: rgba(44, 62, 80, 0.1); color: var(--text-secondary); }
-
-/* Action Cards Specifics */
-.action-content .icon {
-  font-size: 2rem;
-  display: block;
-  margin-bottom: 0.5rem;
-  /* Icon color will inherit from .action-card color (white) */
-}
-
-.action-content h3 {
-  /* Use h3 styles from main.css */
-  color: inherit; /* Inherit color (white) from .action-card */
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem; /* Adjust size */
-}
-
-.action-desc {
-  font-size: 0.85rem;
-  opacity: 0.8;
-  margin: 0;
-  color: inherit; /* Inherit color (white) */
-}
-
-/* Recent Records Section Title */
-.section-title {
-  /* Use h2 styles from main.css */
-  margin: 1.5rem 0 1rem 0;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-/* Record Card Specifics */
-.record-card {
+  padding: 0.8rem 1.5rem;
+  border-radius: 20px;
   cursor: pointer;
-  /* Base styles from .card */
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(132, 169, 140, 0.3);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.header-icon {
+  font-size: 2rem;
+  animation: gentle-sway 3s ease-in-out infinite;
+}
+
+@keyframes gentle-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.header-title h1 {
+  color: var(--life-moss);
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+/* 主内容 */
+.garden-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* 欢迎区域 */
+.welcome-section {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.welcome-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 2.5rem 2rem;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.welcome-avatar {
+  margin-bottom: 1.5rem;
+}
+
+.avatar-bloom {
+  font-size: 4rem;
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.welcome-title {
+  color: var(--life-moss);
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.welcome-subtitle {
+  color: var(--life-olive);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* 统计花园 */
+.stats-garden {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  color: var(--life-moss);
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-bloom {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.stat-bloom:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.15);
+  border-color: rgba(132, 169, 140, 0.3);
+}
+
+.bloom-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.bloom-icon.seeds { animation: gentle-bounce 2s ease-in-out infinite; }
+.bloom-icon.flowers { animation: gentle-sway 3s ease-in-out infinite; }
+.bloom-icon.health { animation: gentle-pulse 2.5s ease-in-out infinite; }
+
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.bloom-content {
+  color: var(--life-moss);
+}
+
+.bloom-number {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--primary-gradient);
+  background: var(--primary-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+
+.bloom-label {
+  font-size: 1rem;
+  color: var(--life-olive);
+  font-weight: 500;
+}
+
+.bloom-status {
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  margin-bottom: 0.5rem;
+}
+
+.bloom-status.positive { background: rgba(132, 169, 140, 0.2); color: var(--life-moss); }
+.bloom-status.stable { background: rgba(255, 155, 133, 0.2); color: var(--bloom-coral); }
+.bloom-status.neutral { background: rgba(202, 210, 197, 0.3); color: var(--earth-clay); }
+.bloom-status.attention { background: rgba(160, 130, 109, 0.2); color: var(--earth-clay); }
+
+/* 快速行动花园 */
+.action-garden {
+  margin-bottom: 3rem;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.action-bloom {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 2px solid transparent;
+}
+
+.action-bloom:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.15);
+  text-decoration: none;
+  color: inherit;
+}
+
+.action-bloom.plant-seed:hover {
+  border-color: var(--life-olive);
+}
+
+.action-bloom.wise-companion:hover {
+  border-color: var(--bloom-coral);
+}
+
+.action-bloom.action-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.action-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+.action-content h4 {
+  color: var(--life-moss);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.action-content p {
+  color: var(--life-olive);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 成长记录花园 */
+.records-garden {
+  margin-bottom: 3rem;
+}
+
+.records-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.record-bloom {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.record-bloom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border-color: var(--life-olive);
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
 }
 
-.record-date {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  background: var(--background-medium);
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--border-radius-sm);
-  white-space: nowrap;
+.record-time {
+  font-size: 0.85rem;
+  color: var(--earth-clay);
+  background: rgba(132, 169, 140, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
 }
 
-.record-emotions {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.emotion-tag, .emotion-more {
+.record-growth-stage {
+  font-size: 0.75rem;
   padding: 0.2rem 0.6rem;
   border-radius: 10px;
-  font-size: 0.75rem;
-}
-.emotion-tag { background: rgba(66, 184, 131, 0.1); color: var(--secondary-color); }
-.emotion-more { background: var(--background-medium); color: var(--text-secondary); }
-
-.record-thought {
-  margin-bottom: 0.75rem;
-  line-height: 1.5;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
-  /* Removed min-height */
-}
-
-.record-status {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 10px;
-  font-size: 0.75rem;
   font-weight: 500;
 }
-/* Status colors same as CognitiveAnalysis */
-.status-completed { background: rgba(66, 184, 131, 0.15); color: #2a9d62; }
-.status-progress { background: rgba(255, 193, 7, 0.15); color: #b98900; }
-.status-pending { background: rgba(44, 62, 80, 0.1); color: var(--text-secondary); }
 
-/* Chart Cards Specifics */
-.chart-card {
+.stage-completed { background: rgba(132, 169, 140, 0.2); color: var(--life-moss); }
+.stage-blooming { background: rgba(255, 155, 133, 0.2); color: var(--bloom-coral); }
+.stage-growing { background: rgba(202, 210, 197, 0.2); color: var(--earth-clay); }
+
+.record-emotion-garden {
   display: flex;
-  flex-direction: column;
-  /* Base styles from .card */
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
 }
 
-.chart-card-header {
+.initial-emotion {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.emotion-label {
+  color: var(--life-moss);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.record-thought-snippet {
+  color: var(--life-olive);
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  min-height: 2.8em;
+}
+
+.record-growth-indicator {
+  display: flex;
+  justify-content: center;
+}
+
+.growth-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: 15px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.progress-completed { background: rgba(132, 169, 140, 0.2); color: var(--life-moss); }
+.progress-blooming { background: rgba(255, 155, 133, 0.2); color: var(--bloom-coral); }
+.progress-growing { background: rgba(202, 210, 197, 0.2); color: var(--earth-clay); }
+
+/* 洞察花园 */
+.insights-garden {
+  margin-bottom: 3rem;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.insight-bloom {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 2rem;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.insight-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.chart-card-header h5 {
-  /* Use h5 styles from main.css */
-  display: flex;
-  align-items: center;
-  margin: 0;
-}
-
-.stat-icon-small {
-  margin-right: 0.5rem;
-  font-size: 1.1rem;
-  opacity: 0.7;
-}
-
-.stat-card-actions {
-  display: flex;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.emotion-count-badge, .bias-count-badge {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 10px;
-  background-color: rgba(58, 110, 165, 0.1);
-  color: var(--primary-color);
-  white-space: nowrap;
+.insight-header h4 {
+  color: var(--life-moss);
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-.chart-content {
-  flex: 1;
+.insight-badge {
+  background: rgba(132, 169, 140, 0.2);
+  color: var(--life-moss);
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.emotion-flowers {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 1rem;
 }
 
-.chart-item {
+.emotion-flower {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
+  gap: 1rem;
 }
 
-.chart-label {
-  flex: 0 0 80px; /* Fixed width for labels */
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.emotion-emoji {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.bias-icon {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.flower-icon {
+  font-size: 1.5rem;
   flex-shrink: 0;
 }
 
-.emotion-name, .bias-name {
+.flower-info {
+  flex-grow: 1;
+}
+
+.flower-name {
+  color: var(--life-moss);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.flower-count {
+  color: var(--life-olive);
+  font-size: 0.85rem;
+}
+
+.flower-bloom-bar {
+  flex: 0 0 100px;
+  height: 8px;
+  background: rgba(132, 169, 140, 0.2);
+  border-radius: 4px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.chart-bar-container {
-  flex: 1;
-  position: relative;
-  height: 18px;
-  background-color: var(--background-medium);
-  border-radius: var(--border-radius-sm);
-  overflow: hidden;
-}
-
-.chart-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
+.bloom-progress {
   height: 100%;
-  border-radius: var(--border-radius-sm);
-  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-  transition: width 0.5s ease-out;
+  background: var(--primary-gradient);
+  border-radius: 4px;
+  transition: width 0.5s ease;
 }
 
-.chart-bar.bias-bar {
-  background: none; /* Handled by inline style */
+.wisdom-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.chart-value {
-  position: absolute;
-  right: 5px;
-  top: 0;
-  height: 100%;
+.wisdom-stat {
   display: flex;
   align-items: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  /* Mix blend mode can make text visible on dark bars, but might need adjustment */
-  /* mix-blend-mode: difference; */
-  /* color: white; */
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(132, 169, 140, 0.1);
+  border-radius: 15px;
 }
 
-.no-data {
-  /* Use .alert styles? Or keep specific */
-  text-align: center;
-  padding: 1.5rem;
-  background-color: var(--background-light);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--border-radius-sm);
-  color: var(--text-secondary);
-  font-style: italic;
-  margin-top: 0.5rem;
+.stat-icon {
+  font-size: 1.5rem;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--life-moss);
+}
+
+.stat-label {
+  color: var(--life-olive);
   font-size: 0.9rem;
 }
 
-/* Tablet and Desktop Grid Adjustments */
-@media (min-width: 600px) {
-  .stats-section {
-    grid-template-columns: repeat(3, 1fr); /* Restore equal fractions */
-  }
-  .actions-section {
-    grid-template-columns: repeat(2, 1fr);
+.wisdom-encouragement {
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 155, 133, 0.1), rgba(255, 200, 87, 0.1));
+  border-radius: 15px;
+  border: 1px solid rgba(255, 155, 133, 0.2);
 }
-  .charts-section {
-    grid-template-columns: repeat(2, 1fr);
+
+.wisdom-encouragement p {
+  color: var(--life-moss);
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.insight-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--life-olive);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+/* 每日鼓励 */
+.daily-encouragement {
+  text-align: center;
+}
+
+.encouragement-card {
+  background: linear-gradient(135deg, rgba(255, 155, 133, 0.1), rgba(255, 200, 87, 0.1));
+  border: 2px solid rgba(255, 155, 133, 0.3);
+  border-radius: 25px;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.encouragement-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+.encouragement-content h4 {
+  color: var(--life-moss);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.encouragement-content p {
+  color: var(--life-olive);
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .garden-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
   }
-  .stat-card {
-    align-items: center; /* Align icon center on larger screens */
-    padding: 1.5rem; /* Slightly more padding on larger screens */
+  
+  .garden-content {
+    padding: 1rem;
+  }
+  
+  .welcome-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-bloom {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .records-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .encouragement-card {
+    flex-direction: column;
+    text-align: center;
   }
 }
 
-@media (min-width: 768px) {
-  .dashboard {
+@media (max-width: 480px) {
+  .header-title h1 {
+    font-size: 1.2rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.2rem;
+  }
+  
+  .stat-bloom,
+  .action-bloom,
+  .record-bloom,
+  .insight-bloom {
     padding: 1.5rem;
-    gap: 2rem;
-  }
-  .dashboard-grid {
-    gap: 1.5rem;
-  }
-  .records-section {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
-
-@media (min-width: 1024px) {
-  .records-section {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-}
-
-/* Remove old specific media query styles if covered */
 </style>

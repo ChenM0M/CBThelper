@@ -6,16 +6,21 @@ import { SpeedInsights } from '@vercel/speed-insights/vue';
 // Import global styles
 import '../assets/css/main.css';
 
+// Import app config
+import appConfig from '../config/app.config.js';
+
 import App from '../App.vue'
 import ApiConfig from '../components/ApiConfig.vue'
 import ThoughtRecord from '../components/ThoughtRecord.vue'
 import CognitiveAnalysis from '../components/CognitiveAnalysis.vue'
 import Dashboard from '../components/Dashboard.vue'
+import MindGarden from '../components/MindGarden.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: Dashboard },
+    { path: '/', component: MindGarden },
+    { path: '/dashboard', component: Dashboard },
     { path: '/config', component: ApiConfig },
     { path: '/record', component: ThoughtRecord },
     { path: '/analysis', component: CognitiveAnalysis }
@@ -24,13 +29,16 @@ const router = createRouter({
 
 const store = {
   state: {
+    // 使用配置文件中的默认值
     apiConfig: {
-      endpoint: 'https://api.openai.com/v1/chat/completions',
-      apiKey: '',
-      model: 'gpt-3.5-turbo'
+      endpoint: appConfig.llm.apiUrl,
+      apiKey: appConfig.llm.apiKey,
+      model: appConfig.llm.modelName
     },
     thoughtRecords: [],
-    selectedRecordIndex: undefined
+    selectedRecordIndex: undefined,
+    currentSession: null, // 当前会话的情绪选择和数据
+    appConfig: appConfig // 将配置暴露给组件使用
   },
   saveState() {
     localStorage.setItem('cbtHelperState', JSON.stringify(this.state))
