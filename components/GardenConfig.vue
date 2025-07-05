@@ -31,6 +31,41 @@
           智慧伙伴设置
         </h2>
         
+        <!-- 配置模式选择 -->
+        <div class="config-mode-selector">
+          <div class="mode-toggle">
+            <input 
+              type="radio" 
+              id="cloud-default" 
+              value="cloud" 
+              v-model="configMode"
+              @change="handleConfigModeChange"
+            >
+            <label for="cloud-default" class="mode-option">
+              <span class="mode-icon">☁️</span>
+              <span class="mode-text">云端默认</span>
+            </label>
+            
+            <input 
+              type="radio" 
+              id="local-config" 
+              value="local" 
+              v-model="configMode"
+              @change="handleConfigModeChange"
+            >
+            <label for="local-config" class="mode-option">
+              <span class="mode-icon">⚙️</span>
+              <span class="mode-text">本地配置</span>
+            </label>
+          </div>
+          <p class="mode-description">
+            <span v-if="configMode === 'cloud'">使用预设的云端配置，无需手动设置</span>
+            <span v-else>使用自定义的本地LLM配置</span>
+          </p>
+        </div>
+        
+        <!-- 本地配置表单，仅在本地模式下显示 -->
+        <div v-show="configMode === 'local'" class="local-config-form">
         <div class="form-group">
           <label for="endpoint">API 地址</label>
           <input
@@ -99,6 +134,33 @@
         <!-- 保存成功提示 -->
         <div v-if="showSuccess" class="success-message">
           ✨ 设置已保存
+        </div>
+        </div>
+        
+        <!-- 云端配置状态显示 -->
+        <div v-show="configMode === 'cloud'" class="cloud-config-status">
+          <div class="cloud-info">
+            <span class="info-icon">✅</span>
+            <div class="info-content">
+              <h4>云端配置已启用</h4>
+              <p>系统将使用预配置的云端LLM服务，您无需进行额外设置。</p>
+            </div>
+          </div>
+          
+          <div class="button-group">
+            <button
+              class="test-button"
+              @click="testCloudConnection"
+              :disabled="isTestingCloud"
+            >
+              {{ isTestingCloud ? '测试中...' : '测试云端连接' }}
+            </button>
+          </div>
+          
+          <!-- 云端测试状态显示 -->
+          <div v-if="cloudTestStatus" class="test-status" :class="{ 'success': cloudTestStatus.includes('成功') }">
+            {{ cloudTestStatus }}
+          </div>
         </div>
       </section>
 
@@ -211,6 +273,10 @@ export default {
       customModelName: '',
       testStatus: '',
       isTesting: false,
+      // 配置模式相关
+      configMode: 'cloud', // 'cloud' 或 'local'
+      cloudTestStatus: '',
+      isTestingCloud: false,
       // 数据管理相关
       selectedFile: null,
       isImporting: false,
@@ -268,6 +334,80 @@ export default {
         if (!this.customModelName) {
           this.customModelName = this.apiConfig.model
         }
+      }
+    },
+    
+    // 配置模式切换
+    handleConfigModeChange() {
+      if (this.configMode === 'cloud') {
+        // 切换到云端模式，清除测试状态
+        this.testStatus = ''
+        this.cloudTestStatus = ''
+      } else {
+        // 切换到本地模式，清除云端测试状态
+        this.cloudTestStatus = ''
+      }
+    },
+    
+    // 测试云端连接
+    async testCloudConnection() {
+      this.isTestingCloud = true
+      this.cloudTestStatus = ''
+      
+      try {
+        // 使用应用配置中的默认云端设置进行测试
+        const defaultConfig = this.$store.state.appConfig.llm
+        
+        if (!defaultConfig.apiKey && !defaultConfig.apiUrl) {
+          this.cloudTestStatus = '❌ 云端配置不完整，请检查环境变量设置'
+          return
+        }
+        
+        const testMessage = {
+          model: defaultConfig.modelName,
+          messages: [
+            {
+              role: 'user',
+              content: '请回复"连接测试成功"'
+            }
+          ],
+          max_tokens: 50,
+          temperature: 0.1
+        }
+
+        const response = await fetch(defaultConfig.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${defaultConfig.apiKey}`
+          },
+          body: JSON.stringify(testMessage)
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.choices && data.choices[0]?.message?.content) {
+            this.cloudTestStatus = '✅ 云端连接测试成功！API响应正常'
+          } else {
+            this.cloudTestStatus = '⚠️ 云端连接成功，但响应格式异常'
+          }
+        } else {
+          const errorText = await response.text()
+          this.cloudTestStatus = `❌ 云端连接失败: ${response.status} ${response.statusText}`
+        }
+        
+        setTimeout(() => {
+          this.cloudTestStatus = ''
+        }, 5000)
+      } catch (error) {
+        console.error('云端连接测试失败:', error)
+        this.cloudTestStatus = '❌ 云端连接测试失败，请检查网络连接或API配置'
+        
+        setTimeout(() => {
+          this.cloudTestStatus = ''
+        }, 5000)
+      } finally {
+        this.isTestingCloud = false
       }
     },
 
@@ -703,6 +843,13 @@ export default {
 
 /* 响应式调整 */
 @media (max-width: 768px) {
+  .floating-back-btn {
+    width: 50px;
+    height: 50px;
+    top: 15px;
+    left: 15px;
+  }
+
   .garden-content {
     padding: 1rem;
   }
@@ -981,6 +1128,126 @@ export default {
   .cancel-button,
   .confirm-button {
     width: 100%;
+  }
+}
+
+/* 移动端480px断点 - 与App.vue保持一致 */
+@media (max-width: 480px) {
+  .floating-back-btn {
+    width: 45px;
+    height: 45px;
+    top: 10px;
+    left: 10px;
+    font-size: 1.2rem;
+  }
+}
+
+/* 配置模式选择器样式 */
+.config-mode-selector {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 15px;
+  border: 1px solid rgba(132, 169, 140, 0.2);
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mode-toggle input[type="radio"] {
+  display: none;
+}
+
+.mode-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(132, 169, 140, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.mode-toggle input[type="radio"]:checked + .mode-option {
+  background: linear-gradient(135deg, #84A98C 0%, #52796F 100%);
+  color: white;
+  border-color: #52796F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(132, 169, 140, 0.3);
+}
+
+.mode-icon {
+  font-size: 1.2rem;
+}
+
+.mode-text {
+  font-size: 1rem;
+}
+
+.mode-description {
+  text-align: center;
+  color: #52796F;
+  font-size: 0.9rem;
+  margin: 0;
+  font-style: italic;
+}
+
+/* 云端配置状态样式 */
+.cloud-config-status {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(132, 169, 140, 0.1) 0%, rgba(82, 121, 111, 0.05) 100%);
+  border-radius: 15px;
+  border: 1px solid rgba(132, 169, 140, 0.2);
+}
+
+.cloud-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-icon {
+  font-size: 1.5rem;
+  margin-top: 0.2rem;
+}
+
+.info-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2D3E40;
+  font-size: 1.1rem;
+}
+
+.info-content p {
+  margin: 0;
+  color: #52796F;
+  line-height: 1.5;
+}
+
+/* 移动端配置模式样式 */
+@media (max-width: 768px) {
+  .mode-toggle {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .mode-option {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .cloud-info {
+    flex-direction: column;
+    gap: 0.8rem;
+    text-align: center;
   }
 }
 </style> 

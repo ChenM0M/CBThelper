@@ -3,7 +3,7 @@
 > 一个基于认知行为疗法(CBT)原理的Vue.js自助心理健康工具
 
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-green.svg)](https://vuejs.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ## 🌟 项目简介
 
@@ -135,16 +135,6 @@ CBThelper/
 - 支持数据导出和备份
 - 用户完全控制自己的数据
 
-## 🤝 贡献指南
-
-我们欢迎社区贡献！请遵循以下步骤：
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
 ### 开发规范
 
 - 遵循 Vue.js 最佳实践
@@ -154,21 +144,15 @@ CBThelper/
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
-## 🙏 致谢
-
-- 感谢 Vue.js 团队提供优秀的前端框架
-- 感谢 CBT 研究者们为心理健康领域做出的贡献
-- 感谢所有测试用户提供的宝贵反馈
+本项目采用 Apache License 2.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
 ## 📞 联系我们
 
 如果你有任何问题、建议或想要贡献代码，请通过以下方式联系：
 
-- 📧 邮箱: your-email@example.com
-- 🐛 问题反馈: [GitHub Issues](https://github.com/your-username/CBThelper/issues)
-- 💬 讨论: [GitHub Discussions](https://github.com/your-username/CBThelper/discussions)
+- 📧 邮箱: 2895521977@qq.com
+- 🐛 问题反馈: [GitHub Issues](https://github.com/ChenM0M/CBThelper/issues)
+- 💬 讨论: [GitHub Discussions](https://github.com/ChenM0M/CBThelper/discussions)
 
 ---
 

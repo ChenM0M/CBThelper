@@ -1193,6 +1193,27 @@ export default {
   .encouragement-card {
     flex-direction: column;
     text-align: center;
+    min-width: auto; /* 移除最小宽度限制 */
+    width: 100%; /* 在移动端占满宽度 */
+    max-width: 100%; /* 确保不超出容器 */
+    padding: 1.5rem; /* 减少内边距 */
+    margin: 0; /* 移除自动边距 */
+  }
+  
+  .encouragement-icon {
+    font-size: 2rem; /* 减小图标大小 */
+  }
+  
+  .encouragement-content h4 {
+    font-size: 1.1rem; /* 减小标题字体 */
+  }
+  
+  .encouragement-content p {
+    font-size: 0.9rem; /* 减小文字字体 */
+  }
+  
+  .daily-encouragement {
+    padding: 0 1rem; /* 添加左右内边距，确保内容不贴边 */
   }
 }
 

@@ -152,6 +152,13 @@
         
         <!-- 详细分析界面 -->
         <section v-else-if="selectedRecord && showAnalysisDetail" class="greenhouse-flower">
+          <!-- 返回总览按钮 -->
+          <div class="back-to-overview-container">
+            <button @click="showAnalysisDetail = false" class="back-to-overview-btn">
+              <span>← 返回温室总览</span>
+            </button>
+          </div>
+          
           <!-- 花朵展示区 -->
           <div class="flower-display">
           <div class="flower-container" @click="triggerAnalysis">
@@ -1162,53 +1169,59 @@ export default {
       const bubbles = []
       const maxBubbles = Math.min(emotions.length, 8) // 最多8个气泡
       
-      // 四角定位法 - 气泡只出现在花朵容器的四个角落区域
+      // 智能避让算法 - 同一层级但避开花朵核心区域
       // 检测是否为移动设备
       const isMobile = window.innerWidth <= 480
-      const cornerPositions = isMobile ? [
-        // 移动端 - 更近的角落位置
-        { baseX: -120, baseY: -100, offsetRange: 40 },
-        { baseX: 120, baseY: -100, offsetRange: 40 },
-        { baseX: -120, baseY: 100, offsetRange: 40 },
-        { baseX: 120, baseY: 100, offsetRange: 40 },
-        { baseX: -150, baseY: -30, offsetRange: 50 },
-        { baseX: 150, baseY: -30, offsetRange: 50 },
-        { baseX: -150, baseY: 30, offsetRange: 50 },
-        { baseX: 150, baseY: 30, offsetRange: 50 }
-      ] : [
-        // 桌面端 - 原始位置
-        { baseX: -200, baseY: -150, offsetRange: 60 },
-        { baseX: 200, baseY: -150, offsetRange: 60 },
-        { baseX: -200, baseY: 150, offsetRange: 60 },
-        { baseX: 200, baseY: 150, offsetRange: 60 },
-        { baseX: -250, baseY: -50, offsetRange: 80 },
-        { baseX: 250, baseY: -50, offsetRange: 80 },
-        { baseX: -250, baseY: 50, offsetRange: 80 },
-        { baseX: 250, baseY: 50, offsetRange: 80 }
-      ]
+      
+      // 定义花朵核心禁区（中心120x120像素）
+      const flowerCoreSize = isMobile ? 80 : 120
+      const safeBoundary = flowerCoreSize / 2 + 20 // 增加20px安全边距
+      
+      // 生成候选位置的函数
+      const generateSafePosition = () => {
+        const maxDistance = isMobile ? 180 : 250
+        const minDistance = safeBoundary + 30
+        
+        let attempts = 0
+        let position
+        
+        do {
+          // 随机角度和距离
+          const angle = Math.random() * 2 * Math.PI
+          const distance = minDistance + Math.random() * (maxDistance - minDistance)
+          
+          position = {
+            x: Math.cos(angle) * distance,
+            y: Math.sin(angle) * distance
+          }
+          
+          attempts++
+        } while (
+          // 检查是否在花朵核心区域内
+          (Math.abs(position.x) < safeBoundary && Math.abs(position.y) < safeBoundary) &&
+          attempts < 10 // 最多尝试10次
+        )
+        
+        return position
+      }
       
       for (let i = 0; i < maxBubbles; i++) {
         const emotion = emotions[i]
-        const cornerIndex = i % cornerPositions.length
-        const corner = cornerPositions[cornerIndex]
-        
-        // 在指定角落区域内生成随机位置
-        const randomX = corner.baseX + (Math.random() - 0.5) * corner.offsetRange
-        const randomY = corner.baseY + (Math.random() - 0.5) * corner.offsetRange
+        const position = generateSafePosition()
         
         // 气泡样式
         const bubble = {
           emotion: emotion,
-          x: randomX,
-          y: randomY,
+          x: position.x,
+          y: position.y,
           style: {
             left: '50%',
             top: '50%',
-            transform: `translate(calc(-50% + ${randomX}px), calc(-50% + ${randomY}px))`,
+            transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
             '--random-offset': `${Math.random() * 360}deg`,
             '--delay': `${i * 0.3}s`,
             '--hue': `${(i * 45) % 360}deg`, // 彩虹颜色，间隔更小
-            zIndex: 0, // 确保在花朵下方
+            zIndex: 1, // 设置为1，确保可见但不会太高
             animationDelay: `${i * 0.2}s`,
             position: 'absolute'
           },
@@ -1990,6 +2003,36 @@ export default {
   box-shadow: 0 4px 12px rgba(132, 169, 140, 0.3);
 }
 
+/* 返回总览按钮 */
+.back-to-overview-container {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.back-to-overview-btn {
+  background: rgba(255, 255, 255, 0.95);
+  color: #2D3E40;
+  border: 1px solid rgba(132, 169, 140, 0.3);
+  border-radius: 25px;
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.back-to-overview-btn:hover {
+  background: rgba(132, 169, 140, 0.9);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(132, 169, 140, 0.3);
+}
+
 /* ===== 查看原始内容功能 ===== */
 .view-original-section {
   text-align: center;
@@ -2435,7 +2478,7 @@ export default {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 0; /* 降低z-index，确保不遮挡花朵 */
+  z-index: 2; /* 调整到与花朵同一层级 */
   overflow: visible;
 }
 
@@ -2860,13 +2903,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  background: linear-gradient(135deg, #84A98C 0%, #52796F 100%);
-  color: white;
+  background: rgba(255, 255, 255, 0.98); /* 改为白色背景 */
+  color: #000000; /* 纯黑色文字 */
   padding: 1rem 2rem;
   border-radius: 30px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 30px rgba(84, 169, 140, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  font-weight: 700; /* 黑体字 */
 }
 
 .companion-hint:hover {
@@ -3539,6 +3583,16 @@ export default {
     text-align: center;
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  /* 返回总览按钮移动端调整 */
+  .back-to-overview-container {
+    top: 60px;
+  }
+  
+  .back-to-overview-btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
   }
   
   .floating-back-btn {

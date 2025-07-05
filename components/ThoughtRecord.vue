@@ -414,7 +414,7 @@ export default {
   left: 0;
   width: 100%;
   height: 70%;
-  background: linear-gradient(180deg, #E8F4F8 0%, #B8D4E3 50%, #A4C2D4 100%);
+  background: url('/public/assets/images/sky-gradient.png') center/cover;
   background-size: cover;
   background-position: center;
   opacity: 0.8;
@@ -426,7 +426,7 @@ export default {
   left: 0;
   width: 100%;
   height: 30%;
-  background: linear-gradient(180deg, #A0826D 0%, #8B7355 50%, #6B5B47 100%);
+  background: url('/public/assets/images/soil-texture.png') center/cover;
   background-size: cover;
   background-position: center bottom;
   opacity: 0.9;
@@ -791,7 +791,10 @@ export default {
   border-radius: 20px;
   padding: 1.5rem;
   font-size: 1.1rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: url('/public/assets/images/input-bg.png'), rgba(255, 255, 255, 0.9);
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
   color: var(--text-primary);
   resize: vertical;
   transition: all 0.3s ease;
