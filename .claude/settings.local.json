@@ -1,15 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls:*)",
-      "Bash(python:*)",
-      "Bash(node:*)",
+      "Bash(timeout 15s npm run serve)",
+      "Bash(npx vue-cli-service build:*)",
+      "Bash(npx vue-cli-service:*)",
+      "Bash(npm run lint)",
+      "Bash(timeout 5s npm run serve:*)",
+      "Bash(mv:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run:*)",
+      "Bash(timeout 10s npm run serve)",
+      "Bash(cd \"/mnt/c/Users/11231/Desktop/LocalRepo/CBThelper\")",
+      "Bash(timeout 10s npm run build)",
+      "Bash(grep -r \"background-image.*url.*assets\" components/)",
       "Bash(grep:*)",
-      "Bash(mkdir:*)",
-      "Bash(cp:*)",
-      "Bash(rm:*)",
-      "Bash(find:*)",
-      "Bash(npm test)"
+      "Bash(rg:*)"
     ],
     "deny": []
   }

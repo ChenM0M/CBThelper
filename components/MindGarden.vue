@@ -308,7 +308,14 @@ export default {
     },
 
     skipMoodSelection() {
-      // 跳过情绪选择，直接进入记录流程
+      // 跳过情绪选择，清除所有选中的情绪和自定义输入
+      this.selectedEmotions = []
+      this.customEmotion = ''
+      
+      // 清除store中的当前会话数据
+      this.$store.state.currentSession = null
+      
+      // 直接进入记录流程，不传递任何情绪数据
       this.$router.push('/record')
     },
 
@@ -472,7 +479,7 @@ export default {
 
 .garden-title {
   font-size: 2.5rem;
-  color: var(--life-moss);
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-weight: 300;
   display: flex;
@@ -493,7 +500,7 @@ export default {
 
 .garden-subtitle {
   font-size: 1.2rem;
-  color: var(--life-olive);
+  color: var(--text-secondary);
   margin-bottom: 2rem;
   font-style: italic;
   line-height: 1.6;
@@ -505,7 +512,7 @@ export default {
 }
 
 .mood-title {
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-size: 1.3rem;
   margin-bottom: 1.5rem;
   font-weight: 500;
@@ -532,11 +539,11 @@ export default {
 .emotion-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  border-color: var(--life-olive);
+  border-color: var(--primary-color);
 }
 
 .emotion-card.selected {
-  border-color: var(--life-moss);
+  border-color: var(--primary-color);
   background: rgba(132, 169, 140, 0.2);
   transform: translateY(-3px) scale(1.05);
   box-shadow: 0 8px 25px rgba(84, 169, 140, 0.3);
@@ -546,7 +553,7 @@ export default {
   position: absolute;
   top: 5px;
   right: 5px;
-  background: var(--life-moss);
+  background: var(--primary-color);
   color: white;
   border-radius: 50%;
   width: 20px;
@@ -579,7 +586,7 @@ export default {
 
 .emotion-name {
   display: block;
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -599,24 +606,24 @@ export default {
   flex: 1;
   max-width: 300px;
   padding: 1rem 1.2rem;
-  border: 2px solid var(--earth-clay);
+  border: 2px solid var(--border-light);
   border-radius: 15px;
   font-size: 1rem;
   background: rgba(255, 255, 255, 0.9);
-  color: var(--life-moss);
+  color: var(--text-primary);
   transition: all 0.3s ease;
   text-align: center;
 }
 
 .custom-input:focus {
   outline: none;
-  border-color: var(--life-olive);
+  border-color: var(--primary-color);
   box-shadow: 0 0 20px rgba(132, 169, 140, 0.3);
   background: rgba(255, 255, 255, 1);
 }
 
 .custom-input::placeholder {
-  color: var(--earth-clay);
+  color: var(--text-muted);
   opacity: 0.7;
 }
 
@@ -750,12 +757,15 @@ export default {
 }
 
 .btn-secondary {
-  background: rgba(211, 184, 165, 0.8);
-  color: var(--life-moss);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-medium);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
-  background: var(--earth-clay);
+  background: var(--bg-muted);
+  border-color: var(--primary-color);
   transform: translateY(-2px);
 }
 
@@ -770,7 +780,7 @@ export default {
 
 .section-title {
   text-align: center;
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-size: 1.5rem;
   margin-bottom: 2rem;
   font-weight: 500;
@@ -817,14 +827,14 @@ export default {
 }
 
 .card-content h4 {
-  color: var(--life-moss);
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
 .card-content p {
-  color: var(--life-olive);
+  color: var(--text-secondary);
   margin: 0 0 0.5rem 0;
   font-size: 0.95rem;
   line-height: 1.4;
@@ -832,7 +842,7 @@ export default {
 
 .card-stats, .card-hint {
   font-size: 0.85rem;
-  color: var(--earth-clay);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -846,7 +856,8 @@ export default {
   border: 2px solid rgba(255, 155, 133, 0.3);
   border-radius: 20px;
   padding: 2rem;
-  max-width: 500px;
+  max-width: fit-content;
+  min-width: 300px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -859,14 +870,14 @@ export default {
 }
 
 .inspiration-content h4 {
-  color: var(--life-moss);
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
   font-weight: 600;
 }
 
 .inspiration-content p {
-  color: var(--life-olive);
+  color: var(--text-secondary);
   margin: 0;
   font-style: italic;
   line-height: 1.5;
@@ -887,7 +898,7 @@ export default {
   }
   
   .emotion-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* 改为3列优化布局 */
     gap: 0.8rem;
   }
   
@@ -942,6 +953,7 @@ export default {
   }
   
   .emotion-grid {
+    grid-template-columns: repeat(3, 1fr); /* 小屏幕保持3列 */
     gap: 0.6rem;
     margin-bottom: 1rem;
   }
@@ -963,18 +975,35 @@ export default {
   
   .custom-emotion {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
   
   .custom-input {
     width: 100%;
     max-width: none;
-    padding: 0.8rem;
+    padding: 1rem;
+    font-size: 1rem;
+    text-align: left; /* 移动端左对齐更自然 */
   }
   
   .add-emotion-btn {
     width: 100%;
-    padding: 0.8rem;
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  /* 优化移动端情绪标签显示 */
+  .emotion-tags {
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .emotion-tag {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 15px;
   }
 }
 </style>

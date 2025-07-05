@@ -9,20 +9,6 @@
       </div>
     </div>
 
-    <!-- 顶部导航 -->
-    <div class="journey-header">
-      <button @click="goBack" class="back-button">
-        <span class="back-icon">🏡</span>
-        回到花园
-      </button>
-      <div class="progress-indicator">
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-        </div>
-        <span class="progress-text">{{ currentStepName }} ({{ currentStep }}/{{ totalSteps }})</span>
-      </div>
-    </div>
-
     <!-- 主内容区 -->
     <div class="journey-content">
       <!-- 进度指示器 -->
@@ -32,7 +18,7 @@
         </div>
         <div class="step-indicator">
           <div class="seed-icon">
-            <img src="../assets/images/seed.png" alt="种子" class="seed-image" />
+            <img src="/assets/images/seed.png" alt="种子" class="seed-image" />
           </div>
           <span class="step-name">{{ currentStepName }}</span>
           <span class="step-count">{{ currentStep }}/{{ totalSteps }}</span>
@@ -75,28 +61,7 @@
           <h2 class="step-title">发生了什么让你有这样的感受？</h2>
           <p class="step-description">可以描述一下当时的环境、时间、人物... 当然，如果不想说也完全可以跳过。</p>
           
-          <div class="input-garden">
-            <div class="growing-plant" :class="{ 'has-content': record.situation }">
-              <div class="soil-base">
-                <span class="soil-emoji">🌍</span>
-              </div>
-              <div class="plant-growth" v-if="record.situation">
-                <div class="plant-sprout">
-                  <span class="plant-emoji">🌱</span>
-                  <div class="growth-sparkles">
-                    <span class="sparkle">✨</span>
-                  </div>
-                </div>
-              </div>
-              <div class="writing-indicator" v-else>
-                <span class="waiting-emoji">🌍</span>
-                <div class="typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
+          <div class="input-container">
             <textarea
               v-model="record.situation"
               class="garden-input"
@@ -127,29 +92,7 @@
             这是最重要的部分。请诚实地记录下当时脑海中的想法，无论它是什么样的。
           </p>
           
-          <div class="input-garden">
-            <div class="growing-plant" :class="{ 'has-content': record.automaticThought, 'thorny': record.automaticThought }">
-              <div class="soil-base">
-                <span class="soil-emoji">🌱</span>
-              </div>
-              <div class="plant-growth" v-if="record.automaticThought">
-                <div class="plant-sprout" :class="{ 'negative': isNegativeThought }">
-                  <span class="plant-emoji">{{ isNegativeThought ? '🥀' : '🌿' }}</span>
-                  <div class="growth-sparkles" v-if="!isNegativeThought">
-                    <span class="sparkle">✨</span>
-                    <span class="sparkle">✨</span>
-                  </div>
-                </div>
-              </div>
-              <div class="writing-indicator" v-else>
-                <span class="waiting-emoji">💭</span>
-                <div class="typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
+          <div class="input-container">
             <textarea
               v-model="record.automaticThought"
               class="garden-input required"
@@ -183,7 +126,18 @@
       <div v-if="currentStep === 3" class="emotion-step">
         <div class="step-card">
           <h2 class="step-title">现在的感觉和刚才比，有什么不同？</h2>
-          <p class="step-description">请选择最贴近你现在感受的情绪和强度。</p>
+          <p class="step-description">
+            请确认或调整你的情绪选择。即使之前选择过情绪，你也可以在这里重新评估和调整。
+          </p>
+          
+          <!-- 显示之前选择的情绪（如果有的话） -->
+          <div v-if="selectedEmotion && record.emotions.length > 0" class="initial-emotions-display">
+            <p class="initial-emotions-text">
+              <span class="reminder-icon">💚</span>
+              之前选择的感受：{{ record.emotions.join('、') }}
+            </p>
+            <p class="adjustment-hint">你可以保持这些选择，或者重新调整</p>
+          </div>
           
           <!-- 情绪选择 -->
           <div class="emotion-selection">
@@ -415,7 +369,7 @@ export default {
         // 兼容新格式：多情绪数组
         if (session.emotions && Array.isArray(session.emotions) && session.emotions.length > 0) {
           this.selectedEmotion = session.emotions[0] // 取第一个情绪作为主要情绪
-          // 将所有情绪添加到记录中
+          // 将所有情绪添加到记录中，但不跳过步骤3的情绪评估
           this.record.emotions = session.emotions.map(e => e.name)
         }
         // 兼容旧格式：单个情绪
@@ -424,6 +378,9 @@ export default {
           this.record.emotions = [session.emotion.name]
         }
       }
+      
+      // 重要：清除currentSession，避免重复使用
+      this.$store.state.currentSession = null
     }
   },
   mounted() {
@@ -457,7 +414,7 @@ export default {
   left: 0;
   width: 100%;
   height: 70%;
-  background-image: url('../assets/images/sky-gradient.png');
+  background: linear-gradient(180deg, #E8F4F8 0%, #B8D4E3 50%, #A4C2D4 100%);
   background-size: cover;
   background-position: center;
   opacity: 0.8;
@@ -469,7 +426,7 @@ export default {
   left: 0;
   width: 100%;
   height: 30%;
-  background-image: url('../assets/images/soil-texture.png');
+  background: linear-gradient(180deg, #A0826D 0%, #8B7355 50%, #6B5B47 100%);
   background-size: cover;
   background-position: center bottom;
   opacity: 0.9;
@@ -522,7 +479,7 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--life-moss) 0%, var(--life-olive) 100%);
+  background: var(--primary-gradient);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -530,7 +487,7 @@ export default {
 .step-indicator {
   display: flex;
   align-items: center;
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-size: 1rem;
 }
 
@@ -542,55 +499,6 @@ export default {
 .step-count {
   font-size: 0.9rem;
   opacity: 0.8;
-}
-
-/* 顶部导航 */
-.journey-header {
-  position: relative;
-  z-index: 10;
-  padding: 1rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(132, 169, 140, 0.2);
-}
-
-.back-button {
-  background: var(--secondary-gradient);
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-}
-
-.back-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(132, 169, 140, 0.3);
-}
-
-.back-icon {
-  font-size: 1.2rem;
-}
-
-.progress-indicator {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.progress-text {
-  color: var(--life-moss);
-  font-size: 0.9rem;
-  font-weight: 500;
-  white-space: nowrap;
 }
 
 /* 主内容 */
@@ -636,7 +544,7 @@ export default {
 }
 
 .step-title {
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-size: 1.8rem;
   margin-bottom: 1rem;
   font-weight: 500;
@@ -667,7 +575,7 @@ export default {
   border-radius: 20px;
   border: 2px solid rgba(132, 169, 140, 0.2);
   font-size: 1.1rem;
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -686,21 +594,22 @@ export default {
 }
 
 .emotions-text {
-  font-size: 0.9rem;
-  color: var(--life-olive);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
   margin: 0;
   font-style: italic;
-  background: rgba(132, 169, 140, 0.1);
-  padding: 0.6rem 1rem;
-  border-radius: 15px;
-  border: 1px solid rgba(132, 169, 140, 0.2);
+  background: var(--bg-muted);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
 }
 
-/* 输入花园 */
-.input-garden {
-  position: relative;
+/* 输入容器 */
+.input-container {
   margin: 2rem 0;
-  text-align: left;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .growing-plant {
@@ -721,12 +630,12 @@ export default {
   position: relative;
   width: 50px;
   height: 15px;
-  background: linear-gradient(135deg, var(--earth-clay), #8B7355);
-  border-radius: 8px;
+  background: linear-gradient(135deg, #A0826D, #8B7355);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .soil-emoji {
@@ -800,8 +709,8 @@ export default {
 .typing-dots span {
   width: 4px;
   height: 4px;
-  background: var(--life-olive);
-  border-radius: 50%;
+  background: var(--primary-color);
+  border-radius: var(--radius-full);
   animation: typing-animation 1.4s ease-in-out infinite;
 }
 
@@ -878,12 +787,12 @@ export default {
 
 .garden-input {
   width: 100%;
-  border: 2px solid var(--earth-clay);
+  border: 2px solid var(--border-light);
   border-radius: 20px;
   padding: 1.5rem;
   font-size: 1.1rem;
   background: rgba(255, 255, 255, 0.9);
-  color: var(--life-moss);
+  color: var(--text-primary);
   resize: vertical;
   transition: all 0.3s ease;
   font-family: inherit;
@@ -893,17 +802,17 @@ export default {
 
 .garden-input:focus {
   outline: none;
-  border-color: var(--life-olive);
+  border-color: var(--primary-color);
   box-shadow: 0 0 25px rgba(132, 169, 140, 0.2);
   background: rgba(255, 255, 255, 1);
 }
 
 .garden-input.required {
-  border-color: var(--life-olive);
+  border-color: var(--primary-color);
 }
 
 .garden-input::placeholder {
-  color: var(--earth-clay);
+  color: var(--text-muted);
   opacity: 0.8;
 }
 
@@ -916,18 +825,46 @@ export default {
 .gentle-reminder p {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(132, 169, 140, 0.1), rgba(255, 155, 133, 0.1));
-  padding: 1rem 1.5rem;
-  border-radius: 15px;
-  border: 1px solid rgba(132, 169, 140, 0.2);
-  color: var(--life-olive);
+  gap: var(--spacing-sm);
+  background: linear-gradient(135deg, var(--bg-muted), rgba(255, 155, 133, 0.1));
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
   font-style: italic;
   margin: 0;
 }
 
 .reminder-icon {
   font-size: 1.2rem;
+}
+
+/* 初始情绪显示 */
+.initial-emotions-display {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(132, 169, 140, 0.08), rgba(132, 169, 140, 0.05));
+  border-radius: 20px;
+  border: 2px solid rgba(132, 169, 140, 0.2);
+  text-align: center;
+}
+
+.initial-emotions-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 0.8rem 0;
+}
+
+.adjustment-hint {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-style: italic;
+  margin: 0;
+  opacity: 0.8;
 }
 
 /* 情绪选择 */
@@ -937,7 +874,7 @@ export default {
 }
 
 .emotion-selection h4 {
-  color: var(--life-moss);
+  color: var(--text-primary);
   margin-bottom: 1rem;
   font-size: 1.2rem;
   font-weight: 500;
@@ -963,12 +900,12 @@ export default {
 .emotion-option:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  border-color: var(--life-olive);
+  border-color: var(--primary-color);
 }
 
 .emotion-option.selected {
-  border-color: var(--life-moss);
-  background: rgba(132, 169, 140, 0.1);
+  border-color: var(--primary-color);
+  background: var(--bg-muted);
   transform: translateY(-3px) scale(1.02);
 }
 
@@ -985,7 +922,7 @@ export default {
 
 .emotion-label {
   display: block;
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -997,7 +934,7 @@ export default {
 
 .intensity-label {
   display: block;
-  color: var(--life-moss);
+  color: var(--text-primary);
   font-weight: 500;
   margin-bottom: 1rem;
   font-size: 1.1rem;
@@ -1010,22 +947,22 @@ export default {
 .intensity-slider {
   width: 100%;
   height: 10px;
-  border-radius: 5px;
-  background: rgba(211, 184, 165, 0.3);
+  border-radius: var(--radius-sm);
+  background: var(--border-light);
   outline: none;
   -webkit-appearance: none;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm);
 }
 
 .intensity-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 25px;
   height: 25px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--primary-gradient);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(132, 169, 140, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-primary);
+  transition: all var(--transition-base);
 }
 
 .intensity-slider::-webkit-slider-thumb:hover {
@@ -1036,7 +973,7 @@ export default {
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
-  color: var(--earth-clay);
+  color: var(--text-muted);
 }
 
 /* 步骤操作按钮 */
@@ -1082,12 +1019,15 @@ export default {
 }
 
 .journey-button.secondary {
-  background: rgba(211, 184, 165, 0.8);
-  color: var(--life-moss);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-medium);
+  box-shadow: var(--shadow-sm);
 }
 
 .journey-button.secondary:hover {
-  background: var(--earth-clay);
+  background: var(--bg-muted);
+  border-color: var(--primary-color);
   transform: translateY(-2px);
 }
 
@@ -1118,11 +1058,11 @@ export default {
 
 .success-card {
   background: rgba(255, 255, 255, 0.98);
-  border: 2px solid var(--life-olive);
-  border-radius: 20px;
-  padding: 2rem;
+  border: 2px solid var(--primary-color);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-lg);
   backdrop-filter: blur(15px);
 }
 
@@ -1132,13 +1072,13 @@ export default {
 }
 
 .success-card h3 {
-  color: var(--life-moss);
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
   font-size: 1.3rem;
 }
 
 .success-card p {
-  color: var(--life-olive);
+  color: var(--text-secondary);
   margin: 0;
   font-style: italic;
 }

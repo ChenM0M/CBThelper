@@ -4,8 +4,9 @@ import { inject } from '@vercel/analytics';
 import { SpeedInsights } from '@vercel/speed-insights/vue';
 
 // Import global styles
-import '../assets/css/main.css';
-import '../assets/css/shared-layout.css';
+import '@/assets/css/main.css';
+import '@/assets/css/components.css';
+import '@/assets/css/responsive.css';
 
 // Import app config
 import appConfig from '../config/app.config.js';
@@ -146,7 +147,7 @@ const store = {
         exportTime: new Date().toISOString(),
         appName: 'CBT Helper',
         data: {
-          thoughtRecords: this.state.thoughtRecords,
+          thoughtRecords: this.state.thoughtRecords, // 包含了智慧伙伴的聊天记录（chatTopics）
           // 不导出API配置以保护隐私
           settings: {
             features: this.state.appConfig?.features || {}

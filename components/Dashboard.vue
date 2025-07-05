@@ -15,35 +15,26 @@
       </div>
     </div>
 
-    <!-- 顶部导航 -->
-    <header class="garden-header">
-      <button @click="goBack" class="back-button">
-        <span class="back-icon">🏡</span>
-        回到花园
-      </button>
-      <div class="header-title">
-        <span class="header-icon">🌸</span>
-        <h1>成长足迹展示</h1>
-      </div>
-    </header>
+    <!-- 返回按钮 -->
+    <button @click="goBack" class="floating-back-btn" aria-label="返回主页">
+      <span>🏡</span>
+    </button>
 
     <!-- 主内容区 -->
     <div class="garden-content">
       
       <!-- 欢迎区域 -->
       <div class="welcome-section">
-        <div class="welcome-card">
-          <div class="welcome-avatar">
-            <div class="avatar-bloom">🌱</div>
-          </div>
-          <h2 class="welcome-title">看看你心灵花园的美丽绽放</h2>
-          <p class="welcome-subtitle" v-if="latestRecord">
-            最近一次成长记录：{{ formatRelativeTime(latestRecord.timestamp) }}
-          </p>
-          <p class="welcome-subtitle" v-else>
-            你的成长之旅即将开始，每一步都值得记录
-          </p>
-        </div>
+        <h1 class="page-title">
+          <span class="title-icon">🌸</span>
+          看看你心灵花园的美丽绽放
+        </h1>
+        <p class="page-subtitle" v-if="latestRecord">
+          最近一次成长记录：{{ formatRelativeTime(latestRecord.timestamp) }}
+        </p>
+        <p class="page-subtitle" v-else>
+          你的成长之旅即将开始，每一步都值得记录
+        </p>
       </div>
 
       <!-- 成长统计花园 -->
@@ -584,7 +575,7 @@ export default {
 }
 
 .back-button {
-  background: var(--secondary-gradient);
+  background: linear-gradient(135deg, #84A98C, #52796F);
   color: white;
   border: none;
   padding: 0.8rem 1.5rem;
@@ -619,7 +610,7 @@ export default {
 }
 
 .header-title h1 {
-  color: var(--life-moss);
+  color: #2D3E40;
   margin: 0;
   font-size: 1.5rem;
   font-weight: 500;
@@ -631,7 +622,7 @@ export default {
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem 2rem; /* 增加顶部内边距避免菜单遮挡 */
 }
 
 /* 欢迎区域 */
@@ -665,16 +656,30 @@ export default {
 }
 
 .welcome-title {
-  color: var(--life-moss);
-  font-size: 1.8rem;
+  color: #2D3E40;
+  font-size: 2.5rem;
   margin-bottom: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.welcome-title .title-icon {
+  font-size: 2.5rem;
+  animation: gentle-sway 3s ease-in-out infinite;
+}
+
+@keyframes gentle-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
 }
 
 .welcome-subtitle {
-  color: var(--life-olive);
-  font-size: 1rem;
+  color: #52796F;
+  font-size: 1.1rem;
   line-height: 1.5;
   margin: 0;
   font-style: italic;
@@ -686,15 +691,15 @@ export default {
 }
 
 .section-title {
-  color: var(--life-moss);
-  font-size: 1.4rem;
-  margin-bottom: 1.5rem;
+  color: #2D3E40;
+  font-size: 1.6rem;
+  margin-bottom: 2rem;
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .stats-grid {
@@ -704,20 +709,20 @@ export default {
 }
 
 .stat-bloom {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 2rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 2.5rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(132, 169, 140, 0.2);
 }
 
 .stat-bloom:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 45px rgba(0,0,0,0.15);
-  border-color: rgba(132, 169, 140, 0.3);
+  transform: translateY(-8px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+  border-color: #84A98C;
 }
 
 .bloom-icon {
@@ -736,14 +741,14 @@ export default {
 }
 
 .bloom-content {
-  color: var(--life-moss);
+  color: #2D3E40;
 }
 
 .bloom-number {
   font-size: 2.5rem;
   font-weight: 600;
-  color: var(--primary-gradient);
-  background: var(--primary-gradient);
+  color: #84A98C;
+  background: linear-gradient(135deg, #84A98C, #52796F);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -753,7 +758,7 @@ export default {
 
 .bloom-label {
   font-size: 1rem;
-  color: var(--life-olive);
+  color: #52796F;
   font-weight: 500;
 }
 
@@ -765,10 +770,10 @@ export default {
   margin-bottom: 0.5rem;
 }
 
-.bloom-status.positive { background: rgba(132, 169, 140, 0.2); color: var(--life-moss); }
-.bloom-status.stable { background: rgba(255, 155, 133, 0.2); color: var(--bloom-coral); }
-.bloom-status.neutral { background: rgba(202, 210, 197, 0.3); color: var(--earth-clay); }
-.bloom-status.attention { background: rgba(160, 130, 109, 0.2); color: var(--earth-clay); }
+.bloom-status.positive { background: rgba(132, 169, 140, 0.2); color: #2D3E40; }
+.bloom-status.stable { background: rgba(255, 155, 133, 0.2); color: #FF9B85; }
+.bloom-status.neutral { background: rgba(202, 210, 197, 0.3); color: #A0826D; }
+.bloom-status.attention { background: rgba(160, 130, 109, 0.2); color: #A0826D; }
 
 /* 快速行动花园 */
 .action-garden {
@@ -782,33 +787,34 @@ export default {
 }
 
 .action-bloom {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 2.5rem;
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  border: 2px solid transparent;
+  border: 2px solid rgba(132, 169, 140, 0.2);
 }
 
 .action-bloom:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 45px rgba(0,0,0,0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
   text-decoration: none;
   color: inherit;
+  border-color: #84A98C;
 }
 
 .action-bloom.plant-seed:hover {
-  border-color: var(--life-olive);
+  border-color: #52796F;
 }
 
 .action-bloom.wise-companion:hover {
-  border-color: var(--bloom-coral);
+  border-color: #FF9B85;
 }
 
 .action-bloom.action-disabled {
@@ -824,14 +830,14 @@ export default {
 }
 
 .action-content h4 {
-  color: var(--life-moss);
+  color: #2D3E40;
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
 .action-content p {
-  color: var(--life-olive);
+  color: #52796F;
   margin: 0;
   line-height: 1.4;
 }
@@ -848,20 +854,20 @@ export default {
 }
 
 .record-bloom {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 1.5rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 25px;
+  padding: 2rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(132, 169, 140, 0.2);
 }
 
 .record-bloom:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-  border-color: var(--life-olive);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border-color: #84A98C;
 }
 
 .record-header {
@@ -875,7 +881,7 @@ export default {
 
 .record-time {
   font-size: 0.85rem;
-  color: var(--earth-clay);
+  color: #A0826D;
   background: rgba(132, 169, 140, 0.1);
   padding: 0.3rem 0.8rem;
   border-radius: 12px;
@@ -888,9 +894,9 @@ export default {
   font-weight: 500;
 }
 
-.stage-completed { background: rgba(132, 169, 140, 0.2); color: var(--life-moss); }
-.stage-blooming { background: rgba(255, 155, 133, 0.2); color: var(--bloom-coral); }
-.stage-growing { background: rgba(202, 210, 197, 0.2); color: var(--earth-clay); }
+.stage-completed { background: rgba(132, 169, 140, 0.2); color: #2D3E40; }
+.stage-blooming { background: rgba(255, 155, 133, 0.2); color: #FF9B85; }
+.stage-growing { background: rgba(202, 210, 197, 0.2); color: #A0826D; }
 
 .record-emotion-garden {
   display: flex;
@@ -910,13 +916,13 @@ export default {
 }
 
 .emotion-label {
-  color: var(--life-moss);
+  color: #2D3E40;
   font-size: 0.9rem;
   font-weight: 500;
 }
 
 .record-thought-snippet {
-  color: var(--life-olive);
+  color: #52796F;
   font-style: italic;
   line-height: 1.4;
   margin-bottom: 1rem;
@@ -938,9 +944,9 @@ export default {
   font-weight: 500;
 }
 
-.progress-completed { background: rgba(132, 169, 140, 0.2); color: var(--life-moss); }
-.progress-blooming { background: rgba(255, 155, 133, 0.2); color: var(--bloom-coral); }
-.progress-growing { background: rgba(202, 210, 197, 0.2); color: var(--earth-clay); }
+.progress-completed { background: rgba(132, 169, 140, 0.2); color: #2D3E40; }
+.progress-blooming { background: rgba(255, 155, 133, 0.2); color: #FF9B85; }
+.progress-growing { background: rgba(202, 210, 197, 0.2); color: #A0826D; }
 
 /* 洞察花园 */
 .insights-garden {
@@ -955,10 +961,18 @@ export default {
 
 .insight-bloom {
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 25px;
-  padding: 2rem;
-  backdrop-filter: blur(15px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  border-radius: 30px;
+  padding: 2.5rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(132, 169, 140, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.insight-bloom:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+  border-color: #84A98C;
 }
 
 .insight-header {
@@ -971,7 +985,7 @@ export default {
 }
 
 .insight-header h4 {
-  color: var(--life-moss);
+  color: #2D3E40;
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
@@ -979,7 +993,7 @@ export default {
 
 .insight-badge {
   background: rgba(132, 169, 140, 0.2);
-  color: var(--life-moss);
+  color: #2D3E40;
   padding: 0.3rem 0.8rem;
   border-radius: 12px;
   font-size: 0.8rem;
@@ -1008,13 +1022,13 @@ export default {
 }
 
 .flower-name {
-  color: var(--life-moss);
+  color: #2D3E40;
   font-weight: 500;
   margin-bottom: 0.2rem;
 }
 
 .flower-count {
-  color: var(--life-olive);
+  color: #52796F;
   font-size: 0.85rem;
 }
 
@@ -1028,7 +1042,7 @@ export default {
 
 .bloom-progress {
   height: 100%;
-  background: var(--primary-gradient);
+  background: linear-gradient(135deg, #84A98C, #52796F);
   border-radius: 4px;
   transition: width 0.5s ease;
 }
@@ -1055,11 +1069,11 @@ export default {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--life-moss);
+  color: #2D3E40;
 }
 
 .stat-label {
-  color: var(--life-olive);
+  color: #52796F;
   font-size: 0.9rem;
 }
 
@@ -1072,7 +1086,7 @@ export default {
 }
 
 .wisdom-encouragement p {
-  color: var(--life-moss);
+  color: #2D3E40;
   margin: 0;
   font-style: italic;
   line-height: 1.5;
@@ -1081,7 +1095,7 @@ export default {
 .insight-empty {
   text-align: center;
   padding: 2rem;
-  color: var(--life-olive);
+  color: #52796F;
 }
 
 .empty-icon {
@@ -1098,13 +1112,24 @@ export default {
 .encouragement-card {
   background: linear-gradient(135deg, rgba(255, 155, 133, 0.1), rgba(255, 200, 87, 0.1));
   border: 2px solid rgba(255, 155, 133, 0.3);
-  border-radius: 25px;
-  padding: 2rem;
-  max-width: 600px;
+  border-radius: 30px;
+  padding: 2.5rem;
+  min-width: 400px; /* 最小宽度 */
+  max-width: 700px; /* 最大宽度 */
+  width: fit-content; /* 适应内容宽度 */
   margin: 0 auto;
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(255, 155, 133, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.encouragement-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 70px rgba(255, 155, 133, 0.15);
+  border-color: rgba(255, 155, 133, 0.5);
 }
 
 .encouragement-icon {
@@ -1114,14 +1139,14 @@ export default {
 }
 
 .encouragement-content h4 {
-  color: var(--life-moss);
+  color: #2D3E40;
   margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
   font-weight: 600;
 }
 
 .encouragement-content p {
-  color: var(--life-olive);
+  color: #52796F;
   margin: 0;
   font-style: italic;
   line-height: 1.5;
@@ -1218,7 +1243,7 @@ export default {
 
 .loading-text {
   font-size: 1.2rem;
-  color: var(--text-primary);
+  color: #2D3E40;
 }
 
 @keyframes fadeInUp {

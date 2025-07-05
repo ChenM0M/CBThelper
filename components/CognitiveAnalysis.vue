@@ -20,9 +20,16 @@
 
     <!-- 主内容区 -->
     <main class="greenhouse-main">
-      <!-- 种子选择界面 -->
+      <!-- 加载状态 -->
       <transition name="fade">
-        <section v-if="!selectedRecord" class="seed-selector">
+        <div v-if="!isDataLoaded" class="loading-state">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+          <p class="loading-text">正在准备温室...</p>
+        </div>
+        <!-- 种子选择界面 -->
+        <section v-else-if="!selectedRecord" class="seed-selector">
         <div class="greenhouse-container">
             <header class="greenhouse-header">
               <h1>🌿 心灵温室</h1>
@@ -57,11 +64,22 @@
                   
                   <!-- 花盆本体 -->
                   <div class="pot-body">
-                    <!-- 情绪标签 -->
-                    <div class="emotion-display">
-                      <span class="emotion-indicator" :style="getEmotionColor(record)">
-                        {{ getFirstEmotion(record) }}
-                      </span>
+                    <!-- 多情绪标签显示 -->
+                    <div class="emotions-display">
+                      <div class="emotion-tags" v-if="getRecordEmotions(record).length > 0">
+                        <span 
+                          v-for="emotion in getRecordEmotions(record).slice(0, 3)" 
+                          :key="emotion"
+                          class="emotion-tag"
+                          :style="getEmotionTagStyle(emotion)"
+                        >
+                          {{ emotion }}
+                        </span>
+                        <span v-if="getRecordEmotions(record).length > 3" class="emotion-more">
+                          +{{ getRecordEmotions(record).length - 3 }}
+                        </span>
+                      </div>
+                      <span v-else class="no-emotions">未记录情绪</span>
                     </div>
                     
                     <!-- 想法预览 -->
@@ -79,22 +97,61 @@
                   </div>
                 </div>
                 
-                <!-- 悬浮信息 -->
-                <div class="hover-info">
-                  <div class="chat-count" v-if="getChatCount(record) > 0">
-                    💬 {{ getChatCount(record) }}次对话
-                  </div>
+                <!-- 对话次数常驻显示 -->
+                <div class="chat-count-persistent" v-if="getChatCount(record) > 0">
+                  💬 {{ getChatCount(record) }}次对话
                 </div>
                 </article>
               </div>
             </div>
           </div>
         </section>
-      </transition>
-
-      <!-- 花朵分析界面 -->
-      <transition name="slide-up">
-        <section v-if="selectedRecord" class="greenhouse-flower">
+        
+        <!-- 花朵分析界面 -->
+        <section v-else-if="selectedRecord && !showAnalysisDetail" class="topic-overview">
+          <!-- 主题标题区 -->
+          <div class="topic-header">
+            <button @click="backToSelection" class="back-to-selection-btn">
+              <span>← 返回选择</span>
+            </button>
+            <h2 class="topic-title-main">
+              {{ selectedRecord.topicTitle || generateTopicTitle(selectedRecord) }}
+            </h2>
+          </div>
+          
+          <!-- 全屏花朵预览区 -->
+          <div class="fullscreen-flower-area" @click="showAnalysisDetail = true">
+            <div class="flower-container-fullscreen">
+              <div class="flower-stage-fullscreen" :class="getFlowerStageClass()">
+                <img 
+                  :src="getFlowerImage()" 
+                  :alt="getFlowerAlt()"
+                  class="flower-image-fullscreen"
+                />
+              </div>
+              
+              <!-- 情绪气泡预览 -->
+              <div class="emotion-bubbles-fullscreen">
+                <div 
+                  v-for="(emotion, index) in getRecordEmotions(selectedRecord).slice(0, 5)" 
+                  :key="index"
+                  class="emotion-bubble-fullscreen"
+                  :style="{ animationDelay: `${index * 0.3}s` }"
+                >
+                  {{ emotion }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="interaction-hint">
+              <p class="click-hint">点击花朵开始深入分析...</p>
+              <div class="hint-indicator">💫</div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- 详细分析界面 -->
+        <section v-else-if="selectedRecord && showAnalysisDetail" class="greenhouse-flower">
           <!-- 花朵展示区 -->
           <div class="flower-display">
           <div class="flower-container" @click="triggerAnalysis">
@@ -141,18 +198,17 @@
             </div>
             
               <!-- 情绪气泡 -->
-              <div class="emotion-bubbles" :class="{ 'initialized': isInitialized }">
-                <template v-if="selectedRecord">
-              <div 
-                v-for="(emotion, index) in getRecordEmotions(selectedRecord)" 
-                :key="index"
-                    class="emotion-bubble"
-                    :style="calculateBubblePosition(index, getRecordEmotions(selectedRecord).length)"
-              >
-                {{ emotion }}
+              <div class="emotion-bubbles-container" v-if="selectedRecord">
+                <div 
+                  v-for="(bubble, index) in emotionBubbles" 
+                  :key="`bubble-${index}`"
+                  class="emotion-bubble"
+                  :style="bubble.style"
+                  :class="bubble.class"
+                >
+                  {{ bubble.emotion }}
+                </div>
               </div>
-                </template>
-            </div>
           </div>
           
             <p class="flower-hint" v-if="!hasAnalysis && !analysisError">
@@ -384,6 +440,21 @@
             >
                   {{ message.content }}
             </div>
+            
+            <!-- 智慧伙伴正在输入指示器 -->
+            <div v-if="isTyping" class="typing-indicator">
+              <div class="typing-message">
+                <div class="typing-avatar">🤖</div>
+                <div class="typing-content">
+                  <span class="typing-text">智慧伙伴正在思考...</span>
+                  <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
               <form class="modal-form" @submit.prevent="sendMessage">
@@ -393,8 +464,12 @@
               placeholder="分享你的想法..."
                   class="modal-input"
                 />
-                <button type="submit" class="modal-send" :disabled="!deepChatInput.trim()">
-              发送
+                <button type="submit" class="modal-send" :disabled="!deepChatInput.trim() || isTyping">
+              <span v-if="isTyping" class="btn-loading">
+                <span class="btn-spinner"></span>
+                发送中...
+              </span>
+              <span v-else>发送</span>
             </button>
               </form>
           </div>
@@ -415,6 +490,7 @@ export default {
     return {
       selectedRecord: null,
       isAnalyzing: false,
+      isTyping: false, // 智慧伙伴正在回复状态
       analysisResult: null,
       showChatDialog: false,
       deepChatInput: '',
@@ -435,7 +511,11 @@ export default {
       currentChatTopic: null, // 当前对话主题
       isInitialized: false,
       analysisError: null,
-      showOriginalContent: false // 控制原始内容弹窗显示
+      showOriginalContent: false, // 控制原始内容弹窗显示
+      isDataLoaded: false, // 防止闪烁的加载状态
+      emotionBubbles: [], // 新的气泡数据结构
+      resizeTimeout: null, // 防抖用的timeout
+      showAnalysisDetail: false // 控制是否显示详细分析界面
     }
   },
   
@@ -468,19 +548,58 @@ export default {
       this.$router.push('/')
     },
     
+    // 返回选择界面
+    backToSelection() {
+      this.selectedRecord = null
+      this.showAnalysisDetail = false
+      this.$store.state.selectedRecordIndex = undefined
+    },
+    
     // 种子选择
     selectSeed(index) {
+      // 确保索引有效和数据存在
+      if (!this.$store.state.thoughtRecords || !this.$store.state.thoughtRecords[index]) {
+        console.warn('[CognitiveAnalysis] 尝试选择无效的记录索引:', index)
+        return
+      }
+      
       this.selectedRecord = this.$store.state.thoughtRecords[index]
       this.$store.state.selectedRecordIndex = index
-      this.analysisResult = null
-      this.deepChatMessages = []
+      
+      // 检查并恢复已保存的分析结果
+      if (this.selectedRecord.analysisData) {
+        console.log('[CognitiveAnalysis] 恢复已保存的分析结果', this.selectedRecord.analysisData)
+        this.analysisResult = this.selectedRecord.analysisData
+        
+        // 已解析的主题直接显示详细内容
+        this.showAnalysisDetail = true
+        
+        // 恢复对话消息
+        if (this.selectedRecord.chatTopics && this.selectedRecord.chatTopics.length > 0) {
+          const latestTopic = this.selectedRecord.chatTopics[this.selectedRecord.chatTopics.length - 1]
+          this.deepChatMessages = latestTopic.messages || []
+          this.currentChatTopic = latestTopic
+        } else {
+          this.deepChatMessages = [{
+            type: 'companion',
+            content: '我已经分析了你的想法，有什么想深入探讨的吗？'
+          }]
+        }
+      } else {
+        // 没有保存的分析结果，显示总览页面等待用户点击
+        this.showAnalysisDetail = false
+        this.analysisResult = null
+        this.deepChatMessages = []
+        this.currentChatTopic = null
+      }
+      
       this.randomFlowerColor = this.generateRandomFlowerColor()
       
       // 使用nextTick确保DOM更新后再初始化气泡
       this.$nextTick(() => {
-        this.isInitialized = false // 先重置
+        // 延迟生成气泡，确保DOM完全渲染
         setTimeout(() => {
-          this.isInitialized = true // 延迟设置以触发动画
+          this.generateEmotionBubbles()
         }, 100)
       })
     },
@@ -541,6 +660,24 @@ export default {
           content: '我已经分析了你的想法，有什么想深入探讨的吗？'
         }]
         
+        // 创建新的对话主题
+        this.currentChatTopic = {
+          id: Date.now(),
+          title: this.selectedRecord.topicTitle || this.generateTopicTitle(this.selectedRecord),
+          messages: this.deepChatMessages,
+          created: Date.now(),
+          lastUpdated: Date.now(),
+          context: {
+            emotions: this.getRecordEmotions(this.selectedRecord),
+            situation: this.selectedRecord.situation,
+            thought: this.selectedRecord.automaticThought,
+            analysis: this.analysisResult
+          }
+        }
+        
+        // 保存初始对话主题
+        this.saveChatTopic()
+        
         // 自动保存分析结果
         this.selectedRecord.completed = true;
         this.selectedRecord.analysisCompleteTime = Date.now();
@@ -566,27 +703,8 @@ export default {
       }
     },
     
-    // 解析分析结果 - 优化内容解析和展示
+    // 解析分析结果 - 移除默认信息替代逻辑
     parseAnalysisResult(analysisText) {
-      // 默认的分析结果结构
-      const defaultResult = {
-        empathy: '让我们一起探索这个想法...',
-        cognitiveBiases: [
-          {
-            icon: '🤔',
-            label: '认知模式',
-            description: '需要进一步分析'
-          }
-        ],
-        guidingQuestions: [
-          {
-            icon: '🌱',
-            text: '让我们一起探索这个想法...'
-          }
-        ],
-        encouragement: '我们一起来面对这个挑战 💪'
-      }
-      
       try {
         // 更智能的文本清理
         const cleanText = analysisText
@@ -599,6 +717,11 @@ export default {
           cleanLength: cleanText.length
         });
         
+        // 如果文本太短或为空，直接抛出错误
+        if (cleanText.length < 50) {
+          throw new Error('分析结果内容过短或为空');
+        }
+        
         // 提取共情理解部分 - 更灵活的匹配
         const empathyPatterns = [
           /共情理解[：:]\s*\n([\s\S]*?)(?=\n\s*认知偏差|$)/i,
@@ -606,7 +729,7 @@ export default {
           /理解[：:]\s*\n([\s\S]*?)(?=\n\s*认知|$)/i
         ];
         
-        let empathy = defaultResult.empathy;
+        let empathy = null;
         for (const pattern of empathyPatterns) {
           const match = cleanText.match(pattern);
           if (match && match[1].trim()) {
@@ -622,7 +745,7 @@ export default {
           /偏差[：:]\s*\n([\s\S]*?)(?=\n\s*引导|问题|$)/i
         ];
         
-        let biases = defaultResult.cognitiveBiases;
+        let biases = [];
         for (const pattern of biasPatterns) {
           const match = cleanText.match(pattern);
           if (match && match[1].trim()) {
@@ -638,7 +761,7 @@ export default {
           /问题[：:]\s*\n([\s\S]*?)(?=\n\s*鼓励|$)/i
         ];
         
-        let questions = defaultResult.guidingQuestions;
+        let questions = [];
         for (const pattern of questionPatterns) {
           const match = cleanText.match(pattern);
           if (match && match[1].trim()) {
@@ -654,7 +777,7 @@ export default {
           /建议[：:]\s*\n([\s\S]*?)$/i
         ];
         
-        let encouragement = defaultResult.encouragement;
+        let encouragement = null;
         for (const pattern of encouragementPatterns) {
           const match = cleanText.match(pattern);
           if (match && match[1].trim()) {
@@ -663,24 +786,29 @@ export default {
           }
         }
 
+        // 验证解析结果，如果关键内容缺失则抛出错误
+        if (!empathy && biases.length === 0 && questions.length === 0 && !encouragement) {
+          throw new Error('无法解析分析结果的关键内容');
+        }
+
         const result = {
-          empathy,
-          cognitiveBiases: biases,
-          guidingQuestions: questions,
-          encouragement
+          empathy: empathy || '分析结果解析出现问题，无法提取共情内容',
+          cognitiveBiases: biases.length > 0 ? biases : [],
+          guidingQuestions: questions.length > 0 ? questions : [],
+          encouragement: encouragement || '分析结果解析出现问题，无法提取鼓励内容'
         };
         
         console.log('[Parse] 解析完成:', {
-          empathyLength: empathy.length,
-          biasCount: biases.length,
-          questionCount: questions.length,
-          encouragementLength: encouragement.length
+          empathyLength: result.empathy.length,
+          biasCount: result.cognitiveBiases.length,
+          questionCount: result.guidingQuestions.length,
+          encouragementLength: result.encouragement.length
         });
         
         return result;
       } catch (error) {
         console.error('解析分析结果出错:', error);
-        return defaultResult;
+        throw error; // 直接抛出错误，不返回默认值
       }
     },
     
@@ -827,9 +955,11 @@ export default {
         this.currentChatTopic = {
           id: Date.now(),
           title: '新的对话',
-          messages: [],
+          messages: [], // 初始为空，将在发送消息时同步
+          created: Date.now(),
+          lastUpdated: Date.now(),
           context: {
-            emotions: this.selectedRecord.emotions,
+            emotions: this.getRecordEmotions(this.selectedRecord),
             situation: this.selectedRecord.situation,
             thought: this.selectedRecord.automaticThought,
             analysis: this.analysisResult
@@ -1006,12 +1136,8 @@ export default {
         color = 'red'
       }
 
-      // 如果没有图片资源，返回占位符
-      try {
-        return require(`../assets/images/${color}-flower-${stage}.png`)
-      } catch {
-        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='80' fill='%23${this.randomFlowerColor.slice(1)}'/%3E%3C/svg%3E`
-      }
+      // 返回花朵图片路径，如果图片不存在会显示占位符
+      return `/assets/images/${color}-flower-${stage}.png`
     },
     
     // 获取花朵替代文本
@@ -1019,68 +1145,81 @@ export default {
       return this.hasAnalysis ? '绽放的花朵' : '含苞待放'
     },
     
-    // 获取气泡位置 - 使用螺旋分布算法
-    calculateBubblePosition(index, total) {
-      // 根据屏幕尺寸调整参数
-      const viewport = {
-        width: window.innerWidth,
-        height: window.innerHeight
-      };
-      
-      let params = {
-        baseRadius: 140,
-        spiralSpacing: 35,
-        minDistance: 80,
-        centerOffset: { x: 0, y: 0 }
-      };
-      
-      // 移动端参数调整
-      if (viewport.width <= 480) {
-        params = {
-          baseRadius: 90,
-          spiralSpacing: 25,
-          minDistance: 55,
-          centerOffset: { x: 0, y: -10 }
-        };
-      } else if (viewport.width <= 768) {
-        params = {
-          baseRadius: 115,
-          spiralSpacing: 30,
-          minDistance: 65,
-          centerOffset: { x: 0, y: -5 }
-        };
+    // 全新的气泡生成系统 - 优化版本
+    // 重构后的气泡生成系统 - 修复定位和遮挡问题
+    generateEmotionBubbles() {
+      if (!this.selectedRecord) {
+        this.emotionBubbles = []
+        return
       }
+
+      const emotions = this.getRecordEmotions(this.selectedRecord)
+      if (emotions.length === 0) {
+        this.emotionBubbles = []
+        return
+      }
+
+      const bubbles = []
+      const maxBubbles = Math.min(emotions.length, 8) // 最多8个气泡
       
-      // 使用费马螺旋(Fermat's spiral)进行分布
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.39 radians
-      const angle = index * goldenAngle;
-      const radius = Math.sqrt(index + 1) * params.spiralSpacing + params.baseRadius;
+      // 四角定位法 - 气泡只出现在花朵容器的四个角落区域
+      // 检测是否为移动设备
+      const isMobile = window.innerWidth <= 480
+      const cornerPositions = isMobile ? [
+        // 移动端 - 更近的角落位置
+        { baseX: -120, baseY: -100, offsetRange: 40 },
+        { baseX: 120, baseY: -100, offsetRange: 40 },
+        { baseX: -120, baseY: 100, offsetRange: 40 },
+        { baseX: 120, baseY: 100, offsetRange: 40 },
+        { baseX: -150, baseY: -30, offsetRange: 50 },
+        { baseX: 150, baseY: -30, offsetRange: 50 },
+        { baseX: -150, baseY: 30, offsetRange: 50 },
+        { baseX: 150, baseY: 30, offsetRange: 50 }
+      ] : [
+        // 桌面端 - 原始位置
+        { baseX: -200, baseY: -150, offsetRange: 60 },
+        { baseX: 200, baseY: -150, offsetRange: 60 },
+        { baseX: -200, baseY: 150, offsetRange: 60 },
+        { baseX: 200, baseY: 150, offsetRange: 60 },
+        { baseX: -250, baseY: -50, offsetRange: 80 },
+        { baseX: 250, baseY: -50, offsetRange: 80 },
+        { baseX: -250, baseY: 50, offsetRange: 80 },
+        { baseX: 250, baseY: 50, offsetRange: 80 }
+      ]
       
-      // 计算位置
-      let x = Math.cos(angle) * radius + params.centerOffset.x;
-      let y = Math.sin(angle) * radius + params.centerOffset.y;
-      
-      // 边界检查 - 确保气泡不会超出屏幕
-      const bubbleSize = 45; // 估算的气泡尺寸
-      const maxX = (viewport.width / 2) - bubbleSize - 20;
-      const maxY = (viewport.height / 2) - bubbleSize - 20;
-      
-      x = Math.max(-maxX, Math.min(maxX, x));
-      y = Math.max(-maxY, Math.min(maxY, y));
-      
-      // 动画延迟，创造依次出现的效果
-      const delay = index * 120 + Math.random() * 50;
-      
-      return {
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) ${this.isInitialized ? 'scale(1)' : 'scale(0)'}`,
-        opacity: this.isInitialized ? 1 : 0,
-        animationDelay: `${delay}ms`,
-        transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-        zIndex: 10 + index // 确保层级正确
-      };
+      for (let i = 0; i < maxBubbles; i++) {
+        const emotion = emotions[i]
+        const cornerIndex = i % cornerPositions.length
+        const corner = cornerPositions[cornerIndex]
+        
+        // 在指定角落区域内生成随机位置
+        const randomX = corner.baseX + (Math.random() - 0.5) * corner.offsetRange
+        const randomY = corner.baseY + (Math.random() - 0.5) * corner.offsetRange
+        
+        // 气泡样式
+        const bubble = {
+          emotion: emotion,
+          x: randomX,
+          y: randomY,
+          style: {
+            left: '50%',
+            top: '50%',
+            transform: `translate(calc(-50% + ${randomX}px), calc(-50% + ${randomY}px))`,
+            '--random-offset': `${Math.random() * 360}deg`,
+            '--delay': `${i * 0.3}s`,
+            '--hue': `${(i * 45) % 360}deg`, // 彩虹颜色，间隔更小
+            zIndex: 0, // 确保在花朵下方
+            animationDelay: `${i * 0.2}s`,
+            position: 'absolute'
+          },
+          class: `bubble-${i % 4}`,
+          index: i
+        }
+        
+        bubbles.push(bubble)
+      }
+
+      this.emotionBubbles = bubbles
     },
     
     
@@ -1235,24 +1374,15 @@ export default {
       }
     },
 
-    initializeBubbles() {
-      this.isInitialized = false;
-      
-      // 使用nextTick确保DOM更新后再初始化
-      this.$nextTick(() => {
-        // 强制重新计算布局
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            this.isInitialized = true;
-          }, 100);
-        });
-      });
-    },
     
-    // 窗口尺寸变化时重新初始化气泡
+    // 窗口尺寸变化时重新生成气泡
     handleResize() {
       if (this.selectedRecord && this.getRecordEmotions(this.selectedRecord).length > 0) {
-        this.initializeBubbles();
+        // 延迟重新生成，避免频繁调用
+        clearTimeout(this.resizeTimeout)
+        this.resizeTimeout = setTimeout(() => {
+          this.generateEmotionBubbles()
+        }, 200)
       }
     },
     
@@ -1355,6 +1485,33 @@ export default {
       
       return colorMap[emotion] || 'background: linear-gradient(45deg, #84A98C, #52796F)';
     },
+
+    getEmotionTagStyle(emotion) {
+      const colorMap = {
+        '愉悦阳光': { background: '#FFF3CD', color: '#856404', border: '#FFD700' },
+        '平静如水': { background: '#E7F3FF', color: '#1C4E80', border: '#87CEEB' },
+        '有些低落': { background: '#F8F9FA', color: '#495057', border: '#A0A0A0' },
+        '焦虑不安': { background: '#FFEBEE', color: '#C62828', border: '#FF6B6B' },
+        '充满希望': { background: '#E8F5E8', color: '#2E7D32', border: '#98FB98' },
+        '疲惫倦怠': { background: '#FFF8E1', color: '#8D6E63', border: '#DEB887' },
+        '愤怒': { background: '#FFEBEE', color: '#B71C1C', border: '#DC143C' },
+        '困惑': { background: '#F3E5F5', color: '#6A1B9A', border: '#DDA0DD' },
+        '开心': { background: '#FFF3CD', color: '#856404', border: '#FFD700' },
+        '难过': { background: '#F8F9FA', color: '#495057', border: '#A0A0A0' },
+        '紧张': { background: '#FFEBEE', color: '#C62828', border: '#FF6B6B' },
+        '兴奋': { background: '#FFF3CD', color: '#856404', border: '#FFD700' },
+        '担心': { background: '#FFEBEE', color: '#C62828', border: '#FF6B6B' },
+        '失望': { background: '#F8F9FA', color: '#495057', border: '#A0A0A0' }
+      };
+      
+      const style = colorMap[emotion] || { background: '#E8F4F8', color: '#2D3E40', border: '#84A98C' };
+      
+      return {
+        backgroundColor: style.background,
+        color: style.color,
+        borderColor: style.border
+      };
+    },
     
     getGrowthStageText(record) {
       if (record.completed) return '已绽放';
@@ -1365,7 +1522,10 @@ export default {
     getChatCount(record) {
       if (!record.chatTopics) return 0;
       return record.chatTopics.reduce((count, topic) => {
-        return count + (topic.messages ? topic.messages.length : 0);
+        if (!topic.messages) return count;
+        // 只统计用户输入的消息数量
+        const userMessages = topic.messages.filter(msg => msg.type === 'user');
+        return count + userMessages.length;
       }, 0);
     }
   },
@@ -1373,20 +1533,39 @@ export default {
   watch: {
     selectedRecord: {
       handler() {
-        this.initializeBubbles();
+        // 当选择的记录改变时，重新生成气泡
+        this.$nextTick(() => {
+          this.generateEmotionBubbles()
+        })
       },
       immediate: true
     }
   },
   
   mounted() {
-    // 如果有预选的记录索引，自动加载
-    if (this.$store.state.selectedRecordIndex !== undefined) {
-      const index = this.$store.state.selectedRecordIndex
-      if (this.$store.state.thoughtRecords[index]) {
-        this.selectSeed(index)
-      }
-    }
+    // 使用 nextTick 确保 store 状态已经完全加载
+    this.$nextTick(() => {
+      setTimeout(() => {
+        // 检查是否从菜单进入且要求显示总览页面
+        if (this.$route.query.view === 'overview') {
+          // 直接显示总览页面，不选择任何记录
+          this.selectedRecord = null
+          this.isDataLoaded = true
+          return
+        }
+        
+        // 如果有预选的记录索引，自动加载
+        if (this.$store.state.selectedRecordIndex !== undefined) {
+          const index = this.$store.state.selectedRecordIndex
+          if (this.$store.state.thoughtRecords && this.$store.state.thoughtRecords[index]) {
+            this.selectSeed(index)
+          }
+        }
+        
+        // 标记数据已加载，避免闪烁
+        this.isDataLoaded = true
+      }, 50) // 给一个小的延迟确保所有异步操作完成
+    })
     
     // 添加窗口尺寸变化监听
     window.addEventListener('resize', this.handleResize);
@@ -1394,7 +1573,12 @@ export default {
   
   beforeUnmount() {
     // 移除窗口尺寸变化监听
-    window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('resize', this.handleResize)
+    
+    // 清理防抖定时器
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout)
+    }
   }
 }
 </script>
@@ -1507,17 +1691,52 @@ export default {
   z-index: 1;
 }
 
+/* ===== 加载状态 ===== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.loading-spinner {
+  margin-bottom: 2rem;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(132, 169, 140, 0.2);
+  border-left: 4px solid #84A98C;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #52796F;
+  font-size: 1.1rem;
+  font-style: italic;
+  margin: 0;
+}
+
 /* ===== 种子选择界面（花盆风格） ===== */
 .seed-selector {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px; /* PC端增大尺寸 */
   margin: 0 auto;
 }
 
 .greenhouse-container {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 30px;
-  padding: 3rem 2rem;
+  padding: 4rem 3rem; /* PC端增加内边距 */
   backdrop-filter: blur(20px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   border: 2px solid rgba(132, 169, 140, 0.2);
@@ -1663,19 +1882,46 @@ export default {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
 }
 
-.emotion-display {
+.emotions-display {
   margin-bottom: 1rem;
   text-align: center;
 }
 
-.emotion-indicator {
-  display: inline-block;
-  padding: 0.4rem 1rem;
-  border-radius: 15px;
-  color: white;
-  font-size: 0.85rem;
+.emotion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.emotion-tag {
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
   font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.emotion-tag:hover {
+  transform: scale(1.05);
+}
+
+.emotion-more {
+  padding: 0.2rem 0.4rem;
+  background: #f0f0f0;
+  color: #666;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.no-emotions {
+  color: #999;
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 .thought-preview {
@@ -1708,6 +1954,23 @@ export default {
 }
 
 /* 悬浮信息 */
+/* 对话次数常驻显示 */
+.chat-count-persistent {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(132, 169, 140, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .hover-info {
   position: absolute;
   top: -15px;
@@ -1853,25 +2116,33 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .status-label {
-  font-weight: 500;
-  color: #52796F;
+  font-weight: 600;
+  color: #2D3E40; /* 更深的颜色提高对比度 */
   min-width: 80px;
 }
 
 .status-item .completed {
-  color: #388e3c;
-  font-weight: 500;
+  color: #1B5E20; /* 更深的绿色提高对比度 */
+  font-weight: 700;
 }
 
 .status-item .pending {
-  color: #f57c00;
-  font-weight: 500;
+  color: #E65100; /* 更深的橙色提高对比度 */
+  font-weight: 700;
+}
+
+/* 增强状态项的文字对比度 */
+.status-item span:not(.status-label) {
+  color: #2D3E40; /* 使用更深的颜色提高对比度 */
+  font-weight: 600; /* 增加字重 */
 }
 
 /* ===== 花朵展示区 ===== */
@@ -1885,6 +2156,209 @@ export default {
 
 .flower-display {
   text-align: center;
+}
+
+/* ===== 主题概览界面 - 全屏风格 ===== */
+.topic-overview {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.topic-header {
+  position: relative;
+  margin-bottom: 2rem;
+  z-index: 10;
+}
+
+/* 返回选择按钮 */
+.back-to-selection-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: linear-gradient(135deg, #84A98C, #52796F);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(132, 169, 140, 0.3);
+  z-index: 10;
+}
+
+.back-to-selection-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(132, 169, 140, 0.4);
+}
+
+.topic-title-main {
+  color: #2D3E40;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+  padding-top: 1rem;
+}
+
+/* 全屏花朵预览区 */
+.fullscreen-flower-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  padding: 2rem;
+}
+
+.fullscreen-flower-area:hover {
+  transform: scale(1.02);
+}
+
+.flower-container-fullscreen {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flower-stage-fullscreen {
+  position: relative;
+  z-index: 1;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flower-image-fullscreen {
+  width: 250px;
+  height: 250px;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.15));
+  transition: transform 0.3s ease;
+}
+
+.fullscreen-flower-area:hover .flower-image-fullscreen {
+  transform: scale(1.1);
+}
+
+/* 全屏情绪气泡 */
+.emotion-bubbles-fullscreen {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.emotion-bubble-fullscreen {
+  position: absolute;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  border-radius: 25px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: 500;
+  color: #2D3E40;
+  border: 1px solid rgba(132, 169, 140, 0.3);
+  animation: fullscreenBubbleFloat 4s ease-in-out infinite;
+  backdrop-filter: blur(15px);
+}
+
+.emotion-bubble-fullscreen:nth-child(1) {
+  top: 10%;
+  right: 15%;
+  animation-delay: 0s;
+}
+
+.emotion-bubble-fullscreen:nth-child(2) {
+  bottom: 20%;
+  left: 10%;
+  animation-delay: 0.5s;
+}
+
+.emotion-bubble-fullscreen:nth-child(3) {
+  top: 30%;
+  right: 5%;
+  animation-delay: 1s;
+}
+
+.emotion-bubble-fullscreen:nth-child(4) {
+  bottom: 40%;
+  right: 25%;
+  animation-delay: 1.5s;
+}
+
+.emotion-bubble-fullscreen:nth-child(5) {
+  top: 60%;
+  left: 20%;
+  animation-delay: 2s;
+}
+
+@keyframes fullscreenBubbleFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.8;
+  }
+  25% {
+    transform: translateY(-15px) scale(1.05);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-8px) scale(1);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translateY(-20px) scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+/* 交互提示 */
+.interaction-hint {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.click-hint {
+  color: #52796F;
+  font-size: 1.2rem;
+  font-style: italic;
+  margin: 0 0 1rem 0;
+  transition: all 0.3s ease;
+}
+
+.fullscreen-flower-area:hover .click-hint {
+  color: #84A98C;
+  font-size: 1.3rem;
+}
+
+.hint-indicator {
+  font-size: 2rem;
+  animation: gentle-pulse 2s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.7; 
+  }
+  50% { 
+    transform: scale(1.2); 
+    opacity: 1; 
+  }
 }
 
 .flower-container {
@@ -1906,6 +2380,7 @@ export default {
   width: 160px;
   height: 160px;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2; /* 确保花朵在气泡之上 */
 }
 
 .flower-image {
@@ -1953,83 +2428,184 @@ export default {
   stroke: #84A98C;
 }
 
-.emotion-bubbles {
+/* ===== 全新情绪气泡系统 ===== */
+/* ===== 重构后的气泡样式 - 更简洁更美观 ===== */
+.emotion-bubbles-container {
   position: absolute;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 2;
+  z-index: 0; /* 降低z-index，确保不遮挡花朵 */
   overflow: visible;
 }
 
 .emotion-bubble {
   position: absolute;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
-  border-radius: 18px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  min-width: 45px;
-  min-height: 32px;
-  max-width: 75px;
-  font-size: 12px;
+  padding: 0.8rem 1.2rem;
+  background: linear-gradient(135deg, 
+    hsl(var(--hue, 200), 70%, 85%), 
+    hsl(var(--hue, 200), 60%, 75%)
+  );
+  color: hsl(var(--hue, 200), 40%, 30%);
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
   font-weight: 500;
-  line-height: 1.2;
-  word-break: break-word;
-  color: #2D3E40;
-  z-index: 10;
-  cursor: default;
-  user-select: none;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(132, 169, 140, 0.3);
+  white-space: nowrap;
+  box-shadow: 
+    0 4px 15px hsla(var(--hue, 200), 50%, 50%, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid hsla(var(--hue, 200), 50%, 80%, 0.5);
+  
+  /* 简化的动画 */
+  animation: 
+    bubbleFloat 6s ease-in-out infinite,
+    bubbleAppear 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  
+  /* 响应式调整 */
   transform-origin: center;
-}
-
-.emotion-bubble::before {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 12px;
-  height: 12px;
-  background: inherit;
-  border-radius: 0 0 50% 50%;
-  border: inherit;
-  border-top: none;
-  z-index: -1;
+  transition: all 0.3s ease;
 }
 
 .emotion-bubble:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 25px rgba(132, 169, 140, 0.25);
-  background: linear-gradient(135deg, rgba(132, 169, 140, 0.15), rgba(132, 169, 140, 0.1));
-  border-color: rgba(132, 169, 140, 0.5);
-  z-index: 15;
+  box-shadow: 
+    0 6px 25px hsla(var(--hue, 200), 50%, 50%, 0.4),
+    0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-@keyframes gentleBobble {
+/* 不同的气泡类型 - 使用CSS变量设置颜色 */
+.emotion-bubble.bubble-0 {
+  --hue: 200deg; /* 蓝色 */
+}
+
+.emotion-bubble.bubble-1 {
+  --hue: 280deg; /* 紫色 */
+}
+
+.emotion-bubble.bubble-2 {
+  --hue: 120deg; /* 绿色 */
+}
+
+.emotion-bubble.bubble-3 {
+  --hue: 40deg; /* 黄色 */
+}
+
+/* 简化的动画 */
+@keyframes bubbleFloat {
   0%, 100% {
     transform: translateY(0px);
+  }
+  25% {
+    transform: translateY(-8px);
   }
   50% {
     transform: translateY(-4px);
   }
+  75% {
+    transform: translateY(-12px);
+  }
 }
 
-.emotion-bubbles.initialized .emotion-bubble {
-  animation: gentleBobble 4s ease-in-out infinite;
+@keyframes bubbleAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: scale(1.1) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0px);
+  }
 }
 
-.emotion-bubble:nth-child(odd) {
-  animation-delay: 0s;
+/* 气泡浮动动画 */
+@keyframes bubbleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--random-offset, 0deg)) scale(1);
+  }
+  25% {
+    transform: translateY(-8px) rotate(calc(var(--random-offset, 0deg) + 2deg)) scale(1.02);
+  }
+  50% {
+    transform: translateY(0px) rotate(var(--random-offset, 0deg)) scale(1);
+  }
+  75% {
+    transform: translateY(-4px) rotate(calc(var(--random-offset, 0deg) - 2deg)) scale(0.98);
+  }
 }
 
-.emotion-bubble:nth-child(even) {
-  animation-delay: 2s;
+/* 气泡光晕效果 */
+@keyframes bubbleGlow {
+  0% {
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, 0.15),
+      0 2px 8px rgba(132, 169, 140, 0.2),
+      inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    box-shadow: 
+      0 12px 35px rgba(0, 0, 0, 0.2),
+      0 4px 15px rgba(132, 169, 140, 0.4),
+      inset 0 1px 3px rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* 气泡出现动画 */
+@keyframes bubbleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) rotate(var(--random-offset, 0deg)) scale(0.3);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) rotate(var(--random-offset, 0deg)) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) rotate(var(--random-offset, 0deg)) scale(1);
+  }
+}
+
+/* 不同的气泡变体 */
+.emotion-bubble.bubble-0 {
+  animation-duration: 4s, 3s, 0.8s;
+  --bubble-hue: 0deg;
+}
+
+.emotion-bubble.bubble-1 {
+  animation-duration: 4.5s, 3.2s, 1s;
+  animation-delay: 0.2s, 0.1s, var(--delay, 0s);
+  --bubble-hue: 60deg;
+}
+
+.emotion-bubble.bubble-2 {
+  animation-duration: 3.8s, 2.8s, 1.2s;
+  animation-delay: 0.4s, 0.3s, var(--delay, 0s);
+  --bubble-hue: 120deg;
+}
+
+.emotion-bubble.bubble-3 {
+  animation-duration: 4.2s, 3.5s, 0.9s;
+  animation-delay: 0.6s, 0.2s, var(--delay, 0s);
+  --bubble-hue: 240deg;
+}
+
+/* 悬停效果 */
+.emotion-bubble:hover {
+  animation-play-state: paused;
+  transform: scale(1.15) rotate(var(--random-offset, 0deg));
+  background: linear-gradient(135deg, rgba(132, 169, 140, 0.15), rgba(132, 169, 140, 0.1));
+  border-color: rgba(132, 169, 140, 0.6);
+  box-shadow: 
+    0 15px 40px rgba(132, 169, 140, 0.3),
+    0 5px 20px rgba(132, 169, 140, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  z-index: 15;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .flower-hint {
@@ -2226,10 +2802,11 @@ export default {
 }
 
 .bias-description {
-  color: #52796F;
+  color: #2D3E40; /* 更深的颜色提高对比度 */
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
+  font-weight: 500; /* 增加字重 */
 }
 
 /* 引导问题列表 */
@@ -2263,10 +2840,11 @@ export default {
 }
 
 .question-text {
-  color: #2D3E40;
+  color: #2D3E40; /* 更深的颜色提高对比度 */
   font-size: 1rem;
   line-height: 1.6;
   margin: 0;
+  font-weight: 500; /* 增加字重 */
 }
 
 /* ===== 底部提示 ===== */
@@ -2300,16 +2878,19 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  background: rgba(255, 255, 255, 0.95);
-  color: #52796F;
+  background: rgba(255, 255, 255, 0.98); /* 增加不透明度 */
+  color: #2D3E40; /* 使用更深的颜色提高对比度 */
   padding: 1rem 2rem;
   border-radius: 30px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* 增加阴影对比度 */
+  border: 1px solid rgba(132, 169, 140, 0.3); /* 添加边框提高可见性 */
 }
 
 .companion-disabled p {
   margin: 0;
+  font-weight: 700; /* 改为黑色粗体 */
+  color: #000000; /* 纯黑色 */
 }
 
 /* ===== 模态对话框 ===== */
@@ -2413,6 +2994,77 @@ export default {
   border-bottom-left-radius: 5px;
 }
 
+/* 打字指示器样式 */
+.typing-indicator {
+  align-self: flex-start;
+  margin-bottom: 1rem;
+}
+
+.typing-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.8rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.typing-avatar {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.typing-content {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  border-bottom-left-radius: 5px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.typing-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--primary-color);
+  border-radius: var(--radius-full);
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+  0%, 80%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
 .modal-form {
   display: flex;
   gap: 1rem;
@@ -2454,6 +3106,27 @@ export default {
 .modal-send:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 按钮加载状态 */
+.btn-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-left: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ===== 过渡动画 ===== */
@@ -2577,8 +3250,8 @@ export default {
   }
   
   .flower-container {
-    width: 220px;
-    height: 220px;
+    width: 180px;
+    height: 180px;
   }
   
   .flower-stage {
@@ -2593,10 +3266,11 @@ export default {
   
   .emotion-bubble {
     padding: 6px 10px;
-    font-size: 11px;
-    min-width: 40px;
-    min-height: 28px;
-    max-width: 65px;
+    font-size: 10px;
+    min-width: 30px;
+    min-height: 24px;
+    max-width: 55px;
+    border-radius: 15px;
   }
   
   .progress-ring {
@@ -2608,6 +3282,49 @@ export default {
     width: 45px;
     height: 45px;
     font-size: 1.3rem;
+  }
+  
+  .back-to-selection-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    z-index: 100;
+  }
+  
+  .topic-title-main {
+    font-size: 1.5rem;
+    padding-top: 60px;
+  }
+  
+  .fullscreen-flower-area {
+    min-height: calc(100vh - 150px);
+    padding: 1rem;
+  }
+  
+  .flower-container-fullscreen {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto 2rem;
+  }
+  
+  .flower-image-fullscreen {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .emotion-bubble-fullscreen {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .click-hint {
+    font-size: 1rem;
+  }
+  
+  .hint-indicator {
+    font-size: 1.5rem;
   }
   
   .analysis-card,
@@ -2640,34 +3357,6 @@ export default {
     font-size: 0.95rem;
   }
   
-  .chat-messages {
-    max-height: 300px;
-    padding: 1.5rem;
-  }
-  
-  .message-avatar {
-    width: 35px;
-    height: 35px;
-    font-size: 1rem;
-  }
-  
-  .message-bubble {
-    padding: 0.8rem 1.2rem;
-    font-size: 0.9rem;
-  }
-  
-  .chat-form {
-    padding: 1rem;
-  }
-  
-  .chat-input {
-    padding: 0.8rem 1.2rem;
-  }
-  
-  .send-button {
-    padding: 0.8rem 1.5rem;
-  }
-  
   .bottom-hint {
     bottom: 20px;
   }
@@ -2696,6 +3385,23 @@ export default {
   
   .modal-form {
     padding: 1rem 1.5rem;
+  }
+  
+  /* 移动端情绪标签优化 */
+  .emotion-tags {
+    gap: 0.2rem;
+    flex-wrap: wrap;
+  }
+  
+  .emotion-tag {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    border-radius: 6px;
+  }
+  
+  .emotion-more {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.65rem;
   }
 }
 
@@ -2783,6 +3489,8 @@ export default {
     min-height: 24px;
     max-width: 55px;
     border-radius: 12px;
+    /* 移动端四角定位法调整 */
+    transform: scale(0.9); /* 稍微缩小避免超出边界 */
   }
   
   .progress-ring {
@@ -2798,6 +3506,39 @@ export default {
   
   .flower-hint {
     font-size: 1rem;
+  }
+  
+  /* 改进加载文字显示 */
+  .loading-text {
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* 改进点击提示文字显示 */
+  .click-hint {
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    padding: 0 1rem;
+  }
+  
+  /* 确保主题标题在移动端正确显示 */
+  .topic-title-main {
+    font-size: 1.5rem;
+    padding-top: 60px;
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-align: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   
   .floating-back-btn {
@@ -3123,11 +3864,12 @@ export default {
 }
 
 .empathy-text {
-  color: #2D3E40;
+  color: #1A2B2E; /* 更深的颜色提高对比度 */
   font-size: 1.1rem;
   line-height: 1.8;
   font-style: italic;
   margin: 0;
+  font-weight: 500; /* 增加字重 */
 }
 
 .encouragement-card {
@@ -3152,7 +3894,8 @@ export default {
   font-size: 1.2rem;
   margin: 0;
   line-height: 1.6;
-  font-weight: 500;
+  font-weight: 600; /* 增加字重提高对比度 */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* 添加文字阴影提高可读性 */
 }
 
 .analysis-stage {
@@ -3168,5 +3911,21 @@ export default {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
   animation: fadeInUp 0.3s ease-out;
+  max-width: 90vw; /* 限制最大宽度 */
+}
+
+/* 手机端修复文字超出问题 */
+@media (max-width: 480px) {
+  .analysis-stage {
+    white-space: normal; /* 允许换行 */
+    text-align: center;
+    max-width: 80vw;
+    line-height: 1.3;
+    bottom: -30px; /* 调整位置避免遮挡 */
+    left: 50%;
+    transform: translateX(-50%);
+    word-break: break-word; /* 确保长单词正确换行 */
+    overflow-wrap: break-word; /* 兼容性更好的换行 */
+  }
 }
 </style>

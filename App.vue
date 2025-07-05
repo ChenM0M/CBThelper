@@ -18,7 +18,7 @@
           <span class="nav-emoji">🌸</span>
           <span class="nav-text">成长足迹</span>
         </router-link>
-        <router-link to="/analysis" class="nav-item" @click="closeNav">
+        <router-link to="/analysis?view=overview" class="nav-item" @click="closeNav">
           <span class="nav-emoji">🏡</span>
           <span class="nav-text">心灵温室</span>
         </router-link>
@@ -88,20 +88,20 @@ onMounted(() => {
 .nav-toggle {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--primary-gradient);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(84, 169, 140, 0.3);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: var(--shadow-primary);
+  transition: all var(--transition-base);
 }
 
 .nav-toggle:hover {
   transform: scale(1.1);
-  box-shadow: 0 12px 35px rgba(84, 169, 140, 0.4);
+  box-shadow: 0 12px 35px rgba(132, 169, 140, 0.4);
 }
 
 .nav-toggle.active {
@@ -109,21 +109,21 @@ onMounted(() => {
 }
 
 .nav-icon {
-  font-size: 1.5rem;
-  transition: transform 0.3s ease;
+  font-size: var(--font-size-xl);
+  transition: transform var(--transition-base);
 }
 
 .nav-menu {
   position: absolute;
   top: 70px;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-primary);
   backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 1rem;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-lg);
   min-width: 200px;
-  animation: slideInFromTop 0.3s ease-out;
+  animation: slideInFromTop var(--transition-base);
 }
 
 @keyframes slideInFromTop {
@@ -140,13 +140,13 @@ onMounted(() => {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.8rem 1rem;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
   text-decoration: none;
-  color: var(--life-moss);
-  border-radius: 15px;
-  transition: all 0.3s ease;
-  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  margin-bottom: var(--spacing-sm);
 }
 
 .nav-item:last-child {
@@ -155,17 +155,17 @@ onMounted(() => {
 
 .nav-item:hover {
   background: var(--secondary-gradient);
-  color: white;
+  color: var(--text-white);
   transform: translateX(5px);
 }
 
 .nav-item.router-link-active {
   background: var(--primary-gradient);
-  color: white;
+  color: var(--text-white);
 }
 
 .nav-emoji {
-  font-size: 1.2rem;
+  font-size: var(--font-size-lg);
 }
 
 .nav-text {
