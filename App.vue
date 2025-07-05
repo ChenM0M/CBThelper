@@ -26,6 +26,10 @@
           <span class="nav-emoji">⚙️</span>
           <span class="nav-text">花园设置</span>
         </router-link>
+        <router-link to="/about" class="nav-item" @click="closeNav">
+          <span class="nav-emoji">ℹ️</span>
+          <span class="nav-text">关于</span>
+        </router-link>
       </div>
     </div>
 

@@ -152,10 +152,10 @@
         
         <!-- 详细分析界面 -->
         <section v-else-if="selectedRecord && showAnalysisDetail" class="greenhouse-flower">
-          <!-- 返回总览按钮 -->
+          <!-- 返回选择页面按钮 -->
           <div class="back-to-overview-container">
-            <button @click="showAnalysisDetail = false" class="back-to-overview-btn">
-              <span>← 返回温室总览</span>
+            <button @click="backToSelection" class="back-to-overview-btn">
+              <span>← 返回选择页面</span>
             </button>
           </div>
           
@@ -2003,7 +2003,7 @@ export default {
   box-shadow: 0 4px 12px rgba(132, 169, 140, 0.3);
 }
 
-/* 返回总览按钮 */
+/* 返回选择页面按钮 */
 .back-to-overview-container {
   position: fixed;
   top: 70px;
@@ -2013,6 +2013,9 @@ export default {
 }
 
 .back-to-overview-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(255, 255, 255, 0.95);
   color: #2D3E40;
   border: 1px solid rgba(132, 169, 140, 0.3);
@@ -2024,6 +2027,14 @@ export default {
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.back-to-overview-btn span {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .back-to-overview-btn:hover {
@@ -2031,6 +2042,10 @@ export default {
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(132, 169, 140, 0.3);
+}
+
+.back-to-overview-btn:hover span {
+  color: white;
 }
 
 /* ===== 查看原始内容功能 ===== */
@@ -2904,13 +2919,23 @@ export default {
   align-items: center;
   gap: 0.8rem;
   background: rgba(255, 255, 255, 0.98); /* 改为白色背景 */
-  color: #000000; /* 纯黑色文字 */
+  color: #000000 !important; /* 纯黑色文字，强制优先级 */
   padding: 1rem 2rem;
   border-radius: 30px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  font-weight: 700; /* 黑体字 */
+  font-weight: 700 !important; /* 黑体字，强制优先级 */
+  border: 2px solid rgba(0, 0, 0, 0.2); /* 添加边框增强对比 */
+}
+
+.companion-hint .hint-text {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+.companion-hint .hint-icon {
+  color: #000000 !important;
 }
 
 .companion-hint:hover {
@@ -2923,18 +2948,22 @@ export default {
   align-items: center;
   gap: 0.8rem;
   background: rgba(255, 255, 255, 0.98); /* 增加不透明度 */
-  color: #2D3E40; /* 使用更深的颜色提高对比度 */
+  color: #000000 !important; /* 使用更深的颜色提高对比度，强制优先级 */
   padding: 1rem 2rem;
   border-radius: 30px;
   backdrop-filter: blur(20px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* 增加阴影对比度 */
-  border: 1px solid rgba(132, 169, 140, 0.3); /* 添加边框提高可见性 */
+  border: 2px solid rgba(0, 0, 0, 0.2); /* 添加边框提高可见性和对比度 */
 }
 
 .companion-disabled p {
   margin: 0;
-  font-weight: 700; /* 改为黑色粗体 */
-  color: #000000; /* 纯黑色 */
+  font-weight: 700 !important; /* 改为黑色粗体，强制优先级 */
+  color: #000000 !important; /* 纯黑色，强制优先级 */
+}
+
+.companion-disabled .rest-icon {
+  color: #000000 !important;
 }
 
 /* ===== 模态对话框 ===== */
@@ -3585,7 +3614,7 @@ export default {
     padding-right: 1rem;
   }
   
-  /* 返回总览按钮移动端调整 */
+  /* 返回选择页面按钮移动端调整 */
   .back-to-overview-container {
     top: 60px;
   }

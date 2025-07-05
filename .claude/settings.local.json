@@ -14,7 +14,8 @@
       "Bash(timeout 10s npm run build)",
       "Bash(grep -r \"background-image.*url.*assets\" components/)",
       "Bash(grep:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

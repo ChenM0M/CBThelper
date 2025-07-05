@@ -17,6 +17,7 @@ import ThoughtRecord from '../components/ThoughtRecord.vue'
 import CognitiveAnalysis from '../components/CognitiveAnalysis.vue'
 import Dashboard from '../components/Dashboard.vue'
 import MindGarden from '../components/MindGarden.vue'
+import AboutPage from '../components/AboutPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,7 +26,8 @@ const router = createRouter({
     { path: '/dashboard', component: Dashboard },
     { path: '/config', component: GardenConfig },
     { path: '/record', component: ThoughtRecord },
-    { path: '/analysis', component: CognitiveAnalysis }
+    { path: '/analysis', component: CognitiveAnalysis },
+    { path: '/about', component: AboutPage }
   ]
 })
 
