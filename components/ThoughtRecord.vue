@@ -1,8 +1,10 @@
 <template>
   <div class="growth-journey">
     <!-- 背景层 -->
-    <div class="journey-background">
-      <div class="growing-garden">
+    <div class="garden-background">
+      <div class="sky-gradient"></div>
+      <div class="soil-texture"></div>
+      <div class="garden-elements">
         <div v-for="i in 8" :key="i" class="garden-element" :style="getGardenElementStyle(i)"></div>
       </div>
     </div>
@@ -23,19 +25,38 @@
 
     <!-- 主内容区 -->
     <div class="journey-content">
-      
+      <!-- 进度指示器 -->
+      <div class="journey-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+        </div>
+        <div class="step-indicator">
+          <div class="seed-icon">
+            <img src="../assets/images/seed.png" alt="种子" class="seed-image" />
+          </div>
+          <span class="step-name">{{ currentStepName }}</span>
+          <span class="step-count">{{ currentStep }}/{{ totalSteps }}</span>
+        </div>
+      </div>
+
       <!-- 欢迎介绍 -->
       <div v-if="currentStep === 0" class="welcome-step">
         <div class="step-card">
           <div class="step-icon">🌱</div>
           <h2 class="step-title">开始今天的成长之旅</h2>
-          <div class="current-mood" v-if="selectedEmotion">
-            <p class="mood-display">
+          <div class="current-mood" v-if="selectedEmotion || record.emotions.length > 0">
+            <p class="mood-display" v-if="selectedEmotion">
               <span class="mood-icon" :style="{ background: selectedEmotion.gradient }">
                 {{ selectedEmotion.emoji || '💭' }}
               </span>
               今天的感受：{{ selectedEmotion.name }}
             </p>
+            <!-- 显示所有选中的情绪 -->
+            <div class="selected-emotions-preview" v-if="record.emotions.length > 1">
+              <p class="emotions-text">
+                还有其他感受：{{ record.emotions.filter(e => e !== selectedEmotion?.name).join('、') }}
+              </p>
+            </div>
           </div>
           <p class="step-description">
             让我们一起轻柔地探索内心的想法，每一个想法都是珍贵的种子，值得被温柔对待。
@@ -56,8 +77,25 @@
           
           <div class="input-garden">
             <div class="growing-plant" :class="{ 'has-content': record.situation }">
-              <div class="soil-base"></div>
-              <div class="plant-sprout" v-if="record.situation"></div>
+              <div class="soil-base">
+                <span class="soil-emoji">🌍</span>
+              </div>
+              <div class="plant-growth" v-if="record.situation">
+                <div class="plant-sprout">
+                  <span class="plant-emoji">🌱</span>
+                  <div class="growth-sparkles">
+                    <span class="sparkle">✨</span>
+                  </div>
+                </div>
+              </div>
+              <div class="writing-indicator" v-else>
+                <span class="waiting-emoji">🌍</span>
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
             </div>
             <textarea
               v-model="record.situation"
@@ -91,9 +129,25 @@
           
           <div class="input-garden">
             <div class="growing-plant" :class="{ 'has-content': record.automaticThought, 'thorny': record.automaticThought }">
-              <div class="soil-base"></div>
-              <div class="plant-sprout dark" v-if="record.automaticThought">
-                <div class="thorns" v-if="isNegativeThought"></div>
+              <div class="soil-base">
+                <span class="soil-emoji">🌱</span>
+              </div>
+              <div class="plant-growth" v-if="record.automaticThought">
+                <div class="plant-sprout" :class="{ 'negative': isNegativeThought }">
+                  <span class="plant-emoji">{{ isNegativeThought ? '🥀' : '🌿' }}</span>
+                  <div class="growth-sparkles" v-if="!isNegativeThought">
+                    <span class="sparkle">✨</span>
+                    <span class="sparkle">✨</span>
+                  </div>
+                </div>
+              </div>
+              <div class="writing-indicator" v-else>
+                <span class="waiting-emoji">💭</span>
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
               </div>
             </div>
             <textarea
@@ -285,7 +339,7 @@ export default {
         // 取消选择
         this.record.emotions = this.record.emotions.filter(e => e !== emotion.name)
       } else {
-        // 选择新情绪（可以多选）
+        // 选择新情绪（支持多选）
         this.record.emotions.push(emotion.name)
       }
     },
@@ -383,40 +437,111 @@ export default {
 .growth-journey {
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(180deg, #F0E5D8 0%, #E8F4F8 50%, #CAD2C5 100%);
+  background: transparent;
 }
 
-/* 背景层 */
-.journey-background {
+/* 背景层样式 */
+.garden-background {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-  pointer-events: none;
+  overflow: hidden;
 }
 
-.growing-garden {
+.sky-gradient {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 70%;
+  background-image: url('../assets/images/sky-gradient.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.8;
 }
 
-.garden-element {
+.soil-texture {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, rgba(132, 169, 140, 0.4), transparent);
-  border-radius: 50%;
-  animation: gentle-float 5s ease-in-out infinite;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  background-image: url('../assets/images/soil-texture.png');
+  background-size: cover;
+  background-position: center bottom;
+  opacity: 0.9;
 }
 
-@keyframes gentle-float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
-  50% { transform: translateY(-15px) rotate(180deg); opacity: 0.7; }
+/* 种子图标样式 */
+.seed-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.seed-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: seedFloat 3s ease-in-out infinite;
+}
+
+@keyframes seedFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 进度指示器样式 */
+.journey-progress {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.progress-bar {
+  height: 8px;
+  background: rgba(132, 169, 140, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--life-moss) 0%, var(--life-olive) 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  color: var(--life-moss);
+  font-size: 1rem;
+}
+
+.step-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.step-count {
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 /* 顶部导航 */
@@ -459,21 +584,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.progress-bar {
-  width: 200px;
-  height: 8px;
-  background: rgba(132, 169, 140, 0.2);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--primary-gradient);
-  transition: width 0.5s ease;
-  border-radius: 4px;
 }
 
 .progress-text {
@@ -571,6 +681,21 @@ export default {
   font-size: 1.5rem;
 }
 
+.selected-emotions-preview {
+  margin-top: 0.8rem;
+}
+
+.emotions-text {
+  font-size: 0.9rem;
+  color: var(--life-olive);
+  margin: 0;
+  font-style: italic;
+  background: rgba(132, 169, 140, 0.1);
+  padding: 0.6rem 1rem;
+  border-radius: 15px;
+  border: 1px solid rgba(132, 169, 140, 0.2);
+}
+
 /* 输入花园 */
 .input-garden {
   position: relative;
@@ -580,65 +705,174 @@ export default {
 
 .growing-plant {
   position: absolute;
-  right: 20px;
-  bottom: 20px;
-  width: 60px;
-  height: 80px;
+  right: 15px;
+  bottom: 15px;
+  width: 70px;
+  height: 90px;
   z-index: 2;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .soil-base {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 10px;
-  background: var(--earth-clay);
-  border-radius: 5px;
+  position: relative;
+  width: 50px;
+  height: 15px;
+  background: linear-gradient(135deg, var(--earth-clay), #8B7355);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.soil-emoji {
+  font-size: 1.2rem;
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+.plant-growth {
+  position: relative;
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: grow-in 0.8s ease-out;
 }
 
 .plant-sprout {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 30px;
-  background: var(--life-olive);
-  border-radius: 10px 10px 50% 50%;
-  transition: all 0.5s ease;
-  transform-origin: bottom center;
-}
-
-.plant-sprout.dark {
-  background: var(--earth-clay);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: plant-sway 3s ease-in-out infinite;
 }
 
-.thorns {
+.plant-emoji {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  transition: all 0.3s ease;
+}
+
+.plant-sprout.negative .plant-emoji {
+  animation: wilt 1s ease-in-out;
+}
+
+.growth-sparkles {
   position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  background: radial-gradient(circle, rgba(200, 119, 119, 0.3), transparent);
-  border-radius: inherit;
+  top: -10px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
 }
 
-.growing-plant.has-content .plant-sprout {
-  animation: grow-up 0.8s ease-out;
+.sparkle {
+  font-size: 0.8rem;
+  animation: sparkle-twinkle 2s ease-in-out infinite;
 }
 
-@keyframes grow-up {
+.sparkle:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.writing-indicator {
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.waiting-emoji {
+  font-size: 1.5rem;
+  animation: float-waiting 2s ease-in-out infinite;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.typing-dots span {
+  width: 4px;
+  height: 4px;
+  background: var(--life-olive);
+  border-radius: 50%;
+  animation: typing-animation 1.4s ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes grow-in {
   0% {
     height: 0;
     opacity: 0;
   }
   100% {
-    height: 30px;
+    height: 60px;
     opacity: 1;
+  }
+}
+
+@keyframes plant-sway {
+  0%, 100% { 
+    transform: rotate(-2deg); 
+  }
+  50% { 
+    transform: rotate(2deg); 
+  }
+}
+
+@keyframes wilt {
+  0% { 
+    transform: scale(1) rotate(0deg); 
+  }
+  50% { 
+    transform: scale(0.9) rotate(-5deg); 
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+  }
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { 
+    opacity: 0.3; 
+    transform: scale(0.8); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2); 
+  }
+}
+
+@keyframes float-waiting {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-5px); 
+  }
+}
+
+@keyframes typing-animation {
+  0%, 80%, 100% { 
+    transform: scale(1); 
+    opacity: 0.5; 
+  }
+  40% { 
+    transform: scale(1.3); 
+    opacity: 1; 
   }
 }
 

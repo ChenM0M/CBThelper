@@ -1,5 +1,13 @@
 <template>
   <div class="growth-garden">
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-icon">🌱</div>
+        <div class="loading-text">花园正在绽放...</div>
+      </div>
+    </div>
+
     <!-- 背景层 -->
     <div class="garden-background">
       <div class="blooming-particles">
@@ -244,7 +252,8 @@ export default {
   name: 'Dashboard',
   data() {
     return {
-      dailyEncouragement: ''
+      dailyEncouragement: '',
+      isLoading: true
     }
   },
   computed: {
@@ -255,7 +264,10 @@ export default {
       return this.$store.state.thoughtRecords && this.$store.state.thoughtRecords.length > 0;
     },
     recentRecords() {
-      return this.$store.state.thoughtRecords ? this.$store.state.thoughtRecords.slice(0, 6) : [];
+      if (!this.$store.state.thoughtRecords || !Array.isArray(this.$store.state.thoughtRecords)) {
+        return [];
+      }
+      return this.$store.state.thoughtRecords.slice(0, 6);
     },
     analyzedRecordsCount() {
       if (!this.$store.state.thoughtRecords) return 0
@@ -292,6 +304,13 @@ export default {
         }, {});
     },
     moodTrend() {
+      if (!this.$store.state.thoughtRecords || !Array.isArray(this.$store.state.thoughtRecords)) {
+        return { 
+          label: '刚刚起步', 
+          class: 'neutral',
+          emoji: '🌱'
+        };
+      }
       const records = this.$store.state.thoughtRecords.slice(0, 5);
       if (records.length < 2) {
         return { 
@@ -471,11 +490,26 @@ export default {
         animationDelay: `${delay}s`,
         animationDuration: `${duration}s`
       }
+    },
+
+    async initializeDashboard() {
+      try {
+        this.isLoading = true;
+        // 确保数据已加载
+        if (!this.$store.state.thoughtRecords) {
+          await this.$store.dispatch('loadThoughtRecords');
+        }
+        this.loadDailyEncouragement();
+      } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+      } finally {
+        this.isLoading = false;
+      }
     }
   },
 
   mounted() {
-    this.loadDailyEncouragement()
+    this.initializeDashboard();
   }
 }
 </script>
@@ -483,8 +517,8 @@ export default {
 <style scoped>
 .growth-garden {
   min-height: 100vh;
-  background: linear-gradient(180deg, #E8F4F8 0%, #F0E5D8 50%, #CAD2C5 100%);
   position: relative;
+  overflow-x: hidden;
 }
 
 /* 背景层 */
@@ -496,6 +530,16 @@ export default {
   height: 100%;
   z-index: 0;
   pointer-events: none;
+}
+
+.garden-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #E8F4F8 0%, #F0E5D8 30%, #CAD2C5 100%);
 }
 
 .blooming-particles {
@@ -510,14 +554,20 @@ export default {
   position: absolute;
   width: 8px;
   height: 8px;
-  background: radial-gradient(circle, rgba(255, 155, 133, 0.4), transparent);
+  background: radial-gradient(circle, rgba(132, 169, 140, 0.6), rgba(132, 169, 140, 0));
   border-radius: 50%;
-  animation: bloom-float 10s ease-in-out infinite;
+  animation: float 8s ease-in-out infinite;
 }
 
-@keyframes bloom-float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
-  50% { transform: translateY(-25px) rotate(180deg); opacity: 0.8; }
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+    opacity: 0.8;
+  }
 }
 
 /* 顶部导航 */
@@ -529,7 +579,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(132, 169, 140, 0.2);
 }
 
@@ -1139,6 +1189,58 @@ export default {
   .record-bloom,
   .insight-bloom {
     padding: 1.5rem;
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  text-align: center;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.loading-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: bounce 2s infinite;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
   }
 }
 </style>

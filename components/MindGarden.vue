@@ -66,7 +66,9 @@
                 class="custom-input"
                 @focus="onCustomEmotionFocus"
                 @blur="onCustomEmotionBlur"
-                @keyup.enter="addCustomEmotion"
+                @keyup.enter.prevent="addCustomEmotion"
+                @keydown.tab.prevent="addCustomEmotion"
+                ref="customEmotionInput"
               >
               <button 
                 v-if="customEmotion.trim()" 
@@ -163,6 +165,8 @@ export default {
       selectedEmotions: [], // 改为数组支持多选
       customEmotion: '',
       isCustomEmotionFocused: false,
+      customEmotionHistory: [], // 新增：记录历史输入
+      customEmotionHistoryIndex: -1, // 新增：历史记录索引
       
       // 预设情绪选项
       emotionOptions: [
@@ -248,10 +252,13 @@ export default {
 
     onCustomEmotionFocus() {
       this.isCustomEmotionFocused = true
+      this.customEmotionHistoryIndex = -1
     },
 
     onCustomEmotionBlur() {
-      this.isCustomEmotionFocused = false
+      setTimeout(() => {
+        this.isCustomEmotionFocused = false
+      }, 200)
     },
 
     // 添加自定义情绪为标签
@@ -265,17 +272,38 @@ export default {
       )
       
       if (!exists) {
+        // 生成渐变色
+        const gradients = [
+          'linear-gradient(135deg, #84A98C, #7B9BB3)',
+          'linear-gradient(135deg, #A0826D, #8B7355)',
+          'linear-gradient(135deg, #9384A8, #7A6B8A)',
+          'linear-gradient(135deg, #FF9B85, #FFA07A)',
+        ]
+        const randomGradient = gradients[Math.floor(Math.random() * gradients.length)]
+        
         const customEmotionObj = {
           name: emotionText,
           isCustom: true,
           emoji: '💭',
           color: '#84A98C',
-          gradient: 'linear-gradient(135deg, #84A98C, #7B9BB3)',
+          gradient: randomGradient,
           flower: 'custom'
         }
         
         this.selectedEmotions.push(customEmotionObj)
+        
+        // 添加到历史记录
+        if (!this.customEmotionHistory.includes(emotionText)) {
+          this.customEmotionHistory.unshift(emotionText)
+          if (this.customEmotionHistory.length > 5) {
+            this.customEmotionHistory.pop()
+          }
+        }
+        
         this.customEmotion = '' // 清空输入框
+        this.$nextTick(() => {
+          this.$refs.customEmotionInput.focus() // 保持输入框焦点
+        })
       }
     },
 
@@ -376,18 +404,17 @@ export default {
   width: 100%;
   height: 100%;
   z-index: 0;
+  pointer-events: none;
 }
 
-.sky-gradient {
+.garden-background::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, 
-    #E8F4F8 0%, 
-    #F0E5D8 30%, 
-    #CAD2C5 100%);
+  background: linear-gradient(180deg, #E8F4F8 0%, #F0E5D8 30%, #CAD2C5 100%);
 }
 
 .floating-particles {
@@ -396,7 +423,6 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
 }
 
 .particle {
@@ -487,7 +513,7 @@ export default {
 
 .emotion-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -558,7 +584,7 @@ export default {
   font-weight: 500;
 }
 
-/* 自定义情绪输入 */
+/* 自定义情绪输入样式优化 */
 .custom-emotion {
   margin-bottom: 2rem;
   display: flex;
@@ -566,12 +592,13 @@ export default {
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .custom-input {
   flex: 1;
   max-width: 300px;
-  padding: 1rem;
+  padding: 1rem 1.2rem;
   border: 2px solid var(--earth-clay);
   border-radius: 15px;
   font-size: 1rem;
@@ -579,23 +606,6 @@ export default {
   color: var(--life-moss);
   transition: all 0.3s ease;
   text-align: center;
-}
-
-.add-emotion-btn {
-  padding: 1rem 1.5rem;
-  background: var(--secondary-gradient);
-  color: white;
-  border: none;
-  border-radius: 15px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.add-emotion-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(132, 169, 140, 0.3);
 }
 
 .custom-input:focus {
@@ -610,7 +620,34 @@ export default {
   opacity: 0.7;
 }
 
-/* 选中情绪标签样式 */
+.add-emotion-btn {
+  padding: 1rem 1.5rem;
+  background: var(--secondary-gradient);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: fadeInRight 0.3s ease forwards;
+}
+
+.add-emotion-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(132, 169, 140, 0.3);
+}
+
+@keyframes fadeInRight {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 选中情绪标签样式优化 */
 .selected-emotions {
   margin-bottom: 1.5rem;
 }
@@ -618,48 +655,58 @@ export default {
 .emotion-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.8rem;
   justify-content: center;
+  padding: 0.5rem;
 }
 
 .emotion-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 0.8rem;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
   border-radius: 20px;
   color: white;
   font-size: 0.9rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  animation: slideIn 0.3s ease;
+  animation: tagPop 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .emotion-tag:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .remove-tag {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
   margin-left: 0.3rem;
-  font-size: 1.1rem;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
+  font-size: 1rem;
+  transition: all 0.2s ease;
 }
 
 .emotion-tag:hover .remove-tag {
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.3);
 }
 
-@keyframes slideIn {
+@keyframes tagPop {
   0% {
+    transform: scale(0.8);
     opacity: 0;
-    transform: translateX(-20px);
+  }
+  50% {
+    transform: scale(1.1);
   }
   100% {
+    transform: scale(1);
     opacity: 1;
-    transform: translateX(0);
   }
 }
 
@@ -845,16 +892,17 @@ export default {
   }
   
   .emotion-card {
-    padding: 0.8rem 0.4rem;
+    padding: 0.8rem 0.5rem;
   }
   
   .emotion-icon {
     width: 40px;
     height: 40px;
+    font-size: 1.3rem;
   }
   
   .emotion-name {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
   
   .action-buttons {
@@ -894,30 +942,39 @@ export default {
   }
   
   .emotion-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 0.6rem;
+    margin-bottom: 1rem;
   }
   
   .emotion-card {
-    padding: 0.8rem 0.4rem;
+    padding: 0.6rem 0.4rem;
   }
   
   .emotion-icon {
-    width: 35px;
-    height: 35px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
   }
   
   .emotion-name {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
   
   .custom-emotion {
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 0.5rem;
   }
   
   .custom-input {
-    max-width: 100%;
+    width: 100%;
+    max-width: none;
+    padding: 0.8rem;
+  }
+  
+  .add-emotion-btn {
+    width: 100%;
+    padding: 0.8rem;
   }
 }
 </style>
