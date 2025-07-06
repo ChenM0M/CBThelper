@@ -82,6 +82,28 @@ export default async function handler(request, response) {
     });
   }
 
+  // 验证模型配置
+  if (!defaultModel) {
+    console.error('缺少模型配置:', {
+      envModel: envDefaultModel,
+      configModel: configModel,
+      availableEnvVars: Object.keys(process.env).filter(key => key.includes('MODEL'))
+    });
+    return response.status(400).json({
+      error: 'Configuration Error',
+      message: '未配置模型名称',
+      code: 'MISSING_MODEL_NAME',
+      details: {
+        required: ['模型名称'],
+        help: '请在环境变量中设置 LLM_MODEL_NAME 或在请求中指定模型',
+        envCheck: {
+          hasLLM_MODEL_NAME: !!process.env.LLM_MODEL_NAME,
+          hasVUE_APP_LLM_MODEL_NAME: !!process.env.VUE_APP_LLM_MODEL_NAME
+        }
+      }
+    });
+  }
+
   try {
     console.log('准备调用LLM API:', {
       url: apiUrl,
@@ -89,7 +111,15 @@ export default async function handler(request, response) {
       messageCount: messages?.length,
       hasApiKey: !!apiKey,
       apiKeySource: configApiKey ? 'request-header' : 'environment',
-      environment: process.env.NODE_ENV || 'unknown'
+      environment: process.env.NODE_ENV || 'unknown',
+      envVars: {
+        LLM_API_KEY: !!process.env.LLM_API_KEY,
+        LLM_API_URL: process.env.LLM_API_URL,
+        LLM_MODEL_NAME: process.env.LLM_MODEL_NAME,
+        VUE_APP_LLM_API_KEY: !!process.env.VUE_APP_LLM_API_KEY,
+        VUE_APP_LLM_API_URL: process.env.VUE_APP_LLM_API_URL,
+        VUE_APP_LLM_MODEL_NAME: process.env.VUE_APP_LLM_MODEL_NAME
+      }
     });
 
     // 验证请求格式
