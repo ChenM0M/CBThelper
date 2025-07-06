@@ -6,7 +6,7 @@ class LLMService {
     // 根据环境选择API路径
     this.baseUrl = process.env.NODE_ENV === 'production' 
       ? '/api/llm-proxy' 
-      : 'http://localhost:3000/api/llm-proxy';
+      : 'http://localhost:3001/api/llm-proxy';
     this.maxRetries = 3;
     this.retryDelay = 1000; // 1秒
     this.vueInstance = null; // 存储Vue实例引用

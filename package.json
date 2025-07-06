@@ -5,7 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "dev:proxy": "node dev-server.js",
+    "dev:full": "concurrently \"npm run dev:proxy\" \"npm run serve\""
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
@@ -16,6 +18,10 @@
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
-    "@vue/cli-service": "^5.0.8"
+    "@vue/cli-service": "^5.0.8",
+    "concurrently": "^7.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2"
   }
 }

@@ -47,8 +47,8 @@ export default async function handler(request, response) {
   // 获取环境变量和请求配置
   // 优先使用直接的环境变量，然后是VUE_APP_前缀的变量
   const envApiKey = process.env.LLM_API_KEY || process.env.VUE_APP_LLM_API_KEY;
-  const envApiUrl = process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
-  const envDefaultModel = process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME || 'gpt-3.5-turbo';
+  const envApiUrl = process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL;
+  const envDefaultModel = process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME;
 
   // 从请求头中获取配置
   const configApiKey = request.headers['x-api-key'];

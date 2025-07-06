@@ -6,9 +6,9 @@
 export default {
   // LLM 服务配置
   llm: {
-    apiUrl: process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL || 'https://api.openai.com/v1/chat/completions',
+    apiUrl: process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL || '',
     apiKey: process.env.LLM_API_KEY || process.env.VUE_APP_LLM_API_KEY || '',
-    modelName: process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME || 'gpt-3.5-turbo',
+    modelName: process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME || '',
     maxTokens: 1000,
     temperature: 0.7
   },

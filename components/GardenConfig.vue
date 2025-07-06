@@ -93,17 +93,13 @@
             v-model="selectedModelOption"
             @change="handleModelChange"
           >
-            <option value="gpt-3.5-turbo">GPT-3.5-Turbo</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="gpt-4-turbo">GPT-4-Turbo</option>
             <option value="custom">自定义模型</option>
           </select>
           
           <input
-            v-if="selectedModelOption === 'custom'"
             v-model="customModelName"
             type="text"
-            placeholder="输入自定义模型名称"
+            placeholder="输入模型名称（如：qwen-turbo）"
             class="custom-model-input"
           >
         </div>
@@ -287,24 +283,14 @@ export default {
 
   created() {
     // 初始化时设置selectedModelOption
-    const predefinedModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
-    if (predefinedModels.includes(this.apiConfig.model)) {
-      this.selectedModelOption = this.apiConfig.model
-    } else {
-      this.selectedModelOption = 'custom'
-      this.customModelName = this.apiConfig.model
-    }
+    this.selectedModelOption = 'custom'
+    this.customModelName = this.apiConfig.model || ''
   },
 
   computed: {
     isFormValid() {
       const hasRequiredFields = this.apiConfig.endpoint && this.apiConfig.apiKey
-      
-      if (this.selectedModelOption === 'custom') {
-        return hasRequiredFields && this.customModelName
-      } else {
-        return hasRequiredFields && this.selectedModelOption
-      }
+      return hasRequiredFields && this.customModelName
     }
   },
 
@@ -328,13 +314,7 @@ export default {
     },
 
     handleModelChange() {
-      if (this.selectedModelOption !== 'custom') {
-        this.apiConfig.model = this.selectedModelOption
-      } else {
-        if (!this.customModelName) {
-          this.customModelName = this.apiConfig.model
-        }
-      }
+      this.apiConfig.model = this.customModelName
     },
     
     // 配置模式切换
@@ -355,9 +335,8 @@ export default {
       this.cloudTestStatus = ''
       
       try {
-        // 在云端环境下，使用代理API进行测试
+        // 云端模式完全依赖环境变量，不使用任何硬编码
         const testMessage = {
-          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'user',
@@ -369,7 +348,11 @@ export default {
         }
 
         // 使用云端代理API
-        const response = await fetch('/api/llm-proxy', {
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/llm-proxy' 
+          : 'http://localhost:3001/api/llm-proxy';
+        
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -417,7 +400,7 @@ export default {
             'Authorization': `Bearer ${this.apiConfig.apiKey}`
           },
           body: JSON.stringify({
-            model: this.selectedModelOption === 'custom' ? this.customModelName : this.selectedModelOption,
+            model: this.customModelName,
             messages: [
               {
                 role: "user",
@@ -449,9 +432,7 @@ export default {
     },
 
     saveConfig() {
-      if (this.selectedModelOption === 'custom') {
-        this.apiConfig.model = this.customModelName;
-      }
+      this.apiConfig.model = this.customModelName;
       
       // 使用store的updateApiConfig方法
       this.$store.updateApiConfig({
