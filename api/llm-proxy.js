@@ -45,9 +45,10 @@ export default async function handler(request, response) {
   }
 
   // 获取环境变量和请求配置
-  const envApiKey = process.env.LLM_API_KEY;
-  const envApiUrl = process.env.LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
-  const envDefaultModel = process.env.LLM_MODEL_NAME || 'gpt-3.5-turbo';
+  // 优先使用直接的环境变量，然后是VUE_APP_前缀的变量
+  const envApiKey = process.env.LLM_API_KEY || process.env.VUE_APP_LLM_API_KEY;
+  const envApiUrl = process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
+  const envDefaultModel = process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME || 'gpt-3.5-turbo';
 
   // 从请求头中获取配置
   const configApiKey = request.headers['x-api-key'];
@@ -61,14 +62,22 @@ export default async function handler(request, response) {
 
   // 验证API配置
   if (!apiKey) {
-    console.error('缺少API密钥配置');
-    return response.status(500).json({
-      error: 'Configuration Error',
-      message: '请在花园设置中配置API密钥',
+    console.error('缺少API密钥配置:', {
+      envApiKey: !!envApiKey,
+      configApiKey: !!configApiKey,
+      availableEnvVars: Object.keys(process.env).filter(key => key.includes('LLM') || key.includes('API'))
+    });
+    return response.status(401).json({
+      error: 'Authentication Error',
+      message: '未配置API密钥或密钥无效',
       code: 'MISSING_API_KEY',
       details: {
         required: ['API密钥'],
-        help: '请在花园设置页面中设置正确的API配置'
+        help: '请在环境变量中设置 LLM_API_KEY 或在花园设置中配置API密钥',
+        envCheck: {
+          hasLLM_API_KEY: !!process.env.LLM_API_KEY,
+          hasVUE_APP_LLM_API_KEY: !!process.env.VUE_APP_LLM_API_KEY
+        }
       }
     });
   }
@@ -78,7 +87,9 @@ export default async function handler(request, response) {
       url: apiUrl,
       model: model || defaultModel,
       messageCount: messages?.length,
-      hasApiKey: !!apiKey
+      hasApiKey: !!apiKey,
+      apiKeySource: configApiKey ? 'request-header' : 'environment',
+      environment: process.env.NODE_ENV || 'unknown'
     });
 
     // 验证请求格式
@@ -159,13 +170,29 @@ export default async function handler(request, response) {
       console.error('LLM API错误:', data);
       
       // 处理常见错误
-      if (data.error?.code === 'invalid_api_key') {
+      if (data.error?.code === 'invalid_api_key' || data.error?.type === 'invalid_request_error') {
         return response.status(401).json({
           error: 'Authentication Error',
           message: 'API密钥无效或已过期',
           code: 'INVALID_API_KEY',
           details: {
-            suggestion: '请检查API密钥是否正确，或者尝试重新生成密钥'
+            originalError: data.error,
+            suggestion: '请检查API密钥是否正确，或者尝试重新生成密钥',
+            apiKeySource: configApiKey ? 'request-header' : 'environment'
+          }
+        });
+      }
+      
+      // 处理401认证错误
+      if (llmResponse.status === 401) {
+        return response.status(401).json({
+          error: 'Authentication Error',
+          message: '认证失败：API密钥无效',
+          code: 'AUTHENTICATION_FAILED',
+          details: {
+            status: llmResponse.status,
+            originalError: data.error,
+            suggestion: '请检查API密钥是否正确配置'
           }
         });
       }

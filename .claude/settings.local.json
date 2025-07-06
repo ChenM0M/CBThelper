@@ -15,7 +15,8 @@
       "Bash(grep -r \"background-image.*url.*assets\" components/)",
       "Bash(grep:*)",
       "Bash(rg:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(grep -n \"mounted()\" components/CognitiveAnalysis.vue)"
     ],
     "deny": []
   }

@@ -120,7 +120,7 @@
           </div>
           
           <!-- 全屏花朵预览区 -->
-          <div class="fullscreen-flower-area" @click="showAnalysisDetail = true">
+          <div class="fullscreen-flower-area" @click="enterDetailView">
             <div class="flower-container-fullscreen">
               <div class="flower-stage-fullscreen" :class="getFlowerStageClass()">
                 <img 
@@ -153,7 +153,7 @@
         <!-- 详细分析界面 -->
         <section v-else-if="selectedRecord && showAnalysisDetail" class="greenhouse-flower">
           <!-- 返回选择页面按钮 -->
-          <div class="back-to-overview-container">
+          <div class="back-to-overview-container" :class="{ 'controls-hidden': !controlsVisible }">
             <button @click="backToSelection" class="back-to-overview-btn">
               <span>← 返回选择页面</span>
             </button>
@@ -309,7 +309,7 @@
         </div>
         
               <!-- 底部提示 -->
-              <div class="bottom-hint" v-if="hasAnalysis">
+              <div class="bottom-hint" v-if="hasAnalysis" :class="{ 'controls-hidden': !controlsVisible }">
                 <div v-if="isWisdomCompanionEnabled" class="companion-hint" @click="openChatDialog">
                   <span class="hint-icon">💬</span>
                   <span class="hint-text">与智慧伙伴深度对话</span>
@@ -497,6 +497,13 @@ export default {
     return {
       selectedRecord: null,
       isAnalyzing: false,
+      // UI隐藏状态管理
+      controlsVisible: false,          // 控制元素是否可见
+      hideTimeout: null,               // 隐藏定时器
+      
+      // 触摸交互状态
+      touchStartY: null,
+      
       isTyping: false, // 智慧伙伴正在回复状态
       analysisResult: null,
       showChatDialog: false,
@@ -555,6 +562,12 @@ export default {
       this.$router.push('/')
     },
     
+    // 进入详细视图
+    enterDetailView() {
+      this.showAnalysisDetail = true;
+      this.resetUIHideState();
+    },
+    
     // 返回选择界面
     backToSelection() {
       this.selectedRecord = null
@@ -580,6 +593,9 @@ export default {
         
         // 已解析的主题直接显示详细内容
         this.showAnalysisDetail = true
+        
+        // 重置UI隐藏状态，进入详细页面时显示控制元素
+        this.resetUIHideState()
         
         // 恢复对话消息
         if (this.selectedRecord.chatTopics && this.selectedRecord.chatTopics.length > 0) {
@@ -699,6 +715,11 @@ export default {
           recordId: this.selectedRecord.id,
           hasAnalysis: !!this.selectedRecord.analysis,
           hasParsedData: !!this.selectedRecord.analysisData
+        });
+        
+        // 分析完成后自动进入详细视图
+        this.$nextTick(() => {
+          this.enterDetailView();
         });
         
       } catch (error) {
@@ -1540,6 +1561,113 @@ export default {
         const userMessages = topic.messages.filter(msg => msg.type === 'user');
         return count + userMessages.length;
       }, 0);
+    },
+    
+    // ===== 简化的UI隐藏逻辑 =====
+    
+    // 初始化滚动检测
+    initializeScrollDetection() {
+      // 高性能滚动监听
+      document.addEventListener('scroll', this.onScroll, { passive: true });
+      document.addEventListener('wheel', this.onWheel, { passive: true });
+      
+      // 触摸事件监听
+      document.addEventListener('touchstart', this.onTouchStart, { passive: true });
+      document.addEventListener('touchmove', this.onTouchMove, { passive: true });
+      document.addEventListener('touchend', this.onTouchEnd, { passive: true });
+      
+      // 键盘滚动支持
+      document.addEventListener('keydown', this.onKeyDown);
+      
+      // 初始状态：隐藏控制元素
+      this.controlsVisible = false;
+    },
+    
+    // 滚动事件处理
+    onScroll(event) {
+      this.handleUserInteraction();
+    },
+    
+    // 鼠标滚轮事件
+    onWheel(event) {
+      this.handleUserInteraction();
+    },
+    
+    // 触摸开始
+    onTouchStart(event) {
+      this.touchStartY = event.touches[0].clientY;
+    },
+    
+    // 触摸移动
+    onTouchMove(event) {
+      if (this.touchStartY !== null) {
+        const touchY = event.touches[0].clientY;
+        const deltaY = Math.abs(touchY - this.touchStartY);
+        
+        // 触摸滑动距离超过5像素时触发
+        if (deltaY > 5) {
+          this.handleUserInteraction();
+        }
+      }
+    },
+    
+    // 触摸结束
+    onTouchEnd(event) {
+      this.touchStartY = null;
+    },
+    
+    // 键盘滚动支持
+    onKeyDown(event) {
+      const scrollKeys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Space'];
+      if (scrollKeys.includes(event.key)) {
+        this.handleUserInteraction();
+      }
+    },
+    
+    // 统一的用户交互处理 - 简化版本
+    handleUserInteraction() {
+      // 显示控制元素
+      this.controlsVisible = true;
+      
+      // 清除之前的隐藏定时器
+      if (this.hideTimeout) {
+        clearTimeout(this.hideTimeout);
+        this.hideTimeout = null;
+      }
+      
+      // 设置1秒后隐藏，不叠加
+      this.hideTimeout = setTimeout(() => {
+        this.controlsVisible = false;
+      }, 1000);
+    },
+    
+    // 清理定时器
+    clearTimeouts() {
+      if (this.hideTimeout) {
+        clearTimeout(this.hideTimeout);
+        this.hideTimeout = null;
+      }
+    },
+    
+    // 重置UI隐藏状态（进入详细页面时调用）
+    resetUIHideState() {
+      // 重置状态
+      this.controlsVisible = false;
+      
+      // 清除定时器
+      this.clearTimeouts();
+    },
+    
+    // 清理滚动检测
+    cleanupScrollDetection() {
+      document.removeEventListener('scroll', this.onScroll);
+      document.removeEventListener('wheel', this.onWheel);
+      document.removeEventListener('touchstart', this.onTouchStart);
+      document.removeEventListener('touchmove', this.onTouchMove);
+      document.removeEventListener('touchend', this.onTouchEnd);
+      document.removeEventListener('keydown', this.onKeyDown);
+      
+      this.clearTimeouts();
     }
   },
   
@@ -1582,6 +1710,9 @@ export default {
     
     // 添加窗口尺寸变化监听
     window.addEventListener('resize', this.handleResize);
+    
+    // 初始化滑动检测
+    this.initializeScrollDetection();
   },
   
   beforeUnmount() {
@@ -1592,6 +1723,9 @@ export default {
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout)
     }
+    
+    // 清理滚动检测
+    this.cleanupScrollDetection();
   }
 }
 </script>
@@ -2010,6 +2144,31 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  
+  /* 现代化过渡动画 */
+  opacity: 1;
+  visibility: visible;
+  transition: 
+    opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0.4s ease;
+  
+  /* 默认显示状态 */
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 隐藏状态的平滑动画 */
+.back-to-overview-container.controls-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-15px);
+  pointer-events: none;
+  
+  /* 延迟隐藏，创建更自然的交互 */
+  transition: 
+    opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s,
+    transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s,
+    visibility 0s 0.7s;
 }
 
 .back-to-overview-btn {
@@ -2905,6 +3064,71 @@ export default {
   font-weight: 500; /* 增加字重 */
 }
 
+/* ===== 现代化UI控制动画 ===== */
+
+/* 添加微妙的脉冲效果，当控制元素即将隐藏时 */
+@keyframes subtle-pulse {
+  0% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: scale(1.02); 
+    opacity: 0.9; 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+/* 当用户交互时，添加轻微的强调效果 */
+.back-to-overview-container:not(.controls-hidden) .back-to-overview-btn {
+  animation: subtle-pulse 2s ease-in-out;
+}
+
+.bottom-hint:not(.controls-hidden) .companion-hint {
+  animation: subtle-pulse 2s ease-in-out 0.2s;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .back-to-overview-container {
+    top: 60px;
+  }
+  
+  .bottom-hint {
+    bottom: 20px;
+  }
+  
+  /* 移动端更快的动画 */
+  .back-to-overview-container.controls-hidden,
+  .bottom-hint.controls-hidden {
+    transition: 
+      opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s,
+      transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s,
+      visibility 0s 0.35s;
+  }
+}
+
+/* 减少动画的用户偏好支持 */
+@media (prefers-reduced-motion: reduce) {
+  .back-to-overview-container,
+  .bottom-hint {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+  
+  .back-to-overview-container.controls-hidden,
+  .bottom-hint.controls-hidden {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+  
+  .back-to-overview-container:not(.controls-hidden) .back-to-overview-btn,
+  .bottom-hint:not(.controls-hidden) .companion-hint {
+    animation: none;
+  }
+}
+
 /* ===== 底部提示 ===== */
 .bottom-hint {
   position: fixed;
@@ -2912,6 +3136,31 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  
+  /* 现代化过渡动画 */
+  opacity: 1;
+  visibility: visible;
+  transition: 
+    opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0.4s ease;
+  
+  /* 默认显示状态 */
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 隐藏状态的平滑动画 */
+.bottom-hint.controls-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(15px);
+  pointer-events: none;
+  
+  /* 延迟隐藏，创建更自然的交互 */
+  transition: 
+    opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s,
+    transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s,
+    visibility 0s 0.7s;
 }
 
 .companion-hint {
