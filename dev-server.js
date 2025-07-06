@@ -12,6 +12,10 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// 静态资源服务 - 为开发环境提供静态资源
+app.use('/assets', express.static(path.join(__dirname, 'public', 'assets')));
+app.use(express.static(path.join(__dirname, 'public')));
+
 // 日志环境变量状态
 console.log('🔍 环境变量检查:');
 console.log('LLM_API_KEY:', process.env.LLM_API_KEY ? '已设置' : '未设置');

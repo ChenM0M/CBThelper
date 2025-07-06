@@ -127,18 +127,20 @@
                   :src="getFlowerImage()" 
                   :alt="getFlowerAlt()"
                   class="flower-image-fullscreen"
+                  @error="handleImageError"
                 />
               </div>
               
-              <!-- 情绪气泡预览 -->
+              <!-- 情绪气泡预览 - 使用动态生成 -->
               <div class="emotion-bubbles-fullscreen">
                 <div 
-                  v-for="(emotion, index) in getRecordEmotions(selectedRecord).slice(0, 5)" 
-                  :key="index"
+                  v-for="(bubble, index) in emotionBubblesPreview" 
+                  :key="`preview-bubble-${index}`"
                   class="emotion-bubble-fullscreen"
-                  :style="{ animationDelay: `${index * 0.3}s` }"
+                  :style="bubble.style"
+                  :class="bubble.class"
                 >
-                  {{ emotion }}
+                  {{ bubble.emotion }}
                 </div>
               </div>
             </div>
@@ -168,6 +170,7 @@
                   :alt="getFlowerAlt()"
                   class="flower-image"
                   :class="{ 'analyzing': isAnalyzing, 'bloomed': hasAnalysis }"
+                  @error="handleImageError"
                 />
                 
                 <!-- 添加进度环 -->
@@ -553,6 +556,70 @@ export default {
 
     currentAnalysisStage() {
       return this.analysisStages[this.analysisStage]
+    },
+
+    // 预览页面的情绪气泡
+    emotionBubblesPreview() {
+      if (!this.selectedRecord) return []
+      
+      const emotions = this.getRecordEmotions(this.selectedRecord)
+      if (emotions.length === 0) return []
+
+      const bubbles = []
+      const maxBubbles = Math.min(emotions.length, 5) // 预览页面最多5个
+      
+      // 使用与分析页面相同的智能定位算法
+      const isMobile = window.innerWidth <= 768
+      const flowerCoreSize = isMobile ? 80 : 120
+      const safeBoundary = flowerCoreSize / 2 + 30
+      
+      // 生成安全位置的函数
+      const generateSafePosition = () => {
+        const maxDistance = isMobile ? 200 : 280 // 预览页面稍大一些
+        const minDistance = safeBoundary + 40
+        
+        let attempts = 0
+        let position
+        
+        do {
+          const angle = Math.random() * 2 * Math.PI
+          const distance = minDistance + Math.random() * (maxDistance - minDistance)
+          
+          position = {
+            x: Math.cos(angle) * distance,
+            y: Math.sin(angle) * distance
+          }
+          
+          attempts++
+        } while (
+          (Math.abs(position.x) < safeBoundary && Math.abs(position.y) < safeBoundary) &&
+          attempts < 10
+        )
+        
+        return position
+      }
+      
+      for (let i = 0; i < maxBubbles; i++) {
+        const emotion = emotions[i]
+        const position = generateSafePosition()
+        
+        const bubble = {
+          emotion: emotion,
+          style: {
+            left: '50%',
+            top: '50%',
+            transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+            '--hue': `${(i * 60) % 360}deg`,
+            animationDelay: `${i * 0.3}s`,
+            position: 'absolute'
+          },
+          class: `preview-bubble-${i % 4}`
+        }
+        
+        bubbles.push(bubble)
+      }
+
+      return bubbles
     }
   },
   
@@ -1154,17 +1221,20 @@ export default {
     
     // 获取花朵图片
     getFlowerImage() {
-      const emotion = this.selectedRecord?.initialEmotion?.name || '平静如水'
+      const emotion = this.selectedRecord?.initialEmotion?.name || this.getFirstEmotion(this.selectedRecord)
       const stage = this.hasAnalysis ? 'bloom' : 'bud'
       let color = 'blue'
 
-      if (['愉悦阳光', '充满希望', '开心'].includes(emotion)) {
+      // 根据情绪选择花朵颜色
+      if (['愉悦阳光', '充满希望', '开心', '兴奋'].includes(emotion)) {
         color = 'yellow'
-      } else if (['焦虑不安', '愤怒', '有些低落'].includes(emotion)) {
+      } else if (['焦虑不安', '愤怒', '有些低落', '紧张', '失望'].includes(emotion)) {
         color = 'red'
+      } else {
+        color = 'blue' // 默认蓝色（平静、困惑等）
       }
 
-      // 返回花朵图片路径，如果图片不存在会显示占位符
+      // 使用绝对路径，这在Vue开发和生产环境中都应该正确
       return `/assets/images/${color}-flower-${stage}.png`
     },
     
@@ -1173,8 +1243,38 @@ export default {
       return this.hasAnalysis ? '绽放的花朵' : '含苞待放'
     },
     
-    // 全新的气泡生成系统 - 优化版本
-    // 重构后的气泡生成系统 - 修复定位和遮挡问题
+    // 处理图片加载错误
+    handleImageError(event) {
+      console.warn('花朵图片加载失败，使用默认图片:', event.target.src)
+      // 尝试使用蓝色花朵作为备用
+      if (!event.target.src.includes('blue-flower')) {
+        const stage = this.hasAnalysis ? 'bloom' : 'bud'
+        event.target.src = `/assets/images/blue-flower-${stage}.png`
+      } else {
+        // 如果连蓝色花朵都加载失败，隐藏图片并显示emoji
+        event.target.style.display = 'none'
+        const parent = event.target.parentElement
+        if (parent && !parent.querySelector('.flower-emoji-fallback')) {
+          const emoji = document.createElement('div')
+          emoji.className = 'flower-emoji-fallback'
+          emoji.textContent = this.hasAnalysis ? '🌸' : '🌱'
+          emoji.style.cssText = `
+            font-size: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+          `
+          parent.appendChild(emoji)
+        }
+      }
+    },
+    
+    // 重构后的气泡生成系统 - 修复叠加和碰撞问题
     generateEmotionBubbles() {
       if (!this.selectedRecord) {
         this.emotionBubbles = []
@@ -1188,27 +1288,48 @@ export default {
       }
 
       const bubbles = []
-      const maxBubbles = Math.min(emotions.length, 8) // 最多8个气泡
+      const maxBubbles = Math.min(emotions.length, 8)
+      const placedBubbles = [] // 记录已放置的气泡位置
       
-      // 智能避让算法 - 同一层级但避开花朵核心区域
       // 检测是否为移动设备
       const isMobile = window.innerWidth <= 480
       
-      // 定义花朵核心禁区（中心120x120像素）
+      // 定义花朵核心禁区和气泡最小间距
       const flowerCoreSize = isMobile ? 80 : 120
-      const safeBoundary = flowerCoreSize / 2 + 20 // 增加20px安全边距
+      const safeBoundary = flowerCoreSize / 2 + 30
+      const bubbleMinDistance = isMobile ? 60 : 80 // 气泡之间的最小距离
       
-      // 生成候选位置的函数
-      const generateSafePosition = () => {
+      // 检查位置是否与已有气泡冲突
+      const isPositionValid = (newPos, existingBubbles) => {
+        // 检查是否在花朵核心区域
+        if (Math.abs(newPos.x) < safeBoundary && Math.abs(newPos.y) < safeBoundary) {
+          return false
+        }
+        
+        // 检查是否与其他气泡冲突
+        return existingBubbles.every(bubble => {
+          const distance = Math.sqrt(
+            Math.pow(newPos.x - bubble.x, 2) + 
+            Math.pow(newPos.y - bubble.y, 2)
+          )
+          return distance >= bubbleMinDistance
+        })
+      }
+      
+      // 生成不冲突的位置
+      const generateSafePosition = (existingBubbles) => {
         const maxDistance = isMobile ? 180 : 250
-        const minDistance = safeBoundary + 30
+        const minDistance = safeBoundary + 20
         
         let attempts = 0
         let position
         
         do {
-          // 随机角度和距离
-          const angle = Math.random() * 2 * Math.PI
+          // 使用更均匀的角度分布
+          const baseAngle = (existingBubbles.length * 360 / maxBubbles) * Math.PI / 180
+          const angleVariation = (Math.random() - 0.5) * Math.PI / 3 // ±30度变化
+          const angle = baseAngle + angleVariation
+          
           const distance = minDistance + Math.random() * (maxDistance - minDistance)
           
           position = {
@@ -1217,18 +1338,14 @@ export default {
           }
           
           attempts++
-        } while (
-          // 检查是否在花朵核心区域内
-          (Math.abs(position.x) < safeBoundary && Math.abs(position.y) < safeBoundary) &&
-          attempts < 10 // 最多尝试10次
-        )
+        } while (!isPositionValid(position, existingBubbles) && attempts < 20)
         
         return position
       }
       
       for (let i = 0; i < maxBubbles; i++) {
         const emotion = emotions[i]
-        const position = generateSafePosition()
+        const position = generateSafePosition(placedBubbles)
         
         // 气泡样式
         const bubble = {
@@ -1241,8 +1358,8 @@ export default {
             transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
             '--random-offset': `${Math.random() * 360}deg`,
             '--delay': `${i * 0.3}s`,
-            '--hue': `${(i * 45) % 360}deg`, // 彩虹颜色，间隔更小
-            zIndex: 1, // 设置为1，确保可见但不会太高
+            '--hue': `${(i * 60) % 360}deg`, // 更大的颜色间隔
+            zIndex: 10 + i, // 避免重叠，每个气泡不同层级
             animationDelay: `${i * 0.2}s`,
             position: 'absolute'
           },
@@ -1251,6 +1368,7 @@ export default {
         }
         
         bubbles.push(bubble)
+        placedBubbles.push(position) // 记录已放置的位置
       }
 
       this.emotionBubbles = bubbles
@@ -2470,7 +2588,7 @@ export default {
   transform: scale(1.1);
 }
 
-/* 全屏情绪气泡 */
+/* 全屏情绪气泡 - 使用动态生成系统 */
 .emotion-bubbles-fullscreen {
   position: absolute;
   width: 100%;
@@ -2482,45 +2600,41 @@ export default {
 .emotion-bubble-fullscreen {
   position: absolute;
   padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  background: linear-gradient(135deg, 
+    hsl(var(--hue, 200), 70%, 85%), 
+    hsl(var(--hue, 200), 60%, 75%)
+  );
+  color: hsl(var(--hue, 200), 40%, 30%);
   border-radius: 25px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   font-size: 14px;
   font-weight: 500;
-  color: #2D3E40;
-  border: 1px solid rgba(132, 169, 140, 0.3);
-  animation: fullscreenBubbleFloat 4s ease-in-out infinite;
+  white-space: nowrap;
+  box-shadow: 
+    0 8px 25px hsla(var(--hue, 200), 50%, 50%, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(15px);
+  border: 1px solid hsla(var(--hue, 200), 50%, 80%, 0.5);
+  animation: 
+    fullscreenBubbleFloat 4s ease-in-out infinite,
+    bubbleAppear 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  transform-origin: center;
 }
 
-.emotion-bubble-fullscreen:nth-child(1) {
-  top: 10%;
-  right: 15%;
-  animation-delay: 0s;
+/* 不同的预览气泡类型 */
+.emotion-bubble-fullscreen.preview-bubble-0 {
+  --hue: 200deg; /* 蓝色 */
 }
 
-.emotion-bubble-fullscreen:nth-child(2) {
-  bottom: 20%;
-  left: 10%;
-  animation-delay: 0.5s;
+.emotion-bubble-fullscreen.preview-bubble-1 {
+  --hue: 280deg; /* 紫色 */
 }
 
-.emotion-bubble-fullscreen:nth-child(3) {
-  top: 30%;
-  right: 5%;
-  animation-delay: 1s;
+.emotion-bubble-fullscreen.preview-bubble-2 {
+  --hue: 120deg; /* 绿色 */
 }
 
-.emotion-bubble-fullscreen:nth-child(4) {
-  bottom: 40%;
-  right: 25%;
-  animation-delay: 1.5s;
-}
-
-.emotion-bubble-fullscreen:nth-child(5) {
-  top: 60%;
-  left: 20%;
-  animation-delay: 2s;
+.emotion-bubble-fullscreen.preview-bubble-3 {
+  --hue: 40deg; /* 黄色 */
 }
 
 @keyframes fullscreenBubbleFloat {
@@ -3401,6 +3515,14 @@ export default {
   border-radius: 25px;
   font-size: 0.95rem;
   transition: all 0.3s ease;
+  background: white;
+  color: #2D3E40;
+  outline: none;
+  /* 移除对话框样式，统一输入框外观 */
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .modal-input:focus {
@@ -3550,7 +3672,7 @@ export default {
   }
   
   .flowerpot-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: 1fr; /* 强制单列显示，避免竖着挤压 */
     gap: 1.5rem;
     padding: 0.5rem;
   }
@@ -3657,6 +3779,9 @@ export default {
   
   .card-title {
     font-size: 1.4rem;
+    /* 确保标题不会换行挤压 */
+    flex-wrap: nowrap;
+    gap: 0.6rem;
   }
   
   .bias-item {
@@ -3673,10 +3798,20 @@ export default {
   
   .question-item {
     padding: 1rem;
+    /* 修复竖着排版问题 */
+    flex-direction: row;
+    align-items: flex-start;
   }
   
   .question-text {
     font-size: 0.95rem;
+    flex: 1; /* 确保文字区域占据剩余空间 */
+  }
+  
+  .question-icon {
+    flex-shrink: 0; /* 防止图标被压缩 */
+    margin-right: 1rem;
+    margin-bottom: 0; /* 移除下边距 */
   }
   
   .bottom-hint {
@@ -3687,18 +3822,49 @@ export default {
   .companion-disabled {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
+    /* 防止文字被挤成竖排 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90vw;
+  }
+  
+  /* 情绪标签容器优化 */
+  .emotion-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    justify-content: center;
+    align-items: center;
+    /* 防止标签被挤成竖排 */
+    min-height: auto;
+  }
+  
+  .emotion-tag {
+    flex-shrink: 0; /* 防止标签被压缩 */
   }
   
   .modal-dialog {
     max-height: 90vh;
+    /* 确保模态框内容不会竖着排列 */
+    width: 95vw;
+    max-width: 400px;
   }
   
   .modal-header {
     padding: 1.2rem 1.5rem;
+    /* 确保标题和关闭按钮水平排列 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
   }
   
   .modal-header h3 {
     font-size: 1.2rem;
+    /* 防止标题被压缩 */
+    flex: 1;
+    margin-right: 1rem;
   }
   
   .modal-messages {
@@ -3707,6 +3873,21 @@ export default {
   
   .modal-form {
     padding: 1rem 1.5rem;
+    /* 确保输入框和按钮水平排列 */
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+  
+  .modal-input {
+    flex: 1; /* 输入框占据剩余空间 */
+    min-width: 0; /* 允许输入框收缩 */
+  }
+  
+  .modal-send {
+    flex-shrink: 0; /* 防止发送按钮被压缩 */
+    white-space: nowrap;
   }
   
   /* 移动端情绪标签优化 */
@@ -4129,60 +4310,240 @@ export default {
   }
 }
 
-/* 暗色模式支持 */
+/* 暗色模式支持 - 完全优化版本 */
 @media (prefers-color-scheme: dark) {
   .mind-greenhouse {
     background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
   }
   
-  .selector-card,
+  .greenhouse-background::before {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 30%, #1f2e2e 100%);
+  }
+  
+  .greenhouse-container,
+  .flowerpot-container,
   .analysis-card,
   .exploration-card,
-  .chat-wrapper,
+  .empathy-card,
   .modal-dialog {
     background: rgba(30, 30, 30, 0.95);
     color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
   }
   
   .greenhouse-header h1,
   .card-title,
   .bias-title,
   .question-text,
-  .message-bubble {
+  .topic-title,
+  .topic-title-main {
     color: #e0e0e0;
   }
   
   .greenhouse-header p,
-  .seed-time,
-  .bias-description {
+  .bias-description,
+  .thought-preview,
+  .empathy-text {
     color: #b0b0b0;
   }
   
-  .seed-item {
+  .flowerpot-item {
     background: rgba(40, 40, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
   }
   
-  .seed-item:hover {
+  .flowerpot-item:hover {
     background: rgba(50, 50, 50, 0.95);
+    border-color: #84A98C;
+  }
+  
+  .plant-section {
+    background: linear-gradient(135deg, rgba(132, 169, 140, 0.2), rgba(132, 169, 140, 0.1));
+  }
+  
+  .pot-body {
+    background: linear-gradient(180deg, rgba(40, 40, 40, 0.9), rgba(30, 30, 30, 0.9));
   }
   
   .emotion-bubble,
-  .message-bubble {
+  .emotion-bubble-fullscreen {
     background: rgba(60, 60, 60, 0.95);
     color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.2);
   }
   
-  .chat-input,
+  .emotion-tag {
+    background: rgba(132, 169, 140, 0.3);
+    color: #e0e0e0;
+    border-color: rgba(132, 169, 140, 0.5);
+  }
+  
   .modal-input {
     background: rgba(40, 40, 40, 0.8);
     color: #e0e0e0;
     border-color: rgba(255, 255, 255, 0.1);
   }
   
-  .chat-input:focus,
   .modal-input:focus {
     background: rgba(50, 50, 50, 0.9);
     border-color: #84A98C;
+    color: #ffffff;
+  }
+  
+  .modal-message.companion {
+    background: rgba(40, 40, 40, 0.8);
+    color: #e0e0e0;
+  }
+  
+  .analysis-stage {
+    background: rgba(30, 30, 30, 0.95);
+    color: #84A98C;
+    border: 1px solid rgba(132, 169, 140, 0.3);
+  }
+  
+  .companion-hint {
+    background: rgba(30, 30, 30, 0.95);
+    color: #ffffff !important;
+    border: 2px solid rgba(132, 169, 140, 0.5);
+  }
+  
+  .companion-hint .hint-text,
+  .companion-hint .hint-icon {
+    color: #ffffff !important;
+  }
+  
+  .companion-disabled {
+    background: rgba(30, 30, 30, 0.95);
+    color: #ffffff !important;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .companion-disabled p,
+  .companion-disabled .rest-icon {
+    color: #ffffff !important;
+  }
+  
+  .back-to-overview-btn,
+  .back-to-selection-btn,
+  .view-original-btn {
+    background: rgba(30, 30, 30, 0.95);
+    color: #e0e0e0;
+    border-color: rgba(132, 169, 140, 0.3);
+  }
+  
+  .back-to-overview-btn:hover,
+  .back-to-selection-btn:hover,
+  .view-original-btn:hover {
+    background: rgba(132, 169, 140, 0.9);
+    color: #ffffff;
+  }
+  
+  .error-content {
+    background: linear-gradient(135deg, rgba(255, 99, 71, 0.2), rgba(255, 160, 122, 0.2));
+    border-color: rgba(255, 99, 71, 0.5);
+    color: #e0e0e0;
+  }
+  
+  .error-title {
+    color: #ffffff;
+  }
+  
+  .error-description {
+    color: #b0b0b0;
+  }
+  
+  /* 鼓励卡片在暗色模式下的特殊处理 */
+  .encouragement-card {
+    background: linear-gradient(135deg, #52796F 0%, #2d3e40 100%);
+  }
+  
+  .encouragement-text {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* 原始内容弹窗暗色模式 */
+  .original-section {
+    background: rgba(40, 40, 40, 0.8);
+    border-left-color: #84A98C;
+  }
+  
+  .section-title {
+    color: #e0e0e0;
+  }
+  
+  .info-item label {
+    color: #84A98C;
+  }
+  
+  .info-item span {
+    color: #e0e0e0;
+  }
+  
+  .content-text p {
+    background: rgba(50, 50, 50, 0.8);
+    color: #e0e0e0;
+  }
+  
+  .status-item {
+    background: rgba(40, 40, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .status-label {
+    color: #e0e0e0;
+  }
+  
+  .status-item .completed {
+    color: #81C784;
+  }
+  
+  .status-item .pending {
+    color: #FFB74D;
+  }
+  
+  /* 花朵阶段类在暗色模式下的调整 */
+  .flower-stage.stage-analyzing,
+  .flower-stage.stage-bloomed {
+    filter: brightness(1.1) contrast(1.1);
+  }
+  
+  /* 进度环在暗色模式下的优化 */
+  .progress-ring .progress-bg {
+    stroke: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* 气泡在暗色模式下使用更亮的颜色 */
+  .emotion-bubble.bubble-0 {
+    --hue: 200deg;
+    background: linear-gradient(135deg, 
+      hsl(200, 60%, 60%), 
+      hsl(200, 50%, 50%)
+    );
+  }
+  
+  .emotion-bubble.bubble-1 {
+    --hue: 280deg;
+    background: linear-gradient(135deg, 
+      hsl(280, 60%, 60%), 
+      hsl(280, 50%, 50%)
+    );
+  }
+  
+  .emotion-bubble.bubble-2 {
+    --hue: 120deg;
+    background: linear-gradient(135deg, 
+      hsl(120, 60%, 60%), 
+      hsl(120, 50%, 50%)
+    );
+  }
+  
+  .emotion-bubble.bubble-3 {
+    --hue: 40deg;
+    background: linear-gradient(135deg, 
+      hsl(40, 70%, 60%), 
+      hsl(40, 60%, 50%)
+    );
   }
 }
 
@@ -4232,7 +4593,7 @@ export default {
 
 .analysis-stage {
   position: absolute;
-  bottom: -40px;
+  bottom: -60px; /* 增加距离，避免遮挡加载条 */
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255, 255, 255, 0.95);
@@ -4244,6 +4605,7 @@ export default {
   white-space: nowrap;
   animation: fadeInUp 0.3s ease-out;
   max-width: 90vw; /* 限制最大宽度 */
+  z-index: 1; /* 确保不会遮挡其他重要元素 */
 }
 
 /* 手机端修复文字超出问题 */
@@ -4253,7 +4615,7 @@ export default {
     text-align: center;
     max-width: 80vw;
     line-height: 1.3;
-    bottom: -30px; /* 调整位置避免遮挡 */
+    bottom: -50px; /* 调整位置避免遮挡，但不要太远 */
     left: 50%;
     transform: translateX(-50%);
     word-break: break-word; /* 确保长单词正确换行 */

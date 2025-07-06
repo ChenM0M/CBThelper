@@ -331,76 +331,76 @@ export default {
     
     // 测试云端连接
     async testCloudConnection() {
-      this.isTestingCloud = true
-      this.cloudTestStatus = ''
+      this.isTestingCloud = true;
+      this.cloudTestStatus = '正在测试云端连接...';
       
       try {
-        // 云端模式完全依赖环境变量，不使用任何硬编码
-        const testMessage = {
-          messages: [
-            {
-              role: 'user',
-              content: '请回复"连接测试成功"'
-            }
-          ],
-          max_tokens: 50,
-          temperature: 0.1
-        }
-
-        // 使用云端代理API
-        const apiUrl = process.env.NODE_ENV === 'production' 
+        // 使用与 LLM 服务相同的代理路径
+        const proxyUrl = process.env.NODE_ENV === 'production' 
           ? '/api/llm-proxy' 
           : 'http://localhost:3001/api/llm-proxy';
-        
-        const response = await fetch(apiUrl, {
+
+        const response = await fetch(proxyUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(testMessage)
-        })
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'user',
+                content: '请回复"连接测试成功"'
+              }
+            ],
+            max_tokens: 50,
+            temperature: 0.1
+          })
+        });
 
         if (response.ok) {
-          const data = await response.json()
+          const data = await response.json();
           if (data.content) {
-            this.cloudTestStatus = '✅ 云端连接测试成功！API响应正常'
+            this.cloudTestStatus = '✅ 云端连接测试成功！API响应正常';
           } else {
-            this.cloudTestStatus = '⚠️ 云端连接成功，但响应格式异常'
+            this.cloudTestStatus = '⚠️ 云端连接成功，但响应格式异常';
           }
         } else {
-          const errorData = await response.json().catch(() => ({}))
-          this.cloudTestStatus = `❌ 云端连接失败: ${errorData.message || response.statusText}`
-          console.error('云端连接测试失败:', errorData)
+          const errorData = await response.json().catch(() => ({}));
+          this.cloudTestStatus = `❌ 云端连接失败: ${errorData.message || response.statusText}`;
+          console.error('云端连接测试失败:', errorData);
         }
-        
-        setTimeout(() => {
-          this.cloudTestStatus = ''
-        }, 5000)
       } catch (error) {
-        console.error('云端连接测试失败:', error)
-        this.cloudTestStatus = '❌ 云端连接测试失败，请检查网络连接或API配置'
-        
-        setTimeout(() => {
-          this.cloudTestStatus = ''
-        }, 5000)
+        console.error('云端连接测试失败:', error);
+        this.cloudTestStatus = '❌ 云端连接测试失败，请检查网络连接或API配置';
       } finally {
-        this.isTestingCloud = false
+        this.isTestingCloud = false;
+        
+        // 5秒后清除状态
+        setTimeout(() => {
+          this.cloudTestStatus = '';
+        }, 5000);
       }
     },
 
     async testConnection() {
-      this.isTesting = true
-      this.testStatus = '正在测试连接...'
+      this.isTesting = true;
+      this.testStatus = '正在测试连接...';
       
       try {
-        const response = await fetch(this.apiConfig.endpoint, {
+        // 使用与 LLM 服务相同的代理路径
+        const proxyUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/llm-proxy' 
+          : 'http://localhost:3001/api/llm-proxy';
+
+        const response = await fetch(proxyUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiConfig.apiKey}`
+            'X-API-Key': this.apiConfig.apiKey,
+            'X-API-URL': this.apiConfig.endpoint,
+            'X-Model-Name': this.apiConfig.model
           },
           body: JSON.stringify({
-            model: this.customModelName,
             messages: [
               {
                 role: "user",
@@ -410,24 +410,30 @@ export default {
             max_tokens: 50,
             temperature: 0.7
           })
-        })
+        });
 
         if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error?.message || '连接测试失败')
+          const error = await response.json();
+          throw new Error(error.message || '连接测试失败');
         }
 
-        const data = await response.json()
-        if (data.choices && data.choices[0]?.message?.content) {
-          this.testStatus = '✅ 连接测试成功！'
+        const data = await response.json();
+        if (data.content && data.content.includes('连接测试成功')) {
+          this.testStatus = '✅ 连接测试成功！';
         } else {
-          throw new Error('API返回格式异常')
+          this.testStatus = '⚠️ 连接成功，但响应异常';
+          console.warn('意外的响应内容:', data);
         }
       } catch (error) {
-        this.testStatus = `❌ 连接失败: ${error.message}`
-        console.error('连接测试失败:', error)
+        console.error('连接测试失败:', error);
+        this.testStatus = `❌ 连接测试失败: ${error.message}`;
       } finally {
-        this.isTesting = false
+        this.isTesting = false;
+        
+        // 5秒后清除状态
+        setTimeout(() => {
+          this.testStatus = '';
+        }, 5000);
       }
     },
 
