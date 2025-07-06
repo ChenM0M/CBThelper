@@ -355,16 +355,9 @@ export default {
       this.cloudTestStatus = ''
       
       try {
-        // 使用应用配置中的默认云端设置进行测试
-        const defaultConfig = this.$store.state.appConfig.llm
-        
-        if (!defaultConfig.apiKey && !defaultConfig.apiUrl) {
-          this.cloudTestStatus = '❌ 云端配置不完整，请检查环境变量设置'
-          return
-        }
-        
+        // 在云端环境下，使用代理API进行测试
         const testMessage = {
-          model: defaultConfig.modelName,
+          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'user',
@@ -375,25 +368,26 @@ export default {
           temperature: 0.1
         }
 
-        const response = await fetch(defaultConfig.apiUrl, {
+        // 使用云端代理API
+        const response = await fetch('/api/llm-proxy', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${defaultConfig.apiKey}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(testMessage)
         })
 
         if (response.ok) {
           const data = await response.json()
-          if (data.choices && data.choices[0]?.message?.content) {
+          if (data.content) {
             this.cloudTestStatus = '✅ 云端连接测试成功！API响应正常'
           } else {
             this.cloudTestStatus = '⚠️ 云端连接成功，但响应格式异常'
           }
         } else {
-          const errorText = await response.text()
-          this.cloudTestStatus = `❌ 云端连接失败: ${response.status} ${response.statusText}`
+          const errorData = await response.json().catch(() => ({}))
+          this.cloudTestStatus = `❌ 云端连接失败: ${errorData.message || response.statusText}`
+          console.error('云端连接测试失败:', errorData)
         }
         
         setTimeout(() => {

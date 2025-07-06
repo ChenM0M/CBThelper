@@ -6,7 +6,7 @@ class LLMService {
     // 根据环境选择API路径
     this.baseUrl = process.env.NODE_ENV === 'production' 
       ? '/api/llm-proxy' 
-      : 'https://api.openai.com/v1/chat/completions';
+      : 'http://localhost:3000/api/llm-proxy';
     this.maxRetries = 3;
     this.retryDelay = 1000; // 1秒
     this.vueInstance = null; // 存储Vue实例引用
@@ -71,28 +71,16 @@ class LLMService {
         baseUrl: this.baseUrl
       });
 
-      // 在生产环境使用代理，开发环境直接调用
-      const requestUrl = process.env.NODE_ENV === 'production' ? this.baseUrl : config.apiUrl;
-      const requestHeaders = process.env.NODE_ENV === 'production' 
-        ? {
-            'Content-Type': 'application/json',
-            'X-API-Key': config.apiKey || '',
-            'X-API-URL': config.apiUrl || '',
-            'X-Model-Name': config.model || ''
-          }
-        : {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config.apiKey}`
-          };
+      // 在生产环境或开发环境都使用代理
+      const requestUrl = this.baseUrl;
+      const requestHeaders = {
+        'Content-Type': 'application/json',
+        'X-API-Key': config.apiKey || '',
+        'X-API-URL': config.apiUrl || '',
+        'X-Model-Name': config.model || ''
+      };
 
-      const requestBody = process.env.NODE_ENV === 'production' 
-        ? JSON.stringify(options)
-        : JSON.stringify({
-            model: config.model,
-            messages: options.messages,
-            temperature: options.temperature || 0.7,
-            max_tokens: options.max_tokens || 1000
-          });
+      const requestBody = JSON.stringify(options);
 
       const response = await fetch(requestUrl, {
         method: 'POST',
