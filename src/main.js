@@ -65,6 +65,9 @@ const store = {
       stateToSave._version = '2.0';
       stateToSave._timestamp = Date.now();
       
+      // 移除 appConfig，因为它应该始终使用最新的环境变量
+      delete stateToSave.appConfig;
+      
       localStorage.setItem('cbtHelperState', JSON.stringify(stateToSave));
       console.log('[Store] 状态已保存', {
         recordCount: this.state.thoughtRecords.length,
@@ -90,16 +93,23 @@ const store = {
         }
         
         // 确保合并所有字段，防止旧版本数据缺少新增字段
+        // 注意：不要覆盖 appConfig
         this.state = {
           ...this.state,
-          ...parsedState,
+          thoughtRecords: parsedState.thoughtRecords || [],
+          selectedRecordIndex: parsedState.selectedRecordIndex,
+          currentSession: parsedState.currentSession,
           // 优先使用独立存储的API配置
           apiConfig: savedLlmConfig ? JSON.parse(savedLlmConfig) : { ...this.state.apiConfig, ...parsedState.apiConfig }
         };
         
+        // 确保 appConfig 使用最新的环境变量
+        this.state.appConfig = appConfig;
+        
         console.log('[Store] 状态已恢复', {
           recordCount: this.state.thoughtRecords.length,
-          version: parsedState._version
+          version: parsedState._version,
+          features: this.state.appConfig.features
         });
       } catch (e) {
         console.error('[Store] 恢复状态失败:', e);
