@@ -3,6 +3,14 @@
  * 统一管理环境变量和应用设置
  */
 
+// 辅助函数：检查布尔环境变量
+const getBooleanEnv = (key, defaultValue = false) => {
+  // 检查多种可能的环境变量名
+  const value = process.env[key] || process.env[`VUE_APP_${key}`];
+  // 严格检查字符串 'true'
+  return value === 'true' ? true : defaultValue;
+};
+
 export default {
   // LLM 服务配置
   llm: {
@@ -15,9 +23,9 @@ export default {
 
   // 功能开关
   features: {
-    wisdomCompanionEnabled: process.env.VUE_APP_WISDOM_COMPANION_ENABLED === 'true',
-    autoAnalysisEnabled: process.env.VUE_APP_AUTO_ANALYSIS_ENABLED === 'true',
-    emotionMultiSelectEnabled: process.env.VUE_APP_EMOTION_MULTI_SELECT_ENABLED === 'true'
+    wisdomCompanionEnabled: getBooleanEnv('WISDOM_COMPANION_ENABLED', true),
+    autoAnalysisEnabled: getBooleanEnv('AUTO_ANALYSIS_ENABLED', true),
+    emotionMultiSelectEnabled: getBooleanEnv('EMOTION_MULTI_SELECT_ENABLED', true)
   },
 
   // 界面限制
@@ -28,7 +36,7 @@ export default {
 
   // 调试配置
   debug: {
-    enabled: process.env.VUE_APP_DEBUG_MODE === 'true',
+    enabled: getBooleanEnv('DEBUG_MODE', false),
     logLevel: 'info'
   },
 
