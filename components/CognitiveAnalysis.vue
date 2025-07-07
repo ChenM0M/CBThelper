@@ -1312,13 +1312,13 @@ export default {
       const isMobile = window.innerWidth <= 768
       const isSmallMobile = window.innerWidth <= 480
       
-      // 动态参数计算
-      const flowerRadius = isMobile ? (isSmallMobile ? 45 : 55) : 70
-      const spawnRadiusMin = flowerRadius + 25 // 花朵安全边界
-      const spawnRadiusMax = Math.min(containerCenterX, containerCenterY) - 20
-      const spawnAngleRange = [-80, 80] // 中上部区域
-      const maxAttempts = 80 // 每个气泡最大尝试次数
-      const maxBubbles = Math.min(emotions.length, isMobile ? 5 : 7)
+      // 动态参数计算 - 针对小容器优化
+      const flowerRadius = isMobile ? (isSmallMobile ? 35 : 45) : 60 // 减少花朵半径
+      const spawnRadiusMin = flowerRadius + 15 // 减少安全边界
+      const spawnRadiusMax = Math.min(containerCenterX, containerCenterY) - 10 // 减少边距
+      const spawnAngleRange = [-90, 90] // 扩大角度范围
+      const maxAttempts = 40 // 减少尝试次数，更快使用备用策略
+      const maxBubbles = Math.min(emotions.length, isMobile ? 4 : 6) // 减少最大气泡数
 
       console.log(`[气泡生成] 开始生成 ${maxBubbles} 个气泡，容器尺寸: ${containerRect.width}x${containerRect.height}`)
 
@@ -1378,7 +1378,7 @@ export default {
             // 检查是否与已放置的气泡重叠
             let hasCollision = false
             for (const placedRect of placedRects) {
-              const margin = 10 // 气泡间最小间距
+              const margin = 5 // 减少气泡间最小间距
               if (
                 currentRect.left - margin < placedRect.right &&
                 currentRect.right + margin > placedRect.left &&
@@ -1390,13 +1390,13 @@ export default {
               }
             }
 
-            // 检查是否超出容器边界
-            const containerMargin = 15
+            // 检查是否超出容器边界 - 放宽边界要求
+            const containerMargin = 5 // 减少容器边距
             const isWithinBounds = 
-              currentRect.left >= containerMargin &&
-              currentRect.right <= containerRect.width - containerMargin &&
-              currentRect.top >= containerMargin &&
-              currentRect.bottom <= containerRect.height - containerMargin
+              currentRect.left >= -containerMargin && // 允许稍微超出左边界
+              currentRect.right <= containerRect.width + containerMargin && // 允许稍微超出右边界
+              currentRect.top >= -containerMargin && // 允许稍微超出上边界
+              currentRect.bottom <= containerRect.height + containerMargin // 允许稍微超出下边界
 
             if (!hasCollision && isWithinBounds) {
               // 找到合适位置
@@ -1415,21 +1415,25 @@ export default {
         } else {
           console.warn(`[气泡生成] 无法为情绪 "${emotion}" 找到合适位置，已尝试 ${maxAttempts} 次`)
           
-          // 使用备用策略：均匀分布
-          const backupAngle = (i * 360) / maxBubbles
-          const backupRadius = spawnRadiusMin + 20
+          // 使用备用策略：智能均匀分布
+          const backupAngle = (i * 120 + 30) % 360 // 更好的角度分布
+          const backupRadius = spawnRadiusMin + 10 // 稍微增加半径
           const backupAngleRad = (backupAngle - 90) * (Math.PI / 180)
           const backupX = containerCenterX + backupRadius * Math.cos(backupAngleRad)
           const backupY = containerCenterY + backupRadius * Math.sin(backupAngleRad)
 
+          // 如果备用位置仍然超出边界，调整到边界内
+          const adjustedX = Math.max(20, Math.min(containerRect.width - 20, backupX))
+          const adjustedY = Math.max(20, Math.min(containerRect.height - 20, backupY))
+
           const backupBubble = {
             emotion: emotion,
-            x: backupX,
-            y: backupY,
+            x: adjustedX,
+            y: adjustedY,
             style: {
               left: '50%',
               top: '50%',
-              transform: `translate(calc(-50% + ${backupX - containerCenterX}px), calc(-50% + ${backupY - containerCenterY}px))`,
+              transform: `translate(calc(-50% + ${adjustedX - containerCenterX}px), calc(-50% + ${adjustedY - containerCenterY}px))`,
               '--hue': `${(i * 60 + 30) % 360}deg`,
               animationDelay: `${i * 0.2}s`,
               position: 'absolute',
@@ -1440,6 +1444,7 @@ export default {
             index: i
           }
           bubbles.push(backupBubble)
+          console.log(`[气泡生成] 使用备用策略放置气泡 "${emotion}"，位置: (${Math.round(adjustedX - containerCenterX)}, ${Math.round(adjustedY - containerCenterY)})`)
         }
       }
 

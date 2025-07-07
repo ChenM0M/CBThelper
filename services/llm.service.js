@@ -41,15 +41,30 @@ class LLMService {
       console.warn('[LLM] 无法访问store，使用默认配置');
       return {
         apiKey: '',
-        apiUrl: 'https://api.openai.com/v1/chat/completions',
-        model: 'gpt-3.5-turbo'
+        apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        model: 'qwen-turbo'
       };
     }
 
+    // 安全地获取配置，确保默认值有效
+    const apiKey = store.apiConfig?.apiKey || '';
+    const apiUrl = store.apiConfig?.endpoint || store.apiConfig?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+    const model = store.apiConfig?.model || 'qwen-turbo';
+
+    // 验证模型名是否有效
+    const validModel = model && typeof model === 'string' && model.length > 0 ? model : 'qwen-turbo';
+
+    console.log('[LLM] 获取API配置:', {
+      hasApiKey: !!apiKey,
+      apiUrl,
+      model: validModel,
+      rawModel: model
+    });
+
     return {
-      apiKey: store.apiConfig?.apiKey || '',
-      apiUrl: store.apiConfig?.endpoint || store.apiConfig?.apiUrl || 'https://api.openai.com/v1/chat/completions',
-      model: store.apiConfig?.model || 'gpt-3.5-turbo'
+      apiKey,
+      apiUrl,
+      model: validModel
     };
   }
 
@@ -77,10 +92,14 @@ class LLMService {
         'Content-Type': 'application/json',
         'X-API-Key': config.apiKey || '',
         'X-API-URL': config.apiUrl || '',
-        'X-Model-Name': config.model || ''
+        'X-Model-Name': config.model || 'qwen-turbo'
       };
 
-      const requestBody = JSON.stringify(options);
+      // 确保请求体包含模型信息
+      const requestBody = JSON.stringify({
+        ...options,
+        model: config.model || 'qwen-turbo'
+      });
 
       const response = await fetch(requestUrl, {
         method: 'POST',
@@ -143,6 +162,19 @@ class LLMService {
           status: error.status
         }
       });
+
+      // 特殊处理404错误（API路径不存在）
+      if (error.message?.includes('404') || error.status === 404) {
+        throw new ApiError(
+          '智慧伙伴服务暂时不可用，请稍后再试，或检查网络连接',
+          'API_ENDPOINT_NOT_FOUND',
+          {
+            baseUrl: this.baseUrl,
+            suggestion: '请确认服务器配置正确'
+          },
+          404
+        );
+      }
 
       // 对于某些错误类型进行重试
       const shouldRetry = this.shouldRetryError(error) && retryCount < this.maxRetries;
