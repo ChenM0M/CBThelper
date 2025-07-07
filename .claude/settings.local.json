@@ -16,7 +16,9 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(pkill:*)",
-      "Bash(grep -n \"mounted()\" components/CognitiveAnalysis.vue)"
+      "Bash(grep -n \"mounted()\" components/CognitiveAnalysis.vue)",
+      "Bash(echo)",
+      "Bash(echo:*)"
     ],
     "deny": []
   }

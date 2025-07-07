@@ -490,3 +490,192 @@
   background: var(--border-light);
   margin: 0 var(--spacing-lg);
 }
+
+/* 深色模式支持 - 完全优化版本 */
+@media (prefers-color-scheme: dark) {
+  /* 表单输入框深色模式 - 解决白色高亮问题 */
+  .form-input,
+  .form-textarea,
+  .form-select {
+    background: rgba(30, 35, 40, 0.9) !important; /* 深色背景替代白色 */
+    color: #ffffff !important; /* 纯白文字确保高对比度 */
+    border-color: rgba(255, 255, 255, 0.2) !important; /* 淡色边框 */
+    font-weight: 500 !important; /* 增加字重提高可读性 */
+  }
+  
+  /* 输入框获得焦点时的样式 - 修复白色高亮问题 */
+  .form-input:focus,
+  .form-textarea:focus,
+  .form-select:focus {
+    background: rgba(40, 45, 50, 0.95) !important; /* 更深的背景，不是白色 */
+    color: #ffffff !important; /* 确保文字保持纯白 */
+    border-color: #84A98C !important; /* 主题色边框 */
+    box-shadow: 0 0 15px rgba(132, 169, 140, 0.4) !important; /* 增强发光效果 */
+    outline: none !important;
+  }
+  
+  /* 占位符文字 */
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important; /* 半透明白色占位符 */
+    opacity: 1 !important;
+    font-weight: 400 !important;
+  }
+  
+  /* 表单标签 */
+  .form-label {
+    color: #ffffff !important; /* 纯白标签 */
+    font-weight: 600 !important; /* 增加字重 */
+  }
+  
+  /* 复选框和单选框 */
+  .form-check-input {
+    background: rgba(30, 35, 40, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  .form-check-input:checked {
+    background: #84A98C !important;
+    border-color: #84A98C !important;
+  }
+  
+  .form-check-label {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+  }
+  
+  /* 开关组件 */
+  .form-switch-slider {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .form-switch-slider:before {
+    background: rgba(30, 35, 40, 0.9) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .form-switch-input:checked + .form-switch-slider {
+    background: #84A98C !important;
+  }
+  
+  .form-switch-input:checked + .form-switch-slider:before {
+    background: #ffffff !important;
+  }
+  
+  /* 卡片组件 */
+  .card {
+    background: rgba(20, 25, 30, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  .card:hover {
+    background: rgba(25, 30, 35, 0.98) !important;
+    border-color: rgba(132, 169, 140, 0.3) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  .card-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  
+  .card-subtitle {
+    color: #e0e0e0 !important;
+    font-weight: 500 !important;
+  }
+  
+  .card-footer {
+    border-top-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* 模态框组件 */
+  .modal-dialog {
+    background: rgba(20, 25, 30, 0.98) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+  }
+  
+  .modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .modal-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  
+  .modal-close {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+  
+  .modal-close:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+  
+  .modal-footer {
+    border-top-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* 按钮组件深色模式优化 */
+  .btn-secondary {
+    background: rgba(30, 35, 40, 0.9) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(40, 45, 50, 0.95) !important;
+    border-color: rgba(132, 169, 140, 0.4) !important;
+    color: #ffffff !important;
+  }
+  
+  .btn-ghost {
+    background: transparent !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  .btn-ghost:hover:not(:disabled) {
+    background: #84A98C !important;
+    color: #ffffff !important;
+    border-color: #84A98C !important;
+  }
+  
+  /* 徽章组件 */
+  .badge-secondary {
+    background: rgba(40, 50, 60, 0.8) !important;
+    color: #ffffff !important;
+  }
+  
+  /* 提示框组件 */
+  .tooltip-text {
+    background: rgba(20, 25, 30, 0.95) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* 加载器组件 */
+  .spinner {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    border-left-color: #84A98C !important;
+  }
+  
+  /* 进度条组件 */
+  .progress {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .progress-bar {
+    background: linear-gradient(135deg, #84A98C, #52796F) !important;
+  }
+  
+  /* 分割线 */
+  .divider,
+  .divider-vertical {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+}

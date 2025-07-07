@@ -561,4 +561,176 @@ export default {
     font-size: 1.2rem;
   }
 }
+
+/* 深色模式支持 - 完全优化版本 */
+@media (prefers-color-scheme: dark) {
+  /* 背景渐变调整 */
+  .sky-gradient {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
+    opacity: 0.9;
+  }
+  
+  /* 花瓣颜色调整 - 使用更亮的颜色在深色背景上显示 */
+  .petal {
+    background: linear-gradient(45deg, #FF9B85, #84A98C);
+    opacity: 0.7;
+  }
+  
+  /* 页面标题和副标题 */
+  .page-title {
+    color: #ffffff !important; /* 纯白标题，强制优先级 */
+    font-weight: 700 !important; /* 增加字重 */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* 添加阴影提高可读性 */
+  }
+  
+  .page-subtitle {
+    color: #e0e0e0 !important; /* 浅灰色副标题 */
+    font-weight: 600 !important; /* 增加字重 */
+  }
+  
+  /* 信息卡片背景 - 这是主要的白色框问题 */
+  .info-card {
+    background: rgba(20, 25, 30, 0.95) !important; /* 深色背景替代白色 */
+    border: 1px solid rgba(255, 255, 255, 0.15) !important; /* 淡色边框 */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important; /* 深色阴影 */
+    backdrop-filter: blur(15px);
+  }
+  
+  .info-card:hover {
+    background: rgba(25, 30, 35, 0.98) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(132, 169, 140, 0.3) !important;
+  }
+  
+  /* 章节标题 */
+  .section-title {
+    color: #ffffff !important; /* 纯白标题 */
+    font-weight: 700 !important; /* 增加字重 */
+  }
+  
+  /* 内容文字 */
+  .info-content {
+    color: #e8e8e8 !important; /* 高对比度的浅灰色 */
+    font-weight: 500 !important; /* 增加字重提高可读性 */
+  }
+  
+  /* 项目描述 */
+  .project-description {
+    color: #f0f0f0 !important; /* 更亮的颜色提高对比度 */
+    font-weight: 500 !important;
+  }
+  
+  /* 特性项目 */
+  .feature-item {
+    background: rgba(40, 50, 60, 0.6) !important; /* 深色背景 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .feature-item:hover {
+    background: rgba(50, 60, 70, 0.8) !important;
+    border-color: rgba(132, 169, 140, 0.4);
+  }
+  
+  .feature-text {
+    color: #ffffff !important; /* 纯白文字 */
+    font-weight: 600 !important;
+  }
+  
+  /* 版本信息 */
+  .version-item {
+    background: rgba(40, 50, 60, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .version-label {
+    color: #ffffff !important; /* 纯白标签 */
+    font-weight: 600 !important;
+  }
+  
+  .version-value {
+    color: #84A98C !important; /* 使用主题色 */
+    font-weight: 700 !important;
+  }
+  
+  /* 联系信息 */
+  .contact-item {
+    background: rgba(40, 50, 60, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+  }
+  
+  .contact-item:hover {
+    background: rgba(50, 60, 70, 0.7) !important;
+    border-color: rgba(132, 169, 140, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(132, 169, 140, 0.2) !important;
+  }
+  
+  .contact-label {
+    color: #ffffff !important; /* 纯白标签 */
+    font-weight: 600 !important;
+  }
+  
+  .contact-value {
+    color: #d0d0d0 !important; /* 浅灰色值 */
+    font-weight: 500 !important;
+  }
+  
+  /* 免责声明特殊处理 */
+  .disclaimer {
+    border-left-color: #FF9B85 !important; /* 保持警告色 */
+    background: rgba(25, 30, 35, 0.95) !important; /* 稍微不同的背景 */
+  }
+  
+  .disclaimer-text {
+    color: #f0f0f0 !important; /* 高对比度文字 */
+    font-weight: 600 !important;
+  }
+  
+  .disclaimer-text strong {
+    color: #ffffff !important; /* 纯白强调文字 */
+  }
+  
+  .disclaimer-list li {
+    color: #e8e8e8 !important;
+    font-weight: 500 !important;
+  }
+  
+  /* 紧急通知 */
+  .emergency-notice {
+    background: rgba(255, 99, 71, 0.2) !important; /* 深色模式下的警告背景 */
+    border-color: rgba(255, 99, 71, 0.5) !important;
+    color: #ffffff !important;
+  }
+  
+  .emergency-notice strong {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  
+  /* 致谢文字 */
+  .acknowledgment-text {
+    color: #f0f0f0 !important; /* 高对比度 */
+    font-weight: 600 !important;
+  }
+  
+  /* 返回按钮优化 */
+  .floating-back-btn {
+    background: linear-gradient(135deg, #84A98C 0%, #52796F 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 8px 25px rgba(132, 169, 140, 0.4) !important;
+  }
+  
+  .floating-back-btn:hover {
+    box-shadow: 0 12px 35px rgba(132, 169, 140, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  /* 确保图标和表情符号在深色模式下清晰可见 */
+  .title-icon,
+  .feature-icon,
+  .contact-icon,
+  .emergency-icon {
+    filter: brightness(1.2) contrast(1.1); /* 增亮图标 */
+  }
+}
 </style>
