@@ -87,6 +87,9 @@ onMounted(() => {
   top: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* 确保菜单右对齐 */
 }
 
 .nav-toggle {
@@ -110,6 +113,7 @@ onMounted(() => {
 
 .nav-toggle.active {
   transform: rotate(180deg);
+  transform-origin: center center; /* 确保围绕花朵的几何中心旋转 */
 }
 
 .nav-icon {
@@ -126,8 +130,12 @@ onMounted(() => {
   border-radius: var(--radius-xl);
   padding: var(--spacing-md);
   box-shadow: var(--shadow-lg);
-  min-width: 200px;
+  width: auto; /* 自动宽度 */
+  min-width: 140px; /* 增加最小宽度确保文字完整显示 */
+  max-width: none; /* 移除最大宽度限制 */
+  white-space: nowrap; /* 防止文字换行 */
   animation: slideInFromTop var(--transition-base);
+  transform-origin: top right; /* 确保动画从右上角开始 */
 }
 
 @keyframes slideInFromTop {
@@ -151,6 +159,7 @@ onMounted(() => {
   border-radius: var(--radius-md);
   transition: all var(--transition-base);
   margin-bottom: var(--spacing-sm);
+  min-width: fit-content; /* 确保宽度足够容纳内容 */
 }
 
 .nav-item:last-child {
@@ -175,6 +184,9 @@ onMounted(() => {
 .nav-text {
   font-weight: 500;
   white-space: nowrap;
+  overflow: visible; /* 允许文字完整显示 */
+  text-overflow: clip; /* 移除省略号 */
+  flex-shrink: 0; /* 防止文字被压缩 */
 }
 
 /* 主内容区域 - 全屏 */
@@ -218,7 +230,8 @@ onMounted(() => {
   
   .nav-menu {
     top: 60px;
-    min-width: 180px;
+    min-width: 130px; /* 移动端适当调整最小宽度 */
+    max-width: none; /* 确保没有最大宽度限制 */
     padding: 0.8rem;
   }
   
@@ -241,6 +254,71 @@ onMounted(() => {
   
   .nav-icon {
     font-size: 1.2rem;
+  }
+}
+
+/* 深色模式支持 - 完全优化版本 */
+@media (prefers-color-scheme: dark) {
+  .app-container {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
+  }
+  
+  .nav-menu {
+    background: rgba(15, 20, 25, 0.98) !important; /* 更深的背景 */
+    border: 2px solid rgba(255, 255, 255, 0.15) !important; /* 增强边框 */
+    backdrop-filter: blur(25px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important; /* 增强阴影 */
+    min-width: 140px; /* 确保深色模式下也有足够宽度 */
+    max-width: none; /* 移除最大宽度限制 */
+  }
+  
+  .nav-item {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 600 !important; /* 增加字重 */
+  }
+  
+  .nav-item:hover {
+    background: linear-gradient(135deg, #84A98C, #52796F) !important;
+    color: #ffffff !important;
+    transform: translateX(5px); /* 添加位移效果 */
+    box-shadow: 0 4px 15px rgba(132, 169, 140, 0.3);
+  }
+  
+  .nav-item.router-link-active {
+    background: linear-gradient(135deg, #84A98C, #52796F) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(132, 169, 140, 0.4);
+  }
+  
+  .nav-text {
+    color: inherit !important;
+    font-weight: inherit !important;
+  }
+  
+  .nav-emoji {
+    filter: brightness(1.2); /* 增亮表情符号 */
+  }
+  
+  /* 导航按钮优化 */
+  .nav-toggle {
+    background: linear-gradient(135deg, #84A98C, #52796F) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 6px 20px rgba(132, 169, 140, 0.3) !important;
+    transform-origin: center center; /* 确保暗色模式下也有正确的旋转中心 */
+  }
+  
+  .nav-toggle:hover {
+    box-shadow: 0 8px 25px rgba(132, 169, 140, 0.4) !important;
+    transform: scale(1.05);
+    transform-origin: center center; /* 悬停时也保持正确的中心 */
+  }
+  
+  .nav-toggle.active {
+    background: linear-gradient(135deg, #52796F, #2d3e40) !important;
+    box-shadow: 0 8px 25px rgba(82, 121, 111, 0.4) !important;
+    transform: rotate(180deg);
+    transform-origin: center center; /* 确保旋转围绕中心进行 */
   }
 }
 </style>

@@ -1006,4 +1006,209 @@ export default {
     border-radius: 15px;
   }
 }
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .mind-garden {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
+  }
+  
+  .garden-background::before {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 30%, #1f2e2e 100%);
+  }
+  
+  .welcome-card {
+    background: rgba(30, 30, 30, 0.95);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .garden-title {
+    color: #ffffff;
+  }
+  
+  .garden-subtitle {
+    color: #d0d0d0;
+  }
+  
+  .emotion-card {
+    background: rgba(40, 40, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+  }
+  
+  .emotion-card:hover {
+    background: rgba(50, 50, 50, 0.9);
+    border-color: #84A98C;
+  }
+  
+  .emotion-card.selected {
+    background: rgba(132, 169, 140, 0.3);
+    border-color: #84A98C;
+  }
+  
+  .emotion-name {
+    color: #ffffff;
+  }
+  
+  .custom-input {
+    background: rgba(40, 40, 40, 0.8);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .custom-input:focus {
+    background: rgba(50, 50, 50, 0.9);
+    border-color: #84A98C;
+    color: #ffffff;
+  }
+  
+  .custom-input::placeholder {
+    color: #b0b0b0;
+  }
+  
+  .add-emotion-btn {
+    background: linear-gradient(135deg, #84A98C, #52796F);
+    color: #ffffff;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #84A98C, #52796F);
+    color: #ffffff;
+  }
+  
+  .btn-secondary {
+    background: rgba(40, 40, 40, 0.8);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .emotion-tag {
+    background: rgba(132, 169, 140, 0.3);
+    color: #e0e0e0;
+    border-color: rgba(132, 169, 140, 0.5);
+  }
+  
+  .remove-tag {
+    background: rgba(255, 99, 71, 0.3);
+    color: #ff6347;
+  }
+  
+  .access-card {
+    background: rgba(30, 30, 30, 0.9);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .access-card:hover {
+    background: rgba(50, 50, 50, 0.95);
+    border-color: #84A98C;
+  }
+  
+  .access-title {
+    color: #ffffff;
+  }
+  
+  .access-description {
+    color: #d0d0d0;
+  }
+  
+  .inspiration-card {
+    background: rgba(30, 30, 30, 0.9);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .inspiration-text {
+    color: #ffffff;
+  }
+  
+  .inspiration-author {
+    color: #84A98C;
+  }
+}
+
+/* 触摸友好性优化 */
+@media (hover: none) and (pointer: coarse) {
+  .emotion-card {
+    min-height: 80px; /* 确保足够的触摸区域 */
+  }
+  
+  .emotion-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  .remove-tag {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+  }
+  
+  .selection-indicator {
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+  }
+  
+  .add-emotion-btn:active,
+  .btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* 改善移动端字体大小和可读性 */
+@media (max-width: 768px) {
+  .emotion-name {
+    font-size: max(0.9rem, 16px); /* 防止iOS缩放，确保可读性 */
+    line-height: 1.4;
+  }
+  
+  .custom-input {
+    font-size: max(1rem, 16px); /* 防止iOS缩放 */
+  }
+}
+
+@media (max-width: 480px) {
+  .emotion-grid {
+    grid-template-columns: repeat(2, 1fr); /* 改为2列，避免过于拥挤 */
+    gap: 1rem;
+  }
+  
+  .emotion-card {
+    padding: 1rem 0.6rem;
+    min-height: 90px; /* 增大触摸区域 */
+  }
+  
+  .emotion-icon {
+    width: 44px; /* 符合最小触摸目标 */
+    height: 44px;
+    font-size: 1.4rem;
+  }
+  
+  .emotion-name {
+    font-size: max(0.9rem, 16px);
+    margin-top: 0.5rem;
+  }
+  
+  .emotion-tag {
+    padding: 0.8rem 1.2rem; /* 增大触摸区域 */
+    font-size: max(0.9rem, 16px);
+    border-radius: 18px;
+    min-height: 44px; /* 最小触摸目标 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .action-buttons {
+    gap: 1.5rem; /* 增大按钮间距 */
+  }
+  
+  .btn {
+    min-height: 48px; /* 增大按钮高度 */
+    font-size: max(1rem, 16px);
+  }
+}
 </style>

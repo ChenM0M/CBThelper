@@ -489,16 +489,26 @@ export default {
   align-items: center;
   color: var(--text-primary);
   font-size: 1rem;
+  gap: 0.8rem; /* 添加间距避免挤压 */
+  flex-wrap: nowrap; /* 确保水平排列 */
+  justify-content: center; /* 居中对齐 */
 }
 
 .step-name {
   flex: 1;
   font-weight: 500;
+  text-align: center; /* 居中对齐 */
+  white-space: nowrap; /* 防止换行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0; /* 允许flex收缩 */
 }
 
 .step-count {
   font-size: 0.9rem;
   opacity: 0.8;
+  flex-shrink: 0; /* 防止被压缩 */
+  white-space: nowrap;
 }
 
 /* 主内容 */
@@ -867,7 +877,7 @@ export default {
   font-size: 0.95rem;
   font-style: italic;
   margin: 0;
-  opacity: 0.8;
+  opacity: 0.9; /* 提高对比度 */
 }
 
 /* 情绪选择 */
@@ -1086,6 +1096,65 @@ export default {
   font-style: italic;
 }
 
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .growth-journey {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
+  }
+  
+  .step-card {
+    background: rgba(20, 25, 30, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+  }
+  
+  .step-title {
+    color: #ffffff;
+  }
+  
+  .step-description {
+    color: #b0b0b0;
+  }
+  
+  .garden-input {
+    background: rgba(30, 35, 40, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+  }
+  
+  .garden-input::placeholder {
+    color: #888888;
+  }
+  
+  .emotion-option {
+    background: rgba(30, 35, 40, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .emotion-option:hover {
+    border-color: #84A98C;
+  }
+  
+  .emotion-option.selected {
+    background: rgba(132, 169, 140, 0.2);
+    border-color: #84A98C;
+  }
+  
+  .emotion-label {
+    color: #e0e0e0;
+  }
+  
+  .journey-progress {
+    background: rgba(20, 25, 30, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .nav-menu {
+    background: rgba(20, 25, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .journey-header {
@@ -1127,6 +1196,45 @@ export default {
     width: 100%;
     max-width: 280px;
   }
+  
+  /* 修复移动端字体大小和触摸友好性 */
+  .step-indicator {
+    font-size: 1rem; /* 保持可读性 */
+    padding: 0.5rem; /* 增加触摸区域 */
+  }
+  
+  .step-count {
+    font-size: 1rem; /* 从0.9rem改为1rem */
+  }
+  
+  .emotions-text {
+    font-size: 1rem; /* 从var(--font-size-sm)改为1rem */
+  }
+  
+  .emotion-label {
+    font-size: 1rem; /* 从0.9rem改为1rem */
+  }
+  
+  .slider-labels {
+    font-size: 1rem; /* 从0.85rem改为1rem */
+  }
+  
+  /* 确保进度指示器在移动端正确显示 */
+  .journey-progress {
+    margin-bottom: 1.5rem; /* 增加间距 */
+    padding: 1rem; /* 增加内边距 */
+  }
+  
+  .step-indicator {
+    min-height: 44px; /* 确保触摸友好 */
+    flex-wrap: nowrap; /* 强制水平排列 */
+    gap: 0.5rem; /* 适当减少间距以适应小屏幕 */
+  }
+  
+  .step-name {
+    font-size: 0.9rem; /* 稍微减小以适应小屏幕 */
+    max-width: 60%; /* 限制最大宽度 */
+  }
 }
 
 @media (max-width: 480px) {
@@ -1149,6 +1257,50 @@ export default {
   
   .emotion-grid {
     grid-template-columns: 1fr;
+  }
+  
+  /* 增大触摸目标 */
+  .emotion-option {
+    padding: 1.2rem 0.8rem; /* 增加内边距 */
+    min-height: 48px; /* 确保最小触摸目标 */
+  }
+  
+  .emotion-option .emotion-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .intensity-slider {
+    height: 12px; /* 增加滑块高度 */
+  }
+  
+  .intensity-slider::-webkit-slider-thumb {
+    width: 28px;
+    height: 28px;
+  }
+  
+  /* 进一步优化进度指示器 */
+  .step-indicator {
+    flex-direction: column; /* 在极小屏幕上垂直排列 */
+    gap: 0.3rem;
+    text-align: center;
+    padding: 0.8rem;
+  }
+  
+  .step-name {
+    font-size: 0.9rem;
+    max-width: 100%; /* 允许全宽 */
+    order: 1; /* 调整顺序 */
+  }
+  
+  .step-count {
+    font-size: 0.8rem;
+    order: 2;
+  }
+  
+  .seed-icon {
+    order: 0; /* 图标在最上方 */
+    margin-bottom: 0.3rem;
   }
 }
 </style>

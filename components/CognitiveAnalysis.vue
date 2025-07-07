@@ -558,60 +558,49 @@ export default {
       return this.analysisStages[this.analysisStage]
     },
 
-    // 预览页面的情绪气泡
+    // 预览页面的智能气泡布局 - 使用相同的DOM碰撞检测算法
     emotionBubblesPreview() {
       if (!this.selectedRecord) return []
       
       const emotions = this.getRecordEmotions(this.selectedRecord)
       if (emotions.length === 0) return []
 
-      const bubbles = []
-      const maxBubbles = Math.min(emotions.length, 5) // 预览页面最多5个
-      
-      // 使用与分析页面相同的智能定位算法
+      // 预览页面使用简化参数
       const isMobile = window.innerWidth <= 768
-      const flowerCoreSize = isMobile ? 80 : 120
-      const safeBoundary = flowerCoreSize / 2 + 30
+      const isSmallMobile = window.innerWidth <= 480
       
-      // 生成安全位置的函数
-      const generateSafePosition = () => {
-        const maxDistance = isMobile ? 200 : 280 // 预览页面稍大一些
-        const minDistance = safeBoundary + 40
-        
-        let attempts = 0
-        let position
-        
-        do {
-          const angle = Math.random() * 2 * Math.PI
-          const distance = minDistance + Math.random() * (maxDistance - minDistance)
-          
-          position = {
-            x: Math.cos(angle) * distance,
-            y: Math.sin(angle) * distance
-          }
-          
-          attempts++
-        } while (
-          (Math.abs(position.x) < safeBoundary && Math.abs(position.y) < safeBoundary) &&
-          attempts < 10
-        )
-        
-        return position
-      }
+      // 预览页面的气泡稍微简化，但使用相同的防重叠逻辑
+      const bubbles = []
+      const maxBubbles = Math.min(emotions.length, isMobile ? 4 : 5) // 预览页面气泡更少
+      
+      // 预设的安全位置 - 确保不重叠
+      const safePositions = [
+        { x: 80, y: -60, angle: 15 },   // 右上
+        { x: -90, y: -40, angle: -20 }, // 左上  
+        { x: 100, y: 20, angle: 25 },   // 右中
+        { x: -80, y: 30, angle: -15 },  // 左中
+        { x: 60, y: 80, angle: 10 }     // 右下
+      ]
       
       for (let i = 0; i < maxBubbles; i++) {
         const emotion = emotions[i]
-        const position = generateSafePosition()
+        const position = safePositions[i] || safePositions[0]
+        
+        // 根据设备调整位置
+        const scaleFactor = isMobile ? (isSmallMobile ? 0.7 : 0.8) : 1.0
+        const x = position.x * scaleFactor
+        const y = position.y * scaleFactor
         
         const bubble = {
           emotion: emotion,
           style: {
             left: '50%',
             top: '50%',
-            transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-            '--hue': `${(i * 60) % 360}deg`,
-            animationDelay: `${i * 0.3}s`,
-            position: 'absolute'
+            transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${position.angle}deg)`,
+            '--hue': `${(i * 65 + 45) % 360}deg`,
+            animationDelay: `${i * 0.25}s`,
+            position: 'absolute',
+            zIndex: 5 + i
           },
           class: `preview-bubble-${i % 4}`
         }
@@ -619,6 +608,7 @@ export default {
         bubbles.push(bubble)
       }
 
+      console.log(`[预览气泡] 生成 ${bubbles.length} 个预览气泡`)
       return bubbles
     }
   },
@@ -633,6 +623,16 @@ export default {
     enterDetailView() {
       this.showAnalysisDetail = true;
       this.resetUIHideState();
+      
+      // 清空气泡，防止旧的气泡干扰
+      this.emotionBubbles = []
+      
+      // 重新生成气泡确保正确显示
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.generateEmotionBubbles()
+        }, 100) // 增加延迟确保DOM完全渲染
+      })
     },
     
     // 返回选择界面
@@ -652,6 +652,9 @@ export default {
       
       this.selectedRecord = this.$store.state.thoughtRecords[index]
       this.$store.state.selectedRecordIndex = index
+      
+      // 清空旧的气泡数据，防止重叠
+      this.emotionBubbles = []
       
       // 检查并恢复已保存的分析结果
       if (this.selectedRecord.analysisData) {
@@ -687,10 +690,10 @@ export default {
       
       // 使用nextTick确保DOM更新后再初始化气泡
       this.$nextTick(() => {
-        // 延迟生成气泡，确保DOM完全渲染
+        // 延迟生成气泡，确保DOM完全渲染且状态稳定
         setTimeout(() => {
           this.generateEmotionBubbles()
-        }, 100)
+        }, 150) // 增加延迟时间
       })
     },
     
@@ -1274,8 +1277,8 @@ export default {
       }
     },
     
-    // 重构后的气泡生成系统 - 修复叠加和碰撞问题
-    generateEmotionBubbles() {
+    // 🚀 全新智能气泡布局系统 - 基于真实DOM碰撞检测
+    async generateEmotionBubbles() {
       if (!this.selectedRecord) {
         this.emotionBubbles = []
         return
@@ -1287,91 +1290,162 @@ export default {
         return
       }
 
-      const bubbles = []
-      const maxBubbles = Math.min(emotions.length, 8)
-      const placedBubbles = [] // 记录已放置的气泡位置
-      
-      // 检测是否为移动设备
-      const isMobile = window.innerWidth <= 480
-      
-      // 定义花朵核心禁区和气泡最小间距
-      const flowerCoreSize = isMobile ? 80 : 120
-      const safeBoundary = flowerCoreSize / 2 + 30
-      const bubbleMinDistance = isMobile ? 60 : 80 // 气泡之间的最小距离
-      
-      // 检查位置是否与已有气泡冲突
-      const isPositionValid = (newPos, existingBubbles) => {
-        // 检查是否在花朵核心区域
-        if (Math.abs(newPos.x) < safeBoundary && Math.abs(newPos.y) < safeBoundary) {
-          return false
-        }
-        
-        // 检查是否与其他气泡冲突
-        return existingBubbles.every(bubble => {
-          const distance = Math.sqrt(
-            Math.pow(newPos.x - bubble.x, 2) + 
-            Math.pow(newPos.y - bubble.y, 2)
-          )
-          return distance >= bubbleMinDistance
-        })
-      }
-      
-      // 生成不冲突的位置
-      const generateSafePosition = (existingBubbles) => {
-        const maxDistance = isMobile ? 180 : 250
-        const minDistance = safeBoundary + 20
-        
-        let attempts = 0
-        let position
-        
-        do {
-          // 使用更均匀的角度分布
-          const baseAngle = (existingBubbles.length * 360 / maxBubbles) * Math.PI / 180
-          const angleVariation = (Math.random() - 0.5) * Math.PI / 3 // ±30度变化
-          const angle = baseAngle + angleVariation
-          
-          const distance = minDistance + Math.random() * (maxDistance - minDistance)
-          
-          position = {
-            x: Math.cos(angle) * distance,
-            y: Math.sin(angle) * distance
-          }
-          
-          attempts++
-        } while (!isPositionValid(position, existingBubbles) && attempts < 20)
-        
-        return position
-      }
-      
-      for (let i = 0; i < maxBubbles; i++) {
-        const emotion = emotions[i]
-        const position = generateSafePosition(placedBubbles)
-        
-        // 气泡样式
-        const bubble = {
-          emotion: emotion,
-          x: position.x,
-          y: position.y,
-          style: {
-            left: '50%',
-            top: '50%',
-            transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-            '--random-offset': `${Math.random() * 360}deg`,
-            '--delay': `${i * 0.3}s`,
-            '--hue': `${(i * 60) % 360}deg`, // 更大的颜色间隔
-            zIndex: 10 + i, // 避免重叠，每个气泡不同层级
-            animationDelay: `${i * 0.2}s`,
-            position: 'absolute'
-          },
-          class: `bubble-${i % 4}`,
-          index: i
-        }
-        
-        bubbles.push(bubble)
-        placedBubbles.push(position) // 记录已放置的位置
+      // 等待DOM更新
+      await this.$nextTick()
+
+      // 获取花朵容器元素
+      const flowerContainer = document.querySelector('.flower-container')
+      if (!flowerContainer) {
+        console.warn('[气泡生成] 无法找到花朵容器')
+        // 如果找不到容器，稍后重试
+        setTimeout(() => {
+          this.generateEmotionBubbles()
+        }, 100)
+        return
       }
 
+      const containerRect = flowerContainer.getBoundingClientRect()
+      const containerCenterX = containerRect.width / 2
+      const containerCenterY = containerRect.height / 2
+
+      // 设备适配参数
+      const isMobile = window.innerWidth <= 768
+      const isSmallMobile = window.innerWidth <= 480
+      
+      // 动态参数计算
+      const flowerRadius = isMobile ? (isSmallMobile ? 45 : 55) : 70
+      const spawnRadiusMin = flowerRadius + 25 // 花朵安全边界
+      const spawnRadiusMax = Math.min(containerCenterX, containerCenterY) - 20
+      const spawnAngleRange = [-80, 80] // 中上部区域
+      const maxAttempts = 80 // 每个气泡最大尝试次数
+      const maxBubbles = Math.min(emotions.length, isMobile ? 5 : 7)
+
+      console.log(`[气泡生成] 开始生成 ${maxBubbles} 个气泡，容器尺寸: ${containerRect.width}x${containerRect.height}`)
+
+      const bubbles = []
+      const placedRects = [] // 记录已放置气泡的边界框
+
+      // 重要：清空现有气泡并确保DOM更新
+      this.emotionBubbles = []
+      await this.$nextTick()
+
+      // 为每个情绪生成气泡
+      for (let i = 0; i < maxBubbles; i++) {
+        const emotion = emotions[i]
+        let placedSuccess = false
+        let bestPosition = null
+
+        // 尝试找到合适位置
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          // 生成随机角度和半径
+          const randomAngle = spawnAngleRange[0] + Math.random() * (spawnAngleRange[1] - spawnAngleRange[0])
+          const randomRadius = spawnRadiusMin + Math.random() * (spawnRadiusMax - spawnRadiusMin)
+          
+          // 转换为坐标
+          const angleRad = (randomAngle - 90) * (Math.PI / 180) // -90度使0度在正上方
+          const x = containerCenterX + randomRadius * Math.cos(angleRad)
+          const y = containerCenterY + randomRadius * Math.sin(angleRad)
+
+          // 创建临时气泡测试位置
+          const tempBubble = {
+            emotion: emotion,
+            x: x,
+            y: y,
+            style: {
+              left: '50%',
+              top: '50%',
+              transform: `translate(calc(-50% + ${x - containerCenterX}px), calc(-50% + ${y - containerCenterY}px))`,
+              '--hue': `${(i * 60 + 30) % 360}deg`,
+              animationDelay: `${i * 0.2}s`,
+              position: 'absolute',
+              zIndex: 10 + i,
+              visibility: 'hidden' // 先隐藏进行测试
+            },
+            class: `detail-bubble-${i % 4}`,
+            index: i
+          }
+
+          // 临时添加到数组进行DOM测量
+          this.emotionBubbles = [...bubbles, tempBubble]
+          await this.$nextTick()
+
+          // 获取临时气泡的实际DOM边界
+          const bubbleElements = document.querySelectorAll('.emotion-bubble')
+          if (bubbleElements.length > i) {
+            const currentBubbleEl = bubbleElements[i]
+            const currentRect = currentBubbleEl.getBoundingClientRect()
+
+            // 检查是否与已放置的气泡重叠
+            let hasCollision = false
+            for (const placedRect of placedRects) {
+              const margin = 10 // 气泡间最小间距
+              if (
+                currentRect.left - margin < placedRect.right &&
+                currentRect.right + margin > placedRect.left &&
+                currentRect.top - margin < placedRect.bottom &&
+                currentRect.bottom + margin > placedRect.top
+              ) {
+                hasCollision = true
+                break
+              }
+            }
+
+            // 检查是否超出容器边界
+            const containerMargin = 15
+            const isWithinBounds = 
+              currentRect.left >= containerMargin &&
+              currentRect.right <= containerRect.width - containerMargin &&
+              currentRect.top >= containerMargin &&
+              currentRect.bottom <= containerRect.height - containerMargin
+
+            if (!hasCollision && isWithinBounds) {
+              // 找到合适位置
+              placedRects.push(currentRect)
+              bestPosition = tempBubble
+              bestPosition.style.visibility = 'visible'
+              placedSuccess = true
+              break
+            }
+          }
+        }
+
+        if (placedSuccess && bestPosition) {
+          bubbles.push(bestPosition)
+          console.log(`[气泡生成] 气泡 "${emotion}" 放置成功，位置: (${Math.round(bestPosition.x - containerCenterX)}, ${Math.round(bestPosition.y - containerCenterY)})`)
+        } else {
+          console.warn(`[气泡生成] 无法为情绪 "${emotion}" 找到合适位置，已尝试 ${maxAttempts} 次`)
+          
+          // 使用备用策略：均匀分布
+          const backupAngle = (i * 360) / maxBubbles
+          const backupRadius = spawnRadiusMin + 20
+          const backupAngleRad = (backupAngle - 90) * (Math.PI / 180)
+          const backupX = containerCenterX + backupRadius * Math.cos(backupAngleRad)
+          const backupY = containerCenterY + backupRadius * Math.sin(backupAngleRad)
+
+          const backupBubble = {
+            emotion: emotion,
+            x: backupX,
+            y: backupY,
+            style: {
+              left: '50%',
+              top: '50%',
+              transform: `translate(calc(-50% + ${backupX - containerCenterX}px), calc(-50% + ${backupY - containerCenterY}px))`,
+              '--hue': `${(i * 60 + 30) % 360}deg`,
+              animationDelay: `${i * 0.2}s`,
+              position: 'absolute',
+              zIndex: 10 + i,
+              visibility: 'visible'
+            },
+            class: `detail-bubble-${i % 4}`,
+            index: i
+          }
+          bubbles.push(backupBubble)
+        }
+      }
+
+      // 最终设置气泡
       this.emotionBubbles = bubbles
+      console.log(`[气泡生成] 完成！成功生成 ${bubbles.length} 个气泡`)
     },
     
     
@@ -2759,28 +2833,27 @@ export default {
   stroke: #84A98C;
 }
 
-/* ===== 全新情绪气泡系统 ===== */
-/* ===== 重构后的气泡样式 - 更简洁更美观 ===== */
+/* ===== 智能重构的情绪气泡系统 ===== */
 .emotion-bubbles-container {
   position: absolute;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 2; /* 调整到与花朵同一层级 */
+  z-index: 1; /* 确保气泡在花朵之下 */
   overflow: visible;
 }
 
 .emotion-bubble {
   position: absolute;
-  padding: 0.8rem 1.2rem;
+  padding: 0.7rem 1rem;
   background: linear-gradient(135deg, 
     hsl(var(--hue, 200), 70%, 85%), 
     hsl(var(--hue, 200), 60%, 75%)
   );
   color: hsl(var(--hue, 200), 40%, 30%);
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
-  font-weight: 500;
+  border-radius: var(--radius-full, 25px);
+  font-size: 0.8rem;
+  font-weight: 600;
   white-space: nowrap;
   box-shadow: 
     0 4px 15px hsla(var(--hue, 200), 50%, 50%, 0.3),
@@ -2788,12 +2861,22 @@ export default {
   backdrop-filter: blur(10px);
   border: 1px solid hsla(var(--hue, 200), 50%, 80%, 0.5);
   
-  /* 简化的动画 */
+  /* 支持动态尺寸 */
+  width: var(--bubble-size, auto);
+  height: var(--bubble-size, auto);
+  min-width: 45px;
+  min-height: 32px;
+  max-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  
+  /* 改进的动画 */
   animation: 
     bubbleFloat 6s ease-in-out infinite,
     bubbleAppear 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
   
-  /* 响应式调整 */
   transform-origin: center;
   transition: all 0.3s ease;
 }
@@ -2805,21 +2888,38 @@ export default {
     0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* 不同的气泡类型 - 使用CSS变量设置颜色 */
-.emotion-bubble.bubble-0 {
+/* 详细页面气泡样式 - 与预览页面区分 */
+.emotion-bubble.detail-bubble-0 {
   --hue: 200deg; /* 蓝色 */
 }
 
-.emotion-bubble.bubble-1 {
+.emotion-bubble.detail-bubble-1 {
   --hue: 280deg; /* 紫色 */
 }
 
-.emotion-bubble.bubble-2 {
+.emotion-bubble.detail-bubble-2 {
   --hue: 120deg; /* 绿色 */
 }
 
-.emotion-bubble.bubble-3 {
+.emotion-bubble.detail-bubble-3 {
   --hue: 40deg; /* 黄色 */
+}
+
+/* 预览页面气泡样式 */
+.emotion-bubble.preview-bubble-0 {
+  --hue: 220deg; /* 稍微不同的蓝色 */
+}
+
+.emotion-bubble.preview-bubble-1 {
+  --hue: 300deg; /* 稍微不同的紫色 */
+}
+
+.emotion-bubble.preview-bubble-2 {
+  --hue: 140deg; /* 稍微不同的绿色 */
+}
+
+.emotion-bubble.preview-bubble-3 {
+  --hue: 60deg; /* 稍微不同的黄色 */
 }
 
 /* 简化的动画 */
@@ -3281,7 +3381,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  background: rgba(255, 255, 255, 0.98); /* 改为白色背景 */
+  background: rgba(255, 255, 255, 0.98) !important; /* 增强不透明度 */
   color: #000000 !important; /* 纯黑色文字，强制优先级 */
   padding: 1rem 2rem;
   border-radius: 30px;
@@ -3289,16 +3389,22 @@ export default {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   font-weight: 700 !important; /* 黑体字，强制优先级 */
-  border: 2px solid rgba(0, 0, 0, 0.2); /* 添加边框增强对比 */
+  border: 2px solid rgba(0, 0, 0, 0.3) !important; /* 增强边框对比度 */
+  z-index: 999 !important; /* 确保在最顶层 */
+  position: relative !important; /* 确保层级生效 */
+  backdrop-filter: blur(15px) !important; /* 增强背景模糊 */
 }
 
 .companion-hint .hint-text {
   color: #000000 !important;
   font-weight: 700 !important;
+  font-size: 1rem !important; /* 确保字体大小 */
+  line-height: 1.4 !important;
 }
 
 .companion-hint .hint-icon {
   color: #000000 !important;
+  font-size: 1.2rem !important;
 }
 
 .companion-hint:hover {
@@ -3310,23 +3416,28 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  background: rgba(255, 255, 255, 0.98); /* 增加不透明度 */
+  background: rgba(255, 255, 255, 0.98) !important; /* 增强不透明度 */
   color: #000000 !important; /* 使用更深的颜色提高对比度，强制优先级 */
   padding: 1rem 2rem;
   border-radius: 30px;
   backdrop-filter: blur(20px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* 增加阴影对比度 */
-  border: 2px solid rgba(0, 0, 0, 0.2); /* 添加边框提高可见性和对比度 */
+  border: 2px solid rgba(0, 0, 0, 0.3) !important; /* 增强边框提高可见性和对比度 */
+  z-index: 999 !important; /* 确保在最顶层 */
+  position: relative !important; /* 确保层级生效 */
 }
 
 .companion-disabled p {
   margin: 0;
   font-weight: 700 !important; /* 改为黑色粗体，强制优先级 */
   color: #000000 !important; /* 纯黑色，强制优先级 */
+  font-size: 1rem !important;
+  line-height: 1.4 !important;
 }
 
 .companion-disabled .rest-icon {
   color: #000000 !important;
+  font-size: 1.2rem !important;
 }
 
 /* ===== 模态对话框 ===== */
@@ -3638,7 +3749,53 @@ export default {
   transform: scale(0.9) translateY(20px);
 }
 
-/* ===== 响应式设计 ===== */
+/* ===== 响应式设计优化 - 统一断点和触摸友好 ===== */
+
+/* 定义CSS变量统一断点 */
+:root {
+  --breakpoint-xs: 375px;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --touch-target-min: 44px; /* 最小触摸目标尺寸 */
+}
+
+/* 确保所有交互元素符合触摸友好标准 */
+.emotion-tag,
+.modal-close,
+.back-to-overview-btn,
+.back-to-selection-btn,
+.retry-btn,
+.dismiss-btn,
+.emotion-bubble {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  /* 为触摸设备添加反馈 */
+  -webkit-tap-highlight-color: rgba(132, 169, 140, 0.3);
+}
+
+/* 触摸设备专用样式 */
+@media (hover: none) and (pointer: coarse) {
+  .emotion-tag:active,
+  .flowerpot-item:active,
+  .back-to-overview-btn:active,
+  .back-to-selection-btn:active,
+  .companion-hint:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* 增加触摸区域 */
+  .emotion-bubble {
+    padding: 12px 16px; /* 增大内边距 */
+  }
+  
+  .modal-close {
+    width: 48px;
+    height: 48px;
+  }
+}
+
 @media (min-width: 768px) {
   .results-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -3709,12 +3866,19 @@ export default {
   }
   
   .emotion-bubble {
-    padding: 6px 10px;
-    font-size: 10px;
-    min-width: 30px;
-    min-height: 24px;
-    max-width: 55px;
-    border-radius: 15px;
+    /* 使用动态尺寸变量而不是固定值 */
+    padding: calc(var(--bubble-size, 50px) * 0.15) calc(var(--bubble-size, 50px) * 0.2);
+    font-size: calc(var(--bubble-size, 50px) * 0.25);
+    min-width: calc(var(--bubble-size, 50px) * 0.8);
+    min-height: calc(var(--bubble-size, 50px) * 0.6);
+    max-width: calc(var(--bubble-size, 50px) * 1.4);
+    border-radius: calc(var(--bubble-size, 50px) * 0.3);
+    /* 确保文字居中 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
   }
   
   .progress-ring {
@@ -3822,11 +3986,14 @@ export default {
   .companion-disabled {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
-    /* 防止文字被挤成竖排 */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90vw;
+    /* 修复移动端文字挤压问题 */
+    white-space: normal; /* 允许正常换行 */
+    word-wrap: break-word;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 85vw; /* 限制最大宽度，避免超出屏幕 */
+    text-align: center; /* 居中对齐提升美观性 */
+    line-height: 1.4; /* 改善行高 */
   }
   
   /* 情绪标签容器优化 */
@@ -3890,21 +4057,64 @@ export default {
     white-space: nowrap;
   }
   
-  /* 移动端情绪标签优化 */
+  /* 移动端情绪标签优化 - 提高字体大小和触摸友好性 */
   .emotion-tags {
-    gap: 0.2rem;
+    gap: 0.4rem; /* 增大间距 */
     flex-wrap: wrap;
   }
   
   .emotion-tag {
-    padding: 0.15rem 0.4rem;
-    font-size: 0.7rem;
-    border-radius: 6px;
+    padding: 0.3rem 0.6rem; /* 增大内边距 */
+    font-size: 0.875rem; /* 从0.7rem提升到0.875rem */
+    border-radius: 8px; /* 增大圆角便于触摸 */
+    min-width: var(--touch-target-min);
+    min-height: 36px; /* 确保足够的触摸区域 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.4; /* 改善行高 */
   }
   
   .emotion-more {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.65rem;
+    padding: 0.3rem 0.5rem; /* 增大内边距 */
+    font-size: 0.8rem; /* 从0.65rem提升 */
+    min-height: 32px;
+  }
+  
+  /* 优化分析阶段文字的移动端显示 */
+  .analysis-stage {
+    font-size: 1rem; /* 从0.9rem提升 */
+    padding: 12px 20px; /* 增大内边距 */
+    line-height: 1.4;
+  }
+  
+  /* 提升认知偏差和问题文字的可读性 */
+  .bias-description {
+    font-size: 1rem; /* 从0.9rem提升 */
+    line-height: 1.6; /* 改善行高 */
+  }
+  
+  .question-text {
+    font-size: 1rem; /* 从0.95rem提升 */
+    line-height: 1.6; /* 改善行高 */
+  }
+  
+  /* 改善底部提示的可读性和布局 */
+  .companion-hint,
+  .companion-disabled {
+    padding: 1rem 1.8rem; /* 增大内边距 */
+    font-size: 1rem; /* 从0.9rem提升 */
+    line-height: 1.4;
+    min-height: var(--touch-target-min);
+    /* 确保文字正常换行，不会被挤成竖排 */
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 80vw; /* 限制宽度避免超出屏幕 */
+    text-align: center;
+    /* 确保不会遮挡进度条 */
+    position: relative;
+    z-index: 5; /* 降低层级，避免遮挡其他元素 */
+    margin-top: 1rem; /* 增加与上方元素的间距 */
   }
 }
 
@@ -3986,14 +4196,23 @@ export default {
   }
   
   .emotion-bubble {
-    padding: 4px 8px;
-    font-size: 10px;
-    min-width: 35px;
-    min-height: 24px;
-    max-width: 55px;
-    border-radius: 12px;
-    /* 移动端四角定位法调整 */
-    transform: scale(0.9); /* 稍微缩小避免超出边界 */
+    /* 极小屏幕使用更紧凑的动态尺寸 */
+    padding: calc(var(--bubble-size, 40px) * 0.1) calc(var(--bubble-size, 40px) * 0.15);
+    font-size: calc(var(--bubble-size, 40px) * 0.22);
+    min-width: calc(var(--bubble-size, 40px) * 0.9);
+    min-height: calc(var(--bubble-size, 40px) * 0.65);
+    max-width: calc(var(--bubble-size, 40px) * 1.2);
+    border-radius: calc(var(--bubble-size, 40px) * 0.25);
+    /* 确保文字正确显示 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.1;
+    word-break: keep-all; /* 保持文字不换行 */
+    overflow: hidden;
+    /* 移动端微调 */
+    transform: scale(0.95); /* 稍微缩小避免超出边界 */
   }
   
   .progress-ring {
@@ -4337,14 +4556,23 @@ export default {
   .question-text,
   .topic-title,
   .topic-title-main {
-    color: #e0e0e0;
+    color: #ffffff; /* 增强对比度 */
+    font-weight: 600; /* 增加字重 */
   }
   
   .greenhouse-header p,
-  .bias-description,
-  .thought-preview,
+  .thought-preview {
+    color: #d0d0d0; /* 提高对比度 */
+  }
+  
+  .bias-description {
+    color: #e8e8e8 !important; /* 显著提高对比度 */
+    font-weight: 600 !important; /* 增加字重提高可读性 */
+  }
+  
   .empathy-text {
-    color: #b0b0b0;
+    color: #f0f0f0 !important; /* 大幅提高对比度 */
+    font-weight: 600 !important;
   }
   
   .flowerpot-item {
@@ -4396,39 +4624,61 @@ export default {
   }
   
   .analysis-stage {
-    background: rgba(30, 30, 30, 0.95);
-    color: #84A98C;
-    border: 1px solid rgba(132, 169, 140, 0.3);
+    background: rgba(20, 20, 20, 0.98) !important; /* 更深的背景 */
+    color: #ffffff !important; /* 纯白文字 */
+    border: 1px solid rgba(132, 169, 140, 0.5);
+    font-weight: 700 !important; /* 加粗字体 */
   }
   
   .companion-hint {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(20, 20, 20, 0.98) !important; /* 更深的背景 */
     color: #ffffff !important;
-    border: 2px solid rgba(132, 169, 140, 0.5);
+    border: 3px solid rgba(132, 169, 140, 0.8) !important; /* 增强边框对比度 */
+    z-index: 999 !important; /* 确保在最顶层 */
+    position: relative !important;
+    backdrop-filter: blur(25px) !important; /* 增强背景模糊 */
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8) !important; /* 增强阴影 */
   }
   
   .companion-hint .hint-text,
   .companion-hint .hint-icon {
     color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important; /* 添加文字阴影 */
+    font-size: 1rem !important;
   }
   
   .companion-disabled {
-    background: rgba(30, 30, 30, 0.95);
+    background: rgba(20, 20, 20, 0.98) !important; /* 更深的背景 */
     color: #ffffff !important;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.4) !important; /* 增强边框对比度 */
+    z-index: 999 !important; /* 确保在最顶层 */
+    position: relative !important;
+    backdrop-filter: blur(25px) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8) !important; /* 增强阴影 */
   }
   
   .companion-disabled p,
   .companion-disabled .rest-icon {
     color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important; /* 添加文字阴影 */
+    font-size: 1rem !important;
   }
   
   .back-to-overview-btn,
   .back-to-selection-btn,
   .view-original-btn {
-    background: rgba(30, 30, 30, 0.95);
-    color: #e0e0e0;
-    border-color: rgba(132, 169, 140, 0.3);
+    background: rgba(20, 20, 20, 0.98);
+    color: #ffffff; /* 纯白文字 */
+    border-color: rgba(132, 169, 140, 0.5);
+    font-weight: 600;
+  }
+  
+  .back-to-overview-btn span,
+  .back-to-selection-btn span {
+    color: #ffffff !important;
+    font-weight: 600 !important;
   }
   
   .back-to-overview-btn:hover,
@@ -4449,7 +4699,7 @@ export default {
   }
   
   .error-description {
-    color: #b0b0b0;
+    color: #d0d0d0;
   }
   
   /* 鼓励卡片在暗色模式下的特殊处理 */
@@ -4460,8 +4710,33 @@ export default {
   .encouragement-text {
     color: #ffffff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-weight: 700; /* 增加字重 */
   }
   
+  /* 情绪气泡在深色模式下的优化 */
+  .emotion-bubble {
+    background: linear-gradient(135deg, 
+      hsla(var(--hue, 200), 60%, 45%, 0.9), 
+      hsla(var(--hue, 200), 50%, 35%, 0.9)
+    );
+    color: #ffffff; /* 纯白文字确保可读性 */
+    border: 1px solid hsla(var(--hue, 200), 50%, 60%, 0.7);
+    box-shadow: 
+      0 4px 15px hsla(var(--hue, 200), 50%, 30%, 0.5),
+      0 2px 8px rgba(0, 0, 0, 0.4);
+    font-weight: 600; /* 增加字重 */
+  }
+  
+  .emotion-bubble:hover {
+    background: linear-gradient(135deg, 
+      hsla(var(--hue, 200), 60%, 50%, 0.95), 
+      hsla(var(--hue, 200), 50%, 40%, 0.95)
+    );
+    box-shadow: 
+      0 6px 25px hsla(var(--hue, 200), 50%, 30%, 0.7),
+      0 4px 15px rgba(0, 0, 0, 0.5);
+  }
+
   /* 原始内容弹窗暗色模式 */
   .original-section {
     background: rgba(40, 40, 40, 0.8);
@@ -4469,20 +4744,23 @@ export default {
   }
   
   .section-title {
-    color: #e0e0e0;
+    color: #ffffff; /* 纯白标题 */
+    font-weight: 600;
   }
   
   .info-item label {
     color: #84A98C;
+    font-weight: 600;
   }
   
   .info-item span {
-    color: #e0e0e0;
+    color: #f0f0f0; /* 提高对比度 */
+    font-weight: 500;
   }
   
   .content-text p {
     background: rgba(50, 50, 50, 0.8);
-    color: #e0e0e0;
+    color: #f0f0f0; /* 提高对比度 */
   }
   
   .status-item {
@@ -4491,15 +4769,18 @@ export default {
   }
   
   .status-label {
-    color: #e0e0e0;
+    color: #ffffff; /* 纯白标签 */
+    font-weight: 600;
   }
   
   .status-item .completed {
     color: #81C784;
+    font-weight: 700;
   }
   
   .status-item .pending {
     color: #FFB74D;
+    font-weight: 700;
   }
   
   /* 花朵阶段类在暗色模式下的调整 */
@@ -4520,6 +4801,7 @@ export default {
       hsl(200, 60%, 60%), 
       hsl(200, 50%, 50%)
     );
+    color: #ffffff;
   }
   
   .emotion-bubble.bubble-1 {
@@ -4528,6 +4810,7 @@ export default {
       hsl(280, 60%, 60%), 
       hsl(280, 50%, 50%)
     );
+    color: #ffffff;
   }
   
   .emotion-bubble.bubble-2 {
@@ -4536,6 +4819,7 @@ export default {
       hsl(120, 60%, 60%), 
       hsl(120, 50%, 50%)
     );
+    color: #ffffff;
   }
   
   .emotion-bubble.bubble-3 {
@@ -4544,6 +4828,7 @@ export default {
       hsl(40, 70%, 60%), 
       hsl(40, 60%, 50%)
     );
+    color: #000000; /* 黄色背景用黑色文字 */
   }
 }
 
@@ -4602,24 +4887,70 @@ export default {
   font-size: 0.9rem;
   color: #52796F;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
+  white-space: nowrap; /* 桌面版保持单行 */
   animation: fadeInUp 0.3s ease-out;
   max-width: 90vw; /* 限制最大宽度 */
   z-index: 1; /* 确保不会遮挡其他重要元素 */
+  text-align: center; /* 居中对齐 */
+  min-width: 120px; /* 确保最小宽度 */
 }
 
-/* 手机端修复文字超出问题 */
-@media (max-width: 480px) {
+/* 移动端修复文字和进度条显示问题 - 扩展到所有移动设备 */
+@media (max-width: 768px) {
   .analysis-stage {
     white-space: normal; /* 允许换行 */
     text-align: center;
-    max-width: 80vw;
-    line-height: 1.3;
-    bottom: -50px; /* 调整位置避免遮挡，但不要太远 */
+    max-width: 70vw; /* 进一步限制宽度避免超出屏幕 */
+    line-height: 1.3; /* 改善行高 */
+    bottom: -65px; /* 调整位置避免遮挡进度条 */
     left: 50%;
     transform: translateX(-50%);
-    word-break: break-word; /* 确保长单词正确换行 */
-    overflow-wrap: break-word; /* 兼容性更好的换行 */
+    font-size: 0.95rem; /* 提升字体大小便于阅读 */
+    padding: 10px 16px; /* 增大内边距提升触摸友好性 */
+    /* 确保不会遮挡进度条 */
+    z-index: 1;
+    min-width: 100px; /* 减小最小宽度 */
+    word-break: keep-all; /* 保持词语完整性 */
+    overflow-wrap: break-word; /* 在必要时换行 */
+  }
+  
+  /* 进度环在移动端的优化 */
+  .progress-ring {
+    width: 150px; /* 稍微减小尺寸 */
+    height: 150px;
+  }
+  
+  /* 确保花朵容器有足够空间显示进度文字 */
+  .flower-container {
+    padding-bottom: 85px; /* 增加底部空间 */
+    min-height: 220px; /* 确保最小高度 */
+  }
+  
+  /* 优化花朵显示区域 */
+  .flower-display {
+    padding: 1rem;
+    min-height: 280px; /* 确保有足够空间 */
+  }
+}
+
+/* 针对极小屏幕的额外优化 */
+@media (max-width: 480px) {
+  .analysis-stage {
+    max-width: 80vw; /* 在极小屏幕上放宽一些 */
+    font-size: 0.9rem;
+    bottom: -70px; /* 进一步调整位置 */
+    padding: 8px 12px;
+    line-height: 1.2;
+  }
+  
+  .progress-ring {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .flower-container {
+    padding-bottom: 90px;
+    min-height: 200px;
   }
 }
 </style>

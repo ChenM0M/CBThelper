@@ -1289,4 +1289,208 @@ export default {
     transform: translateY(-10px);
   }
 }
+
+/* 深色模式支持 - 完全优化版本 */
+@media (prefers-color-scheme: dark) {
+  .growth-garden {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
+  }
+  
+  .garden-background::before {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 30%, #1f2e2e 100%);
+  }
+  
+  .loading-overlay {
+    background: rgba(20, 25, 30, 0.9);
+  }
+  
+  .loading-text {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 600; /* 增加字重提高可读性 */
+  }
+  
+  .page-title,
+  .welcome-title {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 700; /* 增加字重 */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* 添加文字阴影 */
+  }
+  
+  .page-subtitle,
+  .welcome-subtitle {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500; /* 增加字重 */
+  }
+  
+  .section-title {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 700; /* 增加字重 */
+  }
+  
+  .stat-bloom,
+  .action-bloom,
+  .record-bloom,
+  .insight-bloom {
+    background: rgba(20, 25, 30, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); /* 增强阴影 */
+  }
+  
+  .stat-bloom:hover,
+  .action-bloom:hover,
+  .record-bloom:hover,
+  .insight-bloom:hover {
+    border-color: #84A98C;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4); /* 增强悬浮阴影 */
+  }
+  
+  .bloom-content,
+  .action-content h4,
+  .record-time,
+  .flower-name,
+  .stat-number,
+  .wisdom-stat .stat-number,
+  .insight-header h4 {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 600; /* 增加字重 */
+  }
+  
+  .bloom-label,
+  .action-content p,
+  .flower-count,
+  .stat-label,
+  .wisdom-stat .stat-text .stat-label,
+  .record-thought-snippet,
+  .emotion-label {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500; /* 增加字重 */
+  }
+  
+  .bloom-status.positive {
+    background: rgba(132, 169, 140, 0.4); /* 增强背景不透明度 */
+    color: #ffffff !important;
+    border: 1px solid rgba(132, 169, 140, 0.6);
+    font-weight: 700;
+  }
+  
+  .bloom-status.stable {
+    background: rgba(255, 155, 133, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 155, 133, 0.6);
+    font-weight: 700;
+  }
+  
+  .bloom-status.neutral {
+    background: rgba(202, 210, 197, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(202, 210, 197, 0.6);
+    font-weight: 700;
+  }
+  
+  .bloom-status.attention {
+    background: rgba(160, 130, 109, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(160, 130, 109, 0.6);
+    font-weight: 700;
+  }
+  
+  .record-growth-stage {
+    color: #ffffff !important;
+    font-weight: 600;
+  }
+  
+  .stage-completed {
+    background: rgba(132, 169, 140, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(132, 169, 140, 0.6);
+    font-weight: 700;
+  }
+  
+  .stage-blooming {
+    background: rgba(255, 155, 133, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 155, 133, 0.6);
+    font-weight: 700;
+  }
+  
+  .stage-growing {
+    background: rgba(202, 210, 197, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(202, 210, 197, 0.6);
+    font-weight: 700;
+  }
+  
+  .progress-completed {
+    background: rgba(132, 169, 140, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(132, 169, 140, 0.6);
+    font-weight: 700;
+  }
+  
+  .progress-blooming {
+    background: rgba(255, 155, 133, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 155, 133, 0.6);
+    font-weight: 700;
+  }
+  
+  .progress-growing {
+    background: rgba(202, 210, 197, 0.4);
+    color: #ffffff !important;
+    border: 1px solid rgba(202, 210, 197, 0.6);
+    font-weight: 700;
+  }
+  
+  .wisdom-stat {
+    background: rgba(132, 169, 140, 0.2);
+    border: 1px solid rgba(132, 169, 140, 0.4);
+  }
+  
+  .wisdom-encouragement {
+    background: linear-gradient(135deg, rgba(255, 155, 133, 0.2), rgba(255, 200, 87, 0.2));
+    border: 2px solid rgba(255, 155, 133, 0.4);
+  }
+  
+  .wisdom-encouragement p {
+    color: #ffffff !important;
+    font-weight: 600;
+  }
+  
+  .insight-empty {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500;
+  }
+  
+  .encouragement-card {
+    background: linear-gradient(135deg, rgba(255, 155, 133, 0.3), rgba(255, 200, 87, 0.3));
+    border: 2px solid rgba(255, 155, 133, 0.5);
+  }
+  
+  .encouragement-content h4 {
+    color: #ffffff !important;
+    font-weight: 700;
+  }
+  
+  .encouragement-content p {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500;
+  }
+  
+  .insight-badge {
+    background: rgba(132, 169, 140, 0.4);
+    color: #ffffff !important;
+    font-weight: 700;
+    border: 1px solid rgba(132, 169, 140, 0.6);
+  }
+  
+  /* 浮动按钮在深色模式下的优化 */
+  .floating-back-btn {
+    background: linear-gradient(135deg, #84A98C 0%, #52796F 100%);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .floating-back-btn:hover {
+    box-shadow: 0 12px 35px rgba(132, 169, 140, 0.5);
+  }
+}
 </style>

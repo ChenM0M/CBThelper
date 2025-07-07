@@ -1123,6 +1123,218 @@ export default {
   }
 }
 
+/* 深色模式支持 - 完全优化版本 */
+@media (prefers-color-scheme: dark) {
+  .garden-config {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 50%, #1f2e2e 100%);
+  }
+  
+  .garden-background::before {
+    background: linear-gradient(180deg, #1a2f3a 0%, #2d3e40 30%, #1f2e2e 100%);
+  }
+  
+  .page-title,
+  .section-title {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 700 !important; /* 增加字重 */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* 添加文字阴影 */
+  }
+  
+  .page-subtitle {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500 !important;
+  }
+  
+  .config-card {
+    background: rgba(20, 25, 30, 0.95) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .config-mode-selector {
+    background: rgba(30, 35, 40, 0.9) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .mode-option {
+    background: rgba(40, 45, 50, 0.9) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    color: #e0e0e0 !important;
+    font-weight: 600 !important;
+  }
+  
+  .mode-toggle input[type="radio"]:checked + .mode-option {
+    background: linear-gradient(135deg, #84A98C 0%, #52796F 100%) !important;
+    color: #ffffff !important;
+    border-color: #52796F !important;
+    font-weight: 700 !important;
+  }
+  
+  .mode-description {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500 !important;
+  }
+  
+  .cloud-config-status {
+    background: linear-gradient(135deg, rgba(132, 169, 140, 0.2) 0%, rgba(82, 121, 111, 0.1) 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .info-content h4 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  
+  .info-content p {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500 !important;
+  }
+  
+  .form-group label {
+    color: #ffffff !important; /* 强制优先级确保纯白 */
+    font-weight: 600 !important;
+  }
+  
+  .form-group input,
+  .form-group select {
+    background: rgba(30, 35, 40, 0.9) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    color: #e0e0e0 !important;
+    font-weight: 500 !important;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #84A98C !important;
+    box-shadow: 0 0 15px rgba(132, 169, 140, 0.4) !important;
+    background: rgba(40, 45, 50, 0.95) !important;
+    color: #ffffff !important;
+  }
+  
+  .form-group input::placeholder {
+    color: #a0a0a0 !important; /* 提高占位符对比度 */
+  }
+  
+  .test-status {
+    background: rgba(244, 67, 54, 0.2) !important;
+    color: #ff8a80 !important; /* 提高错误文字对比度 */
+    border: 1px solid rgba(244, 67, 54, 0.4) !important;
+    font-weight: 600 !important;
+  }
+  
+  .test-status.success {
+    background: rgba(76, 175, 80, 0.2) !important;
+    color: #81c784 !important; /* 提高成功文字对比度 */
+    border: 1px solid rgba(76, 175, 80, 0.4) !important;
+  }
+  
+  .control-group {
+    background: rgba(132, 169, 140, 0.15) !important; /* 增加背景不透明度 */
+    border-left: 4px solid #84A98C !important;
+  }
+  
+  .control-group h3 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  
+  .control-description {
+    color: #e0e0e0 !important; /* 提高对比度 */
+    font-weight: 500 !important;
+  }
+  
+  .control-description.warning {
+    color: #ff8a80 !important; /* 提高警告文字对比度 */
+    font-weight: 600 !important;
+  }
+  
+  .file-info {
+    background: rgba(30, 35, 40, 0.9) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    font-weight: 500 !important;
+  }
+  
+  .danger-zone {
+    background: rgba(244, 67, 54, 0.1) !important;
+    border-left: 4px solid #f44336 !important;
+  }
+  
+  .operation-status.success {
+    background: rgba(76, 175, 80, 0.2) !important;
+    color: #81c784 !important;
+    border: 2px solid rgba(76, 175, 80, 0.4) !important;
+    font-weight: 600 !important;
+  }
+  
+  .operation-status.error {
+    background: rgba(244, 67, 54, 0.2) !important;
+    color: #ff8a80 !important;
+    border: 2px solid rgba(244, 67, 54, 0.4) !important;
+    font-weight: 600 !important;
+  }
+  
+  .modal-dialog {
+    background: rgba(20, 25, 30, 0.95) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .modal-header h3 {
+    color: #ff8a80 !important; /* 提高错误标题对比度 */
+    font-weight: 700 !important;
+  }
+  
+  .modal-body {
+    color: #e0e0e0 !important;
+    font-weight: 500 !important;
+  }
+  
+  .modal-body ul {
+    color: #e0e0e0 !important;
+  }
+  
+  .modal-body li {
+    color: #e0e0e0 !important;
+  }
+  
+  .modal-body strong {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  
+  .cancel-button {
+    background: rgba(132, 169, 140, 0.2) !important;
+    color: #84A98C !important;
+    border: 2px solid rgba(132, 169, 140, 0.4) !important;
+    font-weight: 600 !important;
+  }
+  
+  .cancel-button:hover {
+    background: rgba(132, 169, 140, 0.3) !important;
+    color: #ffffff !important;
+  }
+  
+  /* 浮动按钮在深色模式下的优化 */
+  .floating-back-btn {
+    background: linear-gradient(135deg, #84A98C 0%, #52796F 100%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .floating-back-btn:hover {
+    box-shadow: 0 12px 35px rgba(132, 169, 140, 0.5) !important;
+  }
+  
+  /* 按钮样式优化 */
+  .test-button,
+  .save-button,
+  .export-button,
+  .import-button,
+  .confirm-import-button,
+  .clear-button {
+    font-weight: 600 !important;
+  }
+}
+
 /* 配置模式选择器样式 */
 .config-mode-selector {
   margin-bottom: 2rem;
