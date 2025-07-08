@@ -1,9 +1,7 @@
-// api/llm-proxy.js
+// api/llm-proxy.cjs
+// CommonJS wrapper for local development server
 
-// Use dynamic import for node-fetch if needed, but Vercel's runtime might have fetch globally
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
-async function handler(request, response) {
+const handler = async function(request, response) {
   // 详细的请求日志
   console.log('收到API请求:', {
     method: request.method,
@@ -182,5 +180,4 @@ async function handler(request, response) {
   }
 }
 
-// ES Module 导出
-export default handler;
+module.exports = handler;

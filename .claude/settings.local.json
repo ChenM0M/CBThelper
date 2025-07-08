@@ -19,7 +19,8 @@
       "Bash(grep -n \"mounted()\" components/CognitiveAnalysis.vue)",
       "Bash(echo)",
       "Bash(echo:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

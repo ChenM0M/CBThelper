@@ -23,13 +23,12 @@ console.log('VUE_APP_LLM_API_KEY:', process.env.VUE_APP_LLM_API_KEY ? '已设置
 console.log('LLM_API_URL:', process.env.LLM_API_URL || '未设置');
 console.log('VUE_APP_LLM_API_URL:', process.env.VUE_APP_LLM_API_URL || '未设置');
 
-// 动态导入 llm-proxy 模块
-async function loadLLMProxy() {
+// 加载 llm-proxy 模块
+function loadLLMProxy() {
   try {
-    const llmProxyPath = path.join(__dirname, 'api', 'llm-proxy.js');
+    const llmProxyPath = path.join(__dirname, 'api', 'llm-proxy.cjs');
     delete require.cache[require.resolve(llmProxyPath)];
-    const module = await import('file://' + llmProxyPath);
-    return module.default;
+    return require(llmProxyPath);
   } catch (error) {
     console.error('无法加载 llm-proxy 模块:', error);
     return null;
@@ -39,7 +38,7 @@ async function loadLLMProxy() {
 // 模拟 Vercel 的请求格式
 app.post('/api/llm-proxy', async (req, res) => {
   try {
-    const llmProxyHandler = await loadLLMProxy();
+    const llmProxyHandler = loadLLMProxy();
     
     if (!llmProxyHandler) {
       return res.status(500).json({
