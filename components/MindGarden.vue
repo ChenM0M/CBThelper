@@ -776,6 +776,7 @@ export default {
 /* 快速访问区域 */
 .quick-access {
   margin-bottom: 3rem;
+  padding: 0 2rem; /* 添加左右padding以对齐内容 */
 }
 
 .section-title {
@@ -849,6 +850,7 @@ export default {
 /* 每日灵感 */
 .daily-inspiration {
   text-align: center;
+  padding: 0 2rem; /* 添加左右padding以对齐内容 */
 }
 
 .inspiration-card {
@@ -895,6 +897,14 @@ export default {
   
   .garden-title {
     font-size: 2rem;
+  }
+  
+  .quick-access {
+    padding: 0 1rem; /* 移动端减少padding */
+  }
+  
+  .daily-inspiration {
+    padding: 0 1rem; /* 移动端减少padding */
   }
   
   .emotion-grid {
@@ -1058,9 +1068,10 @@ export default {
   }
   
   .custom-input:focus {
-    background: rgba(50, 50, 50, 0.9);
+    background: rgba(40, 40, 40, 0.95); /* 保持深色背景 */
     border-color: #84A98C;
     color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(132, 169, 140, 0.2); /* 添加柔和的光晕效果 */
   }
   
   .custom-input::placeholder {

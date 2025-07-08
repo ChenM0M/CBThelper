@@ -494,14 +494,24 @@ export default {
     },
 
     saveConfig() {
-      this.apiConfig.model = this.customModelName;
+      // 确保模型名被正确设置
+      const modelName = this.customModelName || 'qwen-turbo';
+      
+      console.log('[Config] 保存配置:', {
+        endpoint: this.apiConfig.endpoint,
+        hasApiKey: !!this.apiConfig.apiKey,
+        model: modelName
+      });
       
       // 使用store的updateApiConfig方法
       this.$store.updateApiConfig({
         endpoint: this.apiConfig.endpoint,
         apiKey: this.apiConfig.apiKey,
-        model: this.apiConfig.model
+        model: modelName
       });
+      
+      // 更新本地的apiConfig以保持同步
+      this.apiConfig.model = modelName;
       
       this.showSuccess = true;
       setTimeout(() => this.showSuccess = false, 2000);
@@ -1262,8 +1272,8 @@ export default {
   .form-group input:focus,
   .form-group select:focus {
     border-color: #84A98C !important;
-    box-shadow: 0 0 15px rgba(132, 169, 140, 0.4) !important;
-    background: rgba(40, 45, 50, 0.95) !important;
+    box-shadow: 0 0 10px rgba(132, 169, 140, 0.3) !important; /* 减少光晕强度 */
+    background: rgba(30, 35, 40, 0.95) !important; /* 保持与非焦点状态相近的背景色 */
     color: #ffffff !important;
   }
   
