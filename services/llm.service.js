@@ -51,8 +51,14 @@ class LLMService {
     const apiUrl = store.apiConfig?.endpoint || store.apiConfig?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
     const model = store.apiConfig?.model || 'qwen-turbo';
 
-    // 验证模型名是否有效
-    const validModel = model && typeof model === 'string' && model.length > 0 ? model : 'qwen-turbo';
+    // 验证模型名是否有效 - 排除无效值如 '0', 'undefined', 'null' 等
+    const validModel = model && 
+                      typeof model === 'string' && 
+                      model.length > 0 && 
+                      model !== '0' && 
+                      model !== 'undefined' && 
+                      model !== 'null' && 
+                      !model.match(/^\d+$/) ? model : 'qwen-turbo';
 
     console.log('[LLM] 获取API配置:', {
       hasApiKey: !!apiKey,

@@ -285,6 +285,19 @@ export default {
     // 初始化时设置selectedModelOption
     this.selectedModelOption = 'custom'
     this.customModelName = this.apiConfig.model || ''
+    
+    // 恢复配置模式选择
+    const savedConfigMode = localStorage.getItem('configMode');
+    if (savedConfigMode) {
+      this.configMode = savedConfigMode;
+    }
+    
+    // 如果是云端模式，应用云端配置
+    if (this.configMode === 'cloud') {
+      this.applyCloudConfig();
+    }
+    
+    console.log('[Config] 初始化完成，当前模式:', this.configMode);
   },
 
   computed: {
@@ -320,13 +333,50 @@ export default {
     // 配置模式切换
     handleConfigModeChange() {
       if (this.configMode === 'cloud') {
-        // 切换到云端模式，清除测试状态
-        this.testStatus = ''
-        this.cloudTestStatus = ''
+        // 切换到云端模式
+        console.log('[Config] 切换到云端模式');
+        this.testStatus = '';
+        this.cloudTestStatus = '';
+        
+        // 应用云端默认配置
+        this.applyCloudConfig();
       } else {
-        // 切换到本地模式，清除云端测试状态
-        this.cloudTestStatus = ''
+        // 切换到本地模式
+        console.log('[Config] 切换到本地模式');
+        this.cloudTestStatus = '';
+        // 本地模式下保持当前配置不变
       }
+      
+      // 保存配置模式选择
+      localStorage.setItem('configMode', this.configMode);
+    },
+    
+    // 应用云端配置
+    applyCloudConfig() {
+      // 使用预设的云端默认配置
+      const cloudConfig = {
+        endpoint: appConfig.llm.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+        apiKey: appConfig.llm.apiKey || '', // 云端配置应该在环境变量中设置
+        model: appConfig.llm.modelName || 'qwen-turbo'
+      };
+      
+      console.log('[Config] 应用云端配置:', {
+        endpoint: cloudConfig.endpoint,
+        hasApiKey: !!cloudConfig.apiKey,
+        model: cloudConfig.model
+      });
+      
+      // 更新到store
+      this.$store.updateApiConfig(cloudConfig);
+      
+      // 更新本地数据用于UI显示
+      this.apiConfig = { ...cloudConfig };
+      this.customModelName = cloudConfig.model;
+      
+      // 清除本地存储的配置，确保使用云端配置
+      localStorage.removeItem('llmConfig');
+      
+      console.log('[Config] 云端配置已应用');
     },
     
     // 测试云端连接
