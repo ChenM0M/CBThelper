@@ -68,7 +68,7 @@
           <div class="version-details">
             <div class="version-item">
               <span class="version-label">当前版本:</span>
-              <span class="version-value">v2.0.0</span>
+              <span class="version-value">v1.6.4</span>
             </div>
             <div class="version-item">
               <span class="version-label">技术栈:</span>
