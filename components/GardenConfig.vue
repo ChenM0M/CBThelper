@@ -347,8 +347,14 @@ export default {
         // 本地模式下保持当前配置不变
       }
       
+      // 更新store中的配置模式
+      this.$store.state.configMode = this.configMode;
+      
       // 保存配置模式选择
       localStorage.setItem('configMode', this.configMode);
+      
+      // 保存整个状态
+      this.$store.saveState();
     },
     
     // 应用云端配置

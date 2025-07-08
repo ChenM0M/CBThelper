@@ -46,10 +46,23 @@ class LLMService {
       };
     }
 
-    // 安全地获取配置，确保默认值有效
-    const apiKey = store.apiConfig?.apiKey || '';
-    const apiUrl = store.apiConfig?.endpoint || store.apiConfig?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-    const model = store.apiConfig?.model || 'qwen-turbo';
+    // 根据配置模式决定使用哪个配置
+    const configMode = store.configMode || 'cloud';
+    console.log('[LLM] 当前配置模式:', configMode);
+    
+    let apiKey, apiUrl, model;
+    
+    if (configMode === 'cloud') {
+      // 云端模式：使用环境变量配置
+      apiKey = store.appConfig?.llm?.apiKey || '';
+      apiUrl = store.appConfig?.llm?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+      model = store.appConfig?.llm?.modelName || 'qwen-turbo';
+    } else {
+      // 本地模式：使用本地存储的配置
+      apiKey = store.apiConfig?.apiKey || '';
+      apiUrl = store.apiConfig?.endpoint || store.apiConfig?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+      model = store.apiConfig?.model || 'qwen-turbo';
+    }
 
     // 验证模型名是否有效 - 排除无效值如 '0', 'undefined', 'null' 等
     const validModel = model && 
@@ -61,6 +74,7 @@ class LLMService {
                       !model.match(/^\d+$/) ? model : 'qwen-turbo';
 
     console.log('[LLM] 获取API配置:', {
+      configMode,
       hasApiKey: !!apiKey,
       apiUrl,
       model: validModel,

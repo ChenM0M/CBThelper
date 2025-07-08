@@ -39,6 +39,7 @@ const store = {
       apiKey: appConfig.llm.apiKey,
       model: appConfig.llm.modelName
     },
+    configMode: 'cloud', // 新增：配置模式 'cloud' 或 'local'
     thoughtRecords: [],
     selectedRecordIndex: undefined,
     currentSession: null, // 当前会话的情绪选择和数据
@@ -81,6 +82,7 @@ const store = {
   restoreState() {
     const saved = localStorage.getItem('cbtHelperState');
     const savedLlmConfig = localStorage.getItem('llmConfig');
+    const savedConfigMode = localStorage.getItem('configMode');
     
     if (saved) {
       try {
@@ -92,6 +94,9 @@ const store = {
           this.migrateOldData(parsedState);
         }
         
+        // 恢复配置模式
+        this.state.configMode = savedConfigMode || parsedState.configMode || 'cloud';
+        
         // 确保合并所有字段，防止旧版本数据缺少新增字段
         // 注意：不要覆盖 appConfig
         this.state = {
@@ -99,9 +104,21 @@ const store = {
           thoughtRecords: parsedState.thoughtRecords || [],
           selectedRecordIndex: parsedState.selectedRecordIndex,
           currentSession: parsedState.currentSession,
-          // 优先使用独立存储的API配置
-          apiConfig: savedLlmConfig ? JSON.parse(savedLlmConfig) : { ...this.state.apiConfig, ...parsedState.apiConfig }
+          configMode: this.state.configMode
         };
+        
+        // 根据配置模式决定使用哪个配置
+        if (this.state.configMode === 'local' && savedLlmConfig) {
+          // 本地模式：使用本地存储的配置
+          this.state.apiConfig = JSON.parse(savedLlmConfig);
+        } else {
+          // 云端模式：使用环境变量配置
+          this.state.apiConfig = {
+            endpoint: appConfig.llm.apiUrl,
+            apiKey: appConfig.llm.apiKey,
+            model: appConfig.llm.modelName
+          };
+        }
         
         // 确保 appConfig 使用最新的环境变量
         this.state.appConfig = appConfig;
@@ -109,6 +126,7 @@ const store = {
         console.log('[Store] 状态已恢复', {
           recordCount: this.state.thoughtRecords.length,
           version: parsedState._version,
+          configMode: this.state.configMode,
           features: this.state.appConfig.features
         });
       } catch (e) {
