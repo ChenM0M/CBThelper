@@ -26,7 +26,7 @@ console.log('VUE_APP_LLM_API_URL:', process.env.VUE_APP_LLM_API_URL || '未设�
 // 加载 llm-proxy 模块
 function loadLLMProxy() {
   try {
-    const llmProxyPath = path.join(__dirname, 'api', 'llm-proxy.cjs');
+    const llmProxyPath = path.join(__dirname, 'dev', 'llm-proxy.cjs');
     delete require.cache[require.resolve(llmProxyPath)];
     return require(llmProxyPath);
   } catch (error) {

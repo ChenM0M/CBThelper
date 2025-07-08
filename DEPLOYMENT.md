@@ -7,13 +7,17 @@
 ```
 CBThelper/
 ├── api/
-│   └── llm-proxy.js         # Vercel 函数
+│   └── llm-proxy.js         # Vercel 函数 (ES Module)
 ├── functions/
 │   └── api/
 │       └── llm-proxy.js     # EdgePages 函数
+├── dev/
+│   └── llm-proxy.cjs        # 本地开发用 (CommonJS)
 ├── dist/                    # 构建输出目录
 └── ...
 ```
+
+注意：`/dev` 目录已在 `.gitignore` 中，不会被推送到仓库。
 
 ## Vercel 部署
 
