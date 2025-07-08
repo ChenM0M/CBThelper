@@ -1,16 +1,24 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist"
+      }
+    }
+  ],
   "functions": {
-    "api/**/*.js": {
+    "api/llm-proxy.js": {
       "runtime": "@vercel/node@3.0.0"
     }
   },
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/api/llm-proxy",
+      "dest": "/api/llm-proxy.js"
     },
     {
       "src": "/js/(.*)",
@@ -32,8 +40,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
