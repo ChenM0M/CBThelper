@@ -29,7 +29,7 @@
       <div v-if="currentStep === 0" class="welcome-step">
         <div class="step-card">
           <div class="step-icon">🌱</div>
-          <h2 class="step-title">开始今天的成长之旅</h2>
+          <h2 class="step-title">{{ $t('thoughtRecord.welcome.title') }}</h2>
           <div class="current-mood" v-if="selectedEmotion || record.emotions.length > 0">
             <p class="mood-display" v-if="selectedEmotion">
               <span class="mood-icon" :style="{ background: selectedEmotion.gradient }">
@@ -45,11 +45,11 @@
             </div>
           </div>
           <p class="step-description">
-            让我们一起轻柔地探索内心的想法，每一个想法都是珍贵的种子，值得被温柔对待。
+            {{ $t('thoughtRecord.welcome.description') }}
           </p>
           <button @click="nextStep" class="journey-button primary">
             <span class="button-icon">🌿</span>
-            开始种植想法的种子
+            {{ $t('thoughtRecord.welcome.startButton') }}
           </button>
         </div>
       </div>
@@ -153,7 +153,7 @@
                 <div class="emotion-icon" :style="{ background: emotion.gradient }">
                   {{ emotion.emoji }}
                 </div>
-                <span class="emotion-label">{{ emotion.name }}</span>
+                <span class="emotion-label">{{ $t(`emotions.${emotion.key}`) }}</span>
               </div>
             </div>
           </div>
@@ -223,14 +223,14 @@ export default {
 
       // 情绪选项
       emotionOptions: [
-        { name: '愉悦阳光', emoji: '😊', color: '#FFC857', gradient: 'linear-gradient(135deg, #FFC857, #FFD700)' },
-        { name: '平静如水', emoji: '😌', color: '#84A98C', gradient: 'linear-gradient(135deg, #84A98C, #7B9BB3)' },
-        { name: '有些低落', emoji: '😔', color: '#A0826D', gradient: 'linear-gradient(135deg, #A0826D, #8B7355)' },
-        { name: '焦虑不安', emoji: '😰', color: '#9384A8', gradient: 'linear-gradient(135deg, #9384A8, #7A6B8A)' },
-        { name: '充满希望', emoji: '🌟', color: '#FF9B85', gradient: 'linear-gradient(135deg, #FF9B85, #FFA07A)' },
-        { name: '疲惫倦怠', emoji: '😴', color: '#CAD2C5', gradient: 'linear-gradient(135deg, #CAD2C5, #B8C5B8)' },
-        { name: '愤怒', emoji: '😡', color: '#C87777', gradient: 'linear-gradient(135deg, #C87777, #B66666)' },
-        { name: '困惑', emoji: '🤔', color: '#9384A8', gradient: 'linear-gradient(135deg, #9384A8, #8A7B9B)' }
+        { key: 'pleasant', emoji: '😊', color: '#FFC857', gradient: 'linear-gradient(135deg, #FFC857, #FFD700)' },
+        { key: 'calm', emoji: '😌', color: '#84A98C', gradient: 'linear-gradient(135deg, #84A98C, #7B9BB3)' },
+        { key: 'sad', emoji: '😔', color: '#A0826D', gradient: 'linear-gradient(135deg, #A0826D, #8B7355)' },
+        { key: 'anxious', emoji: '😰', color: '#9384A8', gradient: 'linear-gradient(135deg, #9384A8, #7A6B8A)' },
+        { key: 'hopeful', emoji: '🌟', color: '#FF9B85', gradient: 'linear-gradient(135deg, #FF9B85, #FFA07A)' },
+        { key: 'tired', emoji: '😴', color: '#CAD2C5', gradient: 'linear-gradient(135deg, #CAD2C5, #B8C5B8)' },
+        { key: 'angry', emoji: '😡', color: '#C87777', gradient: 'linear-gradient(135deg, #C87777, #B66666)' },
+        { key: 'confused', emoji: '🤔', color: '#9384A8', gradient: 'linear-gradient(135deg, #9384A8, #8A7B9B)' }
       ]
     }
   },
@@ -240,7 +240,12 @@ export default {
     },
 
     currentStepName() {
-      const names = ['准备开始', '环境背景', '内心声音', '感受此刻']
+      const names = [
+        this.$t('thoughtRecord.progress.preparing'),
+        this.$t('thoughtRecord.progress.situation'),
+        this.$t('thoughtRecord.progress.thoughts'),
+        this.$t('thoughtRecord.progress.emotions')
+      ]
       return names[this.currentStep] || '探索中'
     },
 
@@ -1303,4 +1308,4 @@ export default {
     margin-bottom: 0.3rem;
   }
 }
-</style>
+</style>

@@ -1,0 +1,186 @@
+{
+  "common": {
+    "loading": "載入中...",
+    "save": "儲存",
+    "cancel": "取消",
+    "confirm": "確認",
+    "delete": "刪除",
+    "edit": "編輯",
+    "back": "返回",
+    "next": "下一步",
+    "prev": "上一步",
+    "skip": "跳過",
+    "continue": "繼續",
+    "start": "開始",
+    "complete": "完成",
+    "close": "關閉"
+  },
+  "navigation": {
+    "mindGarden": "心靈花園",
+    "dashboard": "成長足跡",
+    "analysis": "心靈溫室",
+    "config": "花園設定",
+    "about": "關於"
+  },
+  "mindGarden": {
+    "title": "歡迎回到你的心靈花園",
+    "subtitle": "每一次探索，都是成長的見證",
+    "moodCheck": {
+      "title": "今天的心情，像什麼顏色？",
+      "customPlaceholder": "或者用自己的話描述...",
+      "addButton": "新增",
+      "skipButton": "暫時不想說，直接開始",
+      "startButton": "開始今天的成長之旅"
+    },
+    "quickAccess": {
+      "title": "探索你的花園",
+      "growth": {
+        "title": "成長足跡",
+        "description": "回顧你的心靈成長歷程",
+        "stats": "已記錄 {count} 次成長"
+      },
+      "wisdom": {
+        "title": "智慧夥伴",
+        "description": "與AI夥伴進行深度對話",
+        "hint": "24小時陪伴"
+      },
+      "settings": {
+        "title": "花園設定",
+        "description": "個人化你的體驗"
+      }
+    },
+    "dailyInspiration": {
+      "title": "今日小提醒"
+    }
+  },
+  "thoughtRecord": {
+    "title": "開始今天的成長之旅",
+    "progress": {
+      "preparing": "準備開始",
+      "situation": "環境背景",
+      "thoughts": "內心聲音",
+      "emotions": "感受此刻"
+    },
+    "welcome": {
+      "title": "開始今天的成長之旅",
+      "description": "讓我們一起輕柔地探索內心的想法，每一個想法都是珍貴的種子，值得被溫柔對待。",
+      "startButton": "開始種植想法的種子",
+      "currentMood": "今天的感受：{emotion}",
+      "otherMoods": "還有其他感受：{emotions}"
+    },
+    "situation": {
+      "title": "發生了什麼讓你有這樣的感受？",
+      "description": "可以描述一下當時的環境、時間、人物... 當然，如果不想說也完全可以跳過。",
+      "placeholder": "那一刻，你在哪裡？發生了什麼？（可以跳過）",
+      "skipButton": "暫時跳過，直接說想法",
+      "nextButton": "繼續探索內心"
+    },
+    "thoughts": {
+      "title": "那一刻，內心冒出了什麼想法？",
+      "description": "這是最重要的部分。請誠實地記錄下當時腦海中的想法，無論它是什麼樣的。",
+      "placeholder": "我當時想... / 我覺得... / 這讓我感到...",
+      "reminder": "你很勇敢地面對了內心的聲音，這就是成長的開始。",
+      "nextButton": "尋找新的視角"
+    },
+    "emotions": {
+      "title": "現在的感覺和剛才比，有什麼不同？",
+      "description": "請確認或調整你的情緒選擇。即使之前選擇過情緒，你也可以在這裡重新評估和調整。",
+      "initialText": "之前選擇的感受：{emotions}",
+      "adjustmentHint": "你可以保持這些選擇，或者重新調整",
+      "currentFeelings": "此刻的感受：",
+      "intensityLabel": "感受的強度：{intensity}%",
+      "intensityMin": "輕微",
+      "intensityMax": "強烈",
+      "nextButton": "和智慧夥伴聊聊"
+    },
+    "success": {
+      "title": "記錄已儲存",
+      "message": "你的想法已經安全地儲存在心靈花園中"
+    }
+  },
+  "dashboard": {
+    "title": "看看你心靈花園的美麗綻放",
+    "loading": "花園正在綻放...",
+    "recentRecord": "最近一次成長記錄：{time}",
+    "welcomeMessage": "你的成長之旅即將開始，每一步都值得記錄",
+    "stats": {
+      "title": "成長的收穫",
+      "seeds": "播下的思維種子",
+      "flowers": "綻放的智慧花朵",
+      "gardenHealth": "花園的生機狀態"
+    },
+    "actions": {
+      "title": "繼續培育心靈",
+      "plantSeed": {
+        "title": "播種新的想法",
+        "description": "記錄今天心中萌芽的思緒"
+      },
+      "wiseCompanion": {
+        "title": "與智慧夥伴對話",
+        "description": "探索{count}個待分析的想法",
+        "noRecords": "先播下一些想法的種子吧"
+      }
+    },
+    "insights": {
+      "title": "花園的智慧洞察",
+      "emotions": {
+        "title": "情緒花朵的色彩",
+        "count": "{count}種色彩",
+        "bloomCount": "綻放了{count}次",
+        "empty": "還沒有情緒記錄，開始播種你的感受吧"
+      },
+      "wisdom": {
+        "title": "智慧夥伴的發現",
+        "dialogCount": "{count}次深度對話",
+        "biasesFound": "{count}個思維模式被發現",
+        "alternativeThoughts": "{count}個新視角被採納",
+        "empty": "開始與智慧夥伴對話，發現內心的智慧"
+      }
+    },
+    "encouragement": {
+      "title": "今日的花園寄語"
+    },
+    "records": {
+      "title": "最近的成長記錄",
+      "stageCompleted": "已完成成長",
+      "stageBlooming": "智慧綻放中",
+      "stageGrowing": "種子萌芽中",
+      "progressCompleted": "成長完成",
+      "progressBlooming": "智慧萌發",
+      "progressGrowing": "等待探索"
+    }
+  },
+  "emotions": {
+    "pleasant": "愉悅陽光",
+    "calm": "平靜如水",
+    "sad": "有些低落",
+    "anxious": "焦慮不安",
+    "hopeful": "充滿希望",
+    "tired": "疲憊倦怠",
+    "angry": "憤怒",
+    "confused": "困惑"
+  },
+  "config": {
+    "title": "花園設定",
+    "language": {
+      "title": "語言設定",
+      "description": "選擇你習慣的語言",
+      "current": "目前語言：{language}"
+    },
+    "companion": {
+      "title": "智慧夥伴設定",
+      "description": "配置AI助手的行為"
+    },
+    "data": {
+      "title": "資料管理",
+      "export": "匯出資料",
+      "import": "匯入資料",
+      "clear": "清除所有資料"
+    }
+  },
+  "about": {
+    "title": "關於心靈花園",
+    "description": "一個溫暖的CBT自助工具",
+    "version": "版本 {version}"
+  }
+}

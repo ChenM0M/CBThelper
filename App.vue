@@ -12,24 +12,30 @@
       <div class="nav-menu" v-show="isNavOpen">
         <router-link to="/" class="nav-item" @click="closeNav">
           <span class="nav-emoji">🌱</span>
-          <span class="nav-text">心灵花园</span>
+          <span class="nav-text">{{ $t('navigation.mindGarden') }}</span>
         </router-link>
         <router-link to="/dashboard" class="nav-item" @click="closeNav">
           <span class="nav-emoji">🌸</span>
-          <span class="nav-text">成长足迹</span>
+          <span class="nav-text">{{ $t('navigation.dashboard') }}</span>
         </router-link>
         <router-link to="/analysis?view=overview" class="nav-item" @click="closeNav">
           <span class="nav-emoji">🏡</span>
-          <span class="nav-text">心灵温室</span>
+          <span class="nav-text">{{ $t('navigation.analysis') }}</span>
         </router-link>
         <router-link to="/config" class="nav-item" @click="closeNav">
           <span class="nav-emoji">⚙️</span>
-          <span class="nav-text">花园设置</span>
+          <span class="nav-text">{{ $t('navigation.config') }}</span>
         </router-link>
         <router-link to="/about" class="nav-item" @click="closeNav">
           <span class="nav-emoji">ℹ️</span>
-          <span class="nav-text">关于</span>
+          <span class="nav-text">{{ $t('navigation.about') }}</span>
         </router-link>
+        
+        <!-- 语言切换器 -->
+        <div class="nav-divider"></div>
+        <div class="nav-language-switcher">
+          <LanguageSwitcher />
+        </div>
       </div>
     </div>
 
@@ -48,6 +54,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import LanguageSwitcher from './components/LanguageSwitcher.vue'
 
 const isNavOpen = ref(false)
 
@@ -61,9 +68,6 @@ function closeNav() {
 
 // 页面初始化
 onMounted(() => {
-  // Set document title
-  document.title = '心灵花园 - 温暖的CBT自助工具'
-  
   // Set favicon dynamically
   const link = document.querySelector("link[rel~='icon']") || document.createElement('link')
   link.type = 'image/png'
@@ -187,6 +191,20 @@ onMounted(() => {
   overflow: visible; /* 允许文字完整显示 */
   text-overflow: clip; /* 移除省略号 */
   flex-shrink: 0; /* 防止文字被压缩 */
+}
+
+/* 导航分隔线 */
+.nav-divider {
+  height: 1px;
+  background: rgba(132, 169, 140, 0.2);
+  margin: 0.5rem 1rem;
+}
+
+/* 语言切换器容器 */
+.nav-language-switcher {
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: center;
 }
 
 /* 主内容区域 - 全屏 */
@@ -321,4 +339,4 @@ onMounted(() => {
     transform-origin: center center; /* 确保旋转围绕中心进行 */
   }
 }
-</style>
+</style>

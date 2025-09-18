@@ -16,13 +16,13 @@
         <div class="welcome-card">
           <h1 class="garden-title">
             <span class="title-icon">🌱</span>
-            欢迎回到你的心灵花园
+            {{ $t('mindGarden.title') }}
           </h1>
-          <p class="garden-subtitle">每一次探索，都是成长的见证</p>
+          <p class="garden-subtitle">{{ $t('mindGarden.subtitle') }}</p>
           
           <!-- 今日感受询问 -->
           <div class="mood-check">
-            <h3 class="mood-title">今天的心情，像什么颜色？</h3>
+            <h3 class="mood-title">{{ $t('mindGarden.moodCheck.title') }}</h3>
             
             <!-- 情绪选择网格 - 支持多选 -->
             <div class="emotion-grid">
@@ -36,7 +36,7 @@
                 <div class="emotion-icon" :style="{ background: emotion.gradient }">
                   {{ emotion.emoji }}
                 </div>
-                <span class="emotion-name">{{ emotion.name }}</span>
+                <span class="emotion-name">{{ $t(`emotions.${emotion.key}`) }}</span>
                 <div class="selection-indicator" v-if="isEmotionSelected(emotion)">✓</div>
               </div>
             </div>
@@ -62,7 +62,7 @@
               <input 
                 v-model="customEmotion"
                 type="text" 
-                placeholder="或者用自己的话描述..."
+                :placeholder="$t('mindGarden.moodCheck.customPlaceholder')"
                 class="custom-input"
                 @focus="onCustomEmotionFocus"
                 @blur="onCustomEmotionBlur"
@@ -76,7 +76,7 @@
                 class="add-emotion-btn"
                 type="button"
               >
-                添加
+                {{ $t('mindGarden.moodCheck.addButton') }}
               </button>
             </div>
 
@@ -86,7 +86,7 @@
                 @click="skipMoodSelection" 
                 class="btn btn-secondary skip-btn"
               >
-                暂时不想说，直接开始
+                {{ $t('mindGarden.moodCheck.skipButton') }}
               </button>
               <button 
                 @click="startGrowthJourney" 
@@ -94,7 +94,7 @@
                 :disabled="!canStart"
               >
                 <span class="btn-icon">🌿</span>
-                开始今天的成长之旅
+                {{ $t('mindGarden.moodCheck.startButton') }}
               </button>
             </div>
           </div>
@@ -103,17 +103,17 @@
 
       <!-- 快速访问区域 -->
       <div class="quick-access">
-        <h3 class="section-title">探索你的花园</h3>
+        <h3 class="section-title">{{ $t('mindGarden.quickAccess.title') }}</h3>
         <div class="access-grid">
           
           <!-- 成长足迹 -->
           <router-link to="/dashboard" class="access-card growth-card">
             <div class="card-icon">🌸</div>
             <div class="card-content">
-              <h4>成长足迹</h4>
-              <p>回顾你的心灵成长历程</p>
+              <h4>{{ $t('mindGarden.quickAccess.growth.title') }}</h4>
+              <p>{{ $t('mindGarden.quickAccess.growth.description') }}</p>
               <div class="card-stats" v-if="stats">
-                <span>已记录 {{ stats.total }} 次成长</span>
+                <span>{{ $t('mindGarden.quickAccess.growth.stats', { count: stats.total }) }}</span>
               </div>
             </div>
           </router-link>
@@ -122,10 +122,10 @@
           <router-link to="/analysis" class="access-card wisdom-card">
             <div class="card-icon">🤖</div>
             <div class="card-content">
-              <h4>智慧伙伴</h4>
-              <p>与AI伙伴进行深度对话</p>
+              <h4>{{ $t('mindGarden.quickAccess.wisdom.title') }}</h4>
+              <p>{{ $t('mindGarden.quickAccess.wisdom.description') }}</p>
               <div class="card-hint">
-                <span>24小时陪伴</span>
+                <span>{{ $t('mindGarden.quickAccess.wisdom.hint') }}</span>
               </div>
             </div>
           </router-link>
@@ -134,8 +134,8 @@
           <router-link to="/config" class="access-card settings-card">
             <div class="card-icon">⚙️</div>
             <div class="card-content">
-              <h4>花园设置</h4>
-              <p>个性化你的体验</p>
+              <h4>{{ $t('mindGarden.quickAccess.settings.title') }}</h4>
+              <p>{{ $t('mindGarden.quickAccess.settings.description') }}</p>
             </div>
           </router-link>
 
@@ -147,7 +147,7 @@
         <div class="inspiration-card">
           <div class="inspiration-icon">💝</div>
           <div class="inspiration-content">
-            <h4>今日小提醒</h4>
+            <h4>{{ $t('mindGarden.dailyInspiration.title') }}</h4>
             <p>{{ dailyInspiration }}</p>
           </div>
         </div>
@@ -171,42 +171,42 @@ export default {
       // 预设情绪选项
       emotionOptions: [
         { 
-          name: '愉悦阳光', 
+          key: 'pleasant',
           emoji: '😊', 
           color: '#FFC857',
           gradient: 'linear-gradient(135deg, #FFC857, #FFD700)',
           flower: 'sunflower'
         },
         { 
-          name: '平静如水', 
+          key: 'calm',
           emoji: '😌', 
           color: '#84A98C',
           gradient: 'linear-gradient(135deg, #84A98C, #7B9BB3)',
           flower: 'lavender'
         },
         { 
-          name: '有些低落', 
+          key: 'sad',
           emoji: '😔', 
           color: '#A0826D',
           gradient: 'linear-gradient(135deg, #A0826D, #8B7355)',
           flower: 'wilted'
         },
         { 
-          name: '焦虑不安', 
+          key: 'anxious',
           emoji: '😰', 
           color: '#9384A8',
           gradient: 'linear-gradient(135deg, #9384A8, #7A6B8A)',
           flower: 'thorny'
         },
         { 
-          name: '充满希望', 
+          key: 'hopeful',
           emoji: '🌟', 
           color: '#FF9B85',
           gradient: 'linear-gradient(135deg, #FF9B85, #FFA07A)',
           flower: 'cherry'
         },
         { 
-          name: '疲惫倦怠', 
+          key: 'tired',
           emoji: '😴', 
           color: '#CAD2C5',
           gradient: 'linear-gradient(135deg, #CAD2C5, #B8C5B8)',
@@ -229,22 +229,27 @@ export default {
   methods: {
     // 切换情绪选择状态（多选模式）
     toggleEmotion(emotion) {
-      const index = this.selectedEmotions.findIndex(e => e.name === emotion.name)
+      const index = this.selectedEmotions.findIndex(e => e.key === emotion.key)
       if (index > -1) {
         this.selectedEmotions.splice(index, 1)
       } else {
-        this.selectedEmotions.push(emotion)
+        // 为选中的情绪添加翻译名称
+        const emotionWithName = {
+          ...emotion,
+          name: this.$t(`emotions.${emotion.key}`)
+        }
+        this.selectedEmotions.push(emotionWithName)
       }
     },
 
     // 检查情绪是否被选中
     isEmotionSelected(emotion) {
-      return this.selectedEmotions.some(e => e.name === emotion.name)
+      return this.selectedEmotions.some(e => e.key === emotion.key)
     },
 
     // 移除选中的情绪
     removeEmotion(emotion) {
-      const index = this.selectedEmotions.findIndex(e => e.name === emotion.name)
+      const index = this.selectedEmotions.findIndex(e => e.key === emotion.key)
       if (index > -1) {
         this.selectedEmotions.splice(index, 1)
       }
@@ -1222,4 +1227,4 @@ export default {
     font-size: max(1rem, 16px);
   }
 }
-</style>
+</style>

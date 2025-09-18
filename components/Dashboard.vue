@@ -27,19 +27,19 @@
       <div class="welcome-section">
         <h1 class="page-title">
           <span class="title-icon">🌸</span>
-          看看你心灵花园的美丽绽放
+          {{ $t('dashboard.title') }}
         </h1>
         <p class="page-subtitle" v-if="latestRecord">
-          最近一次成长记录：{{ formatRelativeTime(latestRecord.timestamp) }}
+          {{ $t('dashboard.recentRecord', { time: formatRelativeTime(latestRecord.timestamp) }) }}
         </p>
         <p class="page-subtitle" v-else>
-          你的成长之旅即将开始，每一步都值得记录
+          {{ $t('dashboard.welcomeMessage') }}
         </p>
       </div>
 
       <!-- 成长统计花园 -->
       <div class="stats-garden">
-        <h3 class="section-title">🌿 成长的收获</h3>
+        <h3 class="section-title">🌿 {{ $t('dashboard.stats.title') }}</h3>
         <div class="stats-grid">
           
           <!-- 种子播种数 -->
@@ -47,7 +47,7 @@
             <div class="bloom-icon seeds">🌱</div>
             <div class="bloom-content">
               <div class="bloom-number">{{ $store.state.thoughtRecords.length }}</div>
-              <div class="bloom-label">播下的思维种子</div>
+              <div class="bloom-label">{{ $t('dashboard.stats.seeds') }}</div>
             </div>
           </div>
           
@@ -56,7 +56,7 @@
             <div class="bloom-icon flowers">🌸</div>
             <div class="bloom-content">
               <div class="bloom-number">{{ analyzedRecordsCount }}</div>
-              <div class="bloom-label">绽放的智慧花朵</div>
+              <div class="bloom-label">{{ $t('dashboard.stats.flowers') }}</div>
             </div>
           </div>
           
@@ -65,7 +65,7 @@
             <div class="bloom-icon health">{{ moodTrend.emoji }}</div>
             <div class="bloom-content">
               <div class="bloom-status" :class="moodTrend.class">{{ moodTrend.label }}</div>
-              <div class="bloom-label">花园的生机状态</div>
+              <div class="bloom-label">{{ $t('dashboard.stats.gardenHealth') }}</div>
             </div>
           </div>
 
@@ -105,7 +105,7 @@
 
       <!-- 成长记录花园 -->
       <div class="records-garden" v-if="hasRecords">
-        <h3 class="section-title">🌸 最近的成长记录</h3>
+        <h3 class="section-title">🌸 {{ $t('dashboard.records.title') }}</h3>
         <div class="records-grid">
           <div 
             v-for="(record, index) in recentRecords" 
@@ -371,9 +371,9 @@ export default {
     },
 
     getGrowthStage(record) {
-      if (record.completed) return '已完成成长'
-      if (record.alternativeThought) return '智慧绽放中'
-      return '种子萌芽中'
+      if (record.completed) return this.$t('dashboard.records.stageCompleted')
+      if (record.alternativeThought) return this.$t('dashboard.records.stageBlooming')
+      return this.$t('dashboard.records.stageGrowing')
     },
 
     getGrowthStageClass(record) {
@@ -395,9 +395,9 @@ export default {
     },
 
     getGrowthProgressText(record) {
-      if (record.completed) return '成长完成'
-      if (record.alternativeThought) return '智慧萌发'
-      return '等待探索'
+      if (record.completed) return this.$t('dashboard.records.progressCompleted')
+      if (record.alternativeThought) return this.$t('dashboard.records.progressBlooming')
+      return this.$t('dashboard.records.progressGrowing')
     },
 
     goToAnalysis(index) {
@@ -1493,4 +1493,4 @@ export default {
     box-shadow: 0 12px 35px rgba(132, 169, 140, 0.5);
   }
 }
-</style>
+</style>

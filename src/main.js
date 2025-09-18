@@ -11,6 +11,9 @@ import '@/assets/css/responsive.css';
 // Import app config
 import appConfig from '../config/app.config.js';
 
+// Import i18n
+import i18n from '@/i18n/index.js';
+
 import App from '../App.vue'
 import GardenConfig from '../components/GardenConfig.vue'
 import ThoughtRecord from '../components/ThoughtRecord.vue'
@@ -254,6 +257,7 @@ inject();
 
 const app = createApp(App)
 app.use(router)
+app.use(i18n)
 app.config.globalProperties.$store = store
 app.component('SpeedInsights', SpeedInsights)
 
@@ -261,4 +265,4 @@ app.component('SpeedInsights', SpeedInsights)
 window.$store = store
 window.vueApp = app
 
-app.mount('#app')
+app.mount('#app')

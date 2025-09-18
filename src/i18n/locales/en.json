@@ -1,0 +1,186 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "prev": "Previous",
+    "skip": "Skip",
+    "continue": "Continue",
+    "start": "Start",
+    "complete": "Complete",
+    "close": "Close"
+  },
+  "navigation": {
+    "mindGarden": "Mind Garden",
+    "dashboard": "Growth Journey",
+    "analysis": "Mind Greenhouse",
+    "config": "Garden Settings",
+    "about": "About"
+  },
+  "mindGarden": {
+    "title": "Welcome back to your Mind Garden",
+    "subtitle": "Every exploration is a testament to growth",
+    "moodCheck": {
+      "title": "What color does your mood feel like today?",
+      "customPlaceholder": "Or describe it in your own words...",
+      "addButton": "Add",
+      "skipButton": "I don't want to say right now, let's start",
+      "startButton": "Begin today's growth journey"
+    },
+    "quickAccess": {
+      "title": "Explore your garden",
+      "growth": {
+        "title": "Growth Journey",
+        "description": "Review your mental wellness journey",
+        "stats": "Recorded {count} growth entries"
+      },
+      "wisdom": {
+        "title": "Wise Companion",
+        "description": "Engage in deep conversations with AI",
+        "hint": "24/7 support"
+      },
+      "settings": {
+        "title": "Garden Settings",
+        "description": "Personalize your experience"
+      }
+    },
+    "dailyInspiration": {
+      "title": "Today's gentle reminder"
+    }
+  },
+  "thoughtRecord": {
+    "title": "Begin today's growth journey",
+    "progress": {
+      "preparing": "Getting ready",
+      "situation": "Setting the scene",
+      "thoughts": "Inner voice",
+      "emotions": "Present feelings"
+    },
+    "welcome": {
+      "title": "Begin today's growth journey",
+      "description": "Let's gently explore your inner thoughts together. Every thought is a precious seed worthy of gentle care.",
+      "startButton": "Start planting seeds of thought",
+      "currentMood": "Today's feeling: {emotion}",
+      "otherMoods": "Other feelings: {emotions}"
+    },
+    "situation": {
+      "title": "What happened that made you feel this way?",
+      "description": "You can describe the environment, time, people involved... Of course, feel free to skip if you prefer.",
+      "placeholder": "Where were you at that moment? What happened? (Optional)",
+      "skipButton": "Skip for now, go to thoughts",
+      "nextButton": "Continue exploring within"
+    },
+    "thoughts": {
+      "title": "What thoughts came to mind in that moment?",
+      "description": "This is the most important part. Please honestly record what was going through your mind, whatever it was.",
+      "placeholder": "I was thinking... / I felt... / This made me feel...",
+      "reminder": "You're brave to face your inner voice - this is where growth begins.",
+      "nextButton": "Find new perspectives"
+    },
+    "emotions": {
+      "title": "How do you feel now compared to earlier?",
+      "description": "Please confirm or adjust your emotion choices. Even if you've selected emotions before, you can reassess and adjust here.",
+      "initialText": "Previously selected feelings: {emotions}",
+      "adjustmentHint": "You can keep these choices, or readjust them",
+      "currentFeelings": "Current feelings:",
+      "intensityLabel": "Feeling intensity: {intensity}%",
+      "intensityMin": "Mild",
+      "intensityMax": "Intense",
+      "nextButton": "Chat with wise companion"
+    },
+    "success": {
+      "title": "Record saved",
+      "message": "Your thoughts have been safely saved in your mind garden"
+    }
+  },
+  "dashboard": {
+    "title": "See the beautiful blooming of your mind garden",
+    "loading": "Garden is blooming...",
+    "recentRecord": "Latest growth record: {time}",
+    "welcomeMessage": "Your growth journey is about to begin, every step is worth recording",
+    "stats": {
+      "title": "Growth harvest",
+      "seeds": "Thought seeds planted",
+      "flowers": "Wisdom flowers bloomed",
+      "gardenHealth": "Garden vitality status"
+    },
+    "actions": {
+      "title": "Continue nurturing your mind",
+      "plantSeed": {
+        "title": "Plant new thoughts",
+        "description": "Record today's budding thoughts"
+      },
+      "wiseCompanion": {
+        "title": "Talk with wise companion",
+        "description": "Explore {count} thoughts awaiting analysis",
+        "noRecords": "Plant some thought seeds first"
+      }
+    },
+    "insights": {
+      "title": "Garden's wise insights",
+      "emotions": {
+        "title": "Colors of emotion flowers",
+        "count": "{count} colors",
+        "bloomCount": "Bloomed {count} times",
+        "empty": "No emotion records yet, start planting your feelings"
+      },
+      "wisdom": {
+        "title": "Wise companion's discoveries",
+        "dialogCount": "{count} deep conversations",
+        "biasesFound": "{count} thought patterns discovered",
+        "alternativeThoughts": "{count} new perspectives adopted",
+        "empty": "Start conversations with your wise companion to discover inner wisdom"
+      }
+    },
+    "encouragement": {
+      "title": "Today's garden message"
+    },
+    "records": {
+      "title": "Recent growth records",
+      "stageCompleted": "Growth completed",
+      "stageBlooming": "Wisdom blooming",
+      "stageGrowing": "Seeds sprouting",
+      "progressCompleted": "Growth complete",
+      "progressBlooming": "Wisdom emerging",
+      "progressGrowing": "Awaiting exploration"
+    }
+  },
+  "emotions": {
+    "pleasant": "Joyful Sunshine",
+    "calm": "Peaceful Waters",
+    "sad": "Somewhat Down",
+    "anxious": "Anxious Unease",
+    "hopeful": "Full of Hope",
+    "tired": "Weary Fatigue",
+    "angry": "Angry",
+    "confused": "Confused"
+  },
+  "config": {
+    "title": "Garden Settings",
+    "language": {
+      "title": "Language Settings",
+      "description": "Choose your preferred language",
+      "current": "Current language: {language}"
+    },
+    "companion": {
+      "title": "Wise Companion Settings",
+      "description": "Configure AI assistant behavior"
+    },
+    "data": {
+      "title": "Data Management",
+      "export": "Export Data",
+      "import": "Import Data",
+      "clear": "Clear All Data"
+    }
+  },
+  "about": {
+    "title": "About Mind Garden",
+    "description": "A warm CBT self-help tool",
+    "version": "Version {version}"
+  }
+}
