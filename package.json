@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Cognitive Behavioral Therapy Helper Application",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "scripts": {
     "serve": "vue-cli-service serve",
