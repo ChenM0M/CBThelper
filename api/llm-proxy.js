@@ -53,10 +53,10 @@ async function handler(request, response) {
     });
   }
 
-  // 配置优先级：请求头 > 环境变量
+  // 配置优先级：请求头 > 环境变量（不再使用硬编码默认值）
   const apiKey = request.headers['x-api-key'] || process.env.LLM_API_KEY || process.env.VUE_APP_LLM_API_KEY;
-  const apiUrl = request.headers['x-api-url'] || process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL || 'https://api.openai.com/v1/chat/completions';
-  const modelName = request.headers['x-model-name'] || process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME || 'gpt-3.5-turbo';
+  const apiUrl = request.headers['x-api-url'] || process.env.LLM_API_URL || process.env.VUE_APP_LLM_API_URL;
+  const modelName = request.headers['x-model-name'] || process.env.LLM_MODEL_NAME || process.env.VUE_APP_LLM_MODEL_NAME;
 
   // 记录最终使用的配置（不包含敏感信息）
   console.log('使用配置:', {
@@ -83,6 +83,30 @@ async function handler(request, response) {
     });
   }
 
+  if (!apiUrl) {
+    console.error('缺少API URL配置');
+    return response.status(400).json({
+      error: 'Configuration Error',
+      message: '未配置API URL',
+      code: 'MISSING_API_URL',
+      details: {
+        help: '请在环境变量中设置 LLM_API_URL 或在请求头中提供 X-API-URL'
+      }
+    });
+  }
+
+  if (!modelName) {
+    console.error('缺少模型名称配置');
+    return response.status(400).json({
+      error: 'Configuration Error',
+      message: '未配置模型名称',
+      code: 'MISSING_MODEL_NAME',
+      details: {
+        help: '请在环境变量中设置 LLM_MODEL_NAME 或在请求头中提供 X-Model-Name'
+      }
+    });
+  }
+
   try {
     // 构建请求选项
     const requestOptions = {
@@ -105,7 +129,7 @@ async function handler(request, response) {
     // 发送请求到LLM API
     const llmResponse = await fetch(apiUrl, requestOptions);
     const contentType = llmResponse.headers.get('content-type');
-    
+
     // 详细的响应日志
     console.log('LLM API响应:', {
       status: llmResponse.status,

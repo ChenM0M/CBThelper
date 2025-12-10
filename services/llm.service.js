@@ -4,8 +4,8 @@ import { ApiError } from './ApiError';
 class LLMService {
   constructor() {
     // 根据环境选择API路径
-    this.baseUrl = process.env.NODE_ENV === 'production' 
-      ? '/api/llm-proxy' 
+    this.baseUrl = process.env.NODE_ENV === 'production'
+      ? '/api/llm-proxy'
       : 'http://localhost:3001/api/llm-proxy';
     this.maxRetries = 3;
     this.retryDelay = 1000; // 1秒
@@ -27,7 +27,7 @@ class LLMService {
    */
   getApiConfig(vueInstance = null) {
     let store = null;
-    
+
     // 尝试多种方式访问store
     if (vueInstance && vueInstance.$store) {
       store = vueInstance.$store.state;
@@ -36,42 +36,45 @@ class LLMService {
     } else if (window.vueApp && window.vueApp.config.globalProperties.$store) {
       store = window.vueApp.config.globalProperties.$store.state;
     }
-    
+
     if (!store) {
-      console.warn('[LLM] 无法访问store，使用默认配置');
+      console.warn('[LLM] 无法访问store，将使用服务端环境变量配置');
+      // 返回空配置，让服务端从环境变量读取 LLM_API_KEY, LLM_API_URL, LLM_MODEL_NAME
       return {
         apiKey: '',
-        apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-        model: 'qwen-turbo'
+        apiUrl: '',
+        model: ''
       };
     }
 
     // 根据配置模式决定使用哪个配置
     const configMode = store.configMode || 'cloud';
     console.log('[LLM] 当前配置模式:', configMode);
-    
+
     let apiKey, apiUrl, model;
-    
+
     if (configMode === 'cloud') {
-      // 云端模式：使用环境变量配置
-      apiKey = store.appConfig?.llm?.apiKey || '';
-      apiUrl = store.appConfig?.llm?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-      model = store.appConfig?.llm?.modelName || 'qwen-turbo';
+      // 云端模式：不传递任何配置，让服务端从环境变量读取
+      // 返回空值，请求时会跳过这些 header，服务端将使用 LLM_API_KEY, LLM_API_URL, LLM_MODEL_NAME 环境变量
+      apiKey = '';
+      apiUrl = '';
+      model = '';
     } else {
-      // 本地模式：使用本地存储的配置
+      // 本地模式：使用本地存储的配置（用户必须在设置中配置）
       apiKey = store.apiConfig?.apiKey || '';
-      apiUrl = store.apiConfig?.endpoint || store.apiConfig?.apiUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-      model = store.apiConfig?.model || 'qwen-turbo';
+      apiUrl = store.apiConfig?.endpoint || store.apiConfig?.apiUrl || '';
+      model = store.apiConfig?.model || '';
     }
 
     // 验证模型名是否有效 - 排除无效值如 '0', 'undefined', 'null' 等
-    const validModel = model && 
-                      typeof model === 'string' && 
-                      model.length > 0 && 
-                      model !== '0' && 
-                      model !== 'undefined' && 
-                      model !== 'null' && 
-                      !model.match(/^\d+$/) ? model : 'qwen-turbo';
+    // 云端模式下返回空字符串，让服务端从环境变量读取
+    const validModel = model &&
+      typeof model === 'string' &&
+      model.length > 0 &&
+      model !== '0' &&
+      model !== 'undefined' &&
+      model !== 'null' &&
+      !model.match(/^\d+$/) ? model : '';
 
     console.log('[LLM] 获取API配置:', {
       configMode,
@@ -97,7 +100,7 @@ class LLMService {
   async sendRequest(options, retryCount = 0) {
     try {
       const config = this.getApiConfig(this.vueInstance);
-      
+
       console.log(`[LLM] 发送请求 (尝试 ${retryCount + 1}/${this.maxRetries + 1})`, {
         messageCount: options.messages?.length,
         firstMessage: options.messages?.[0]?.content?.substring(0, 50) + '...',
@@ -108,17 +111,18 @@ class LLMService {
 
       // 在生产环境或开发环境都使用代理
       const requestUrl = this.baseUrl;
+      // 只有在配置值非空时才添加对应的请求头，否则让服务端使用环境变量
       const requestHeaders = {
         'Content-Type': 'application/json',
-        'X-API-Key': config.apiKey || '',
-        'X-API-URL': config.apiUrl || '',
-        'X-Model-Name': config.model || 'qwen-turbo'
+        ...(config.apiKey && { 'X-API-Key': config.apiKey }),
+        ...(config.apiUrl && { 'X-API-URL': config.apiUrl }),
+        ...(config.model && { 'X-Model-Name': config.model })
       };
 
-      // 确保请求体包含模型信息
+      // 请求体只包含基本选项，模型信息通过请求头或服务端环境变量配置
       const requestBody = JSON.stringify({
         ...options,
-        model: config.model || 'qwen-turbo'
+        ...(config.model && { model: config.model })
       });
 
       const response = await fetch(requestUrl, {
@@ -198,7 +202,7 @@ class LLMService {
 
       // 对于某些错误类型进行重试
       const shouldRetry = this.shouldRetryError(error) && retryCount < this.maxRetries;
-      
+
       if (shouldRetry) {
         console.log(`[LLM] 等待 ${this.retryDelay}ms 后重试...`);
         await new Promise(resolve => setTimeout(resolve, this.retryDelay));
@@ -218,14 +222,14 @@ class LLMService {
   shouldRetryError(error) {
     // 网络错误、超时等临时性错误
     if (!error.status || error.status >= 500) return true;
-    
+
     // 特定的错误代码不重试
     const nonRetryableCodes = [
       'INVALID_API_KEY',
       'INVALID_REQUEST',
       'INVALID_RESPONSE_FORMAT'
     ];
-    
+
     return !nonRetryableCodes.includes(error.code);
   }
 
@@ -305,7 +309,7 @@ class LLMService {
     // 构建更详细的系统提示
     const analysisContext = context.analysis ? this.formatAnalysisContext(context.analysis) : '';
     const emotionalContext = this.buildEmotionalContext(context);
-    
+
     const systemPrompt = {
       role: "system",
       content: `你是一位温柔、专业的心理咨询师，专注于认知行为疗法(CBT)。
@@ -372,30 +376,30 @@ ${analysisContext}
    */
   formatAnalysisContext(analysis) {
     if (!analysis) return '暂无分析结果';
-    
+
     const parts = [];
-    
+
     // 共情理解
     if (analysis.empathy) {
       parts.push(`**共情理解**: ${analysis.empathy}`);
     }
-    
+
     // 认知偏差
     if (analysis.cognitiveBiases && analysis.cognitiveBiases.length > 0) {
-      const biases = analysis.cognitiveBiases.map(bias => 
+      const biases = analysis.cognitiveBiases.map(bias =>
         `  - ${bias.label}: ${bias.description}`
       ).join('\n');
       parts.push(`**识别的认知偏差**:\n${biases}`);
     }
-    
+
     // 引导问题
     if (analysis.guidingQuestions && analysis.guidingQuestions.length > 0) {
-      const questions = analysis.guidingQuestions.map((q, index) => 
+      const questions = analysis.guidingQuestions.map((q, index) =>
         `  ${index + 1}. ${q.text}`
       ).join('\n');
       parts.push(`**建议的探索方向**:\n${questions}`);
     }
-    
+
     return parts.join('\n\n') || '暂无分析结果';
   }
 
@@ -406,28 +410,28 @@ ${analysisContext}
    */
   buildEmotionalContext(context) {
     const parts = [];
-    
+
     // 情绪状态
     if (context.emotions && context.emotions.length > 0) {
       parts.push(`**当前情绪**: ${context.emotions.join('、')}`);
     }
-    
+
     // 具体情境
     if (context.situation) {
       parts.push(`**遇到的情况**: ${context.situation}`);
     }
-    
+
     // 主要想法
     if (context.thought) {
       parts.push(`**内心想法**: "${context.thought}"`);
     }
-    
+
     // 记录时间（如果有的话）
     if (context.timestamp) {
       const timeStr = new Date(context.timestamp).toLocaleString('zh-CN');
       parts.push(`**记录时间**: ${timeStr}`);
     }
-    
+
     return parts.join('\n') || '用户暂未提供详细情况描述';
   }
 }
