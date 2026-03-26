@@ -53,7 +53,7 @@ export function getCurrentLocale() {
 export function getSupportedLocales() {
   return [
     { code: 'zh-CN', name: '简体中文', flag: '🇨🇳' },
-    { code: 'zh-TW', name: '繁體中文', flag: '🇹🇼' },
+    { code: 'zh-TW', name: '繁體中文', flag: '🇨🇳' },
     { code: 'en', name: 'English', flag: '🇺🇸' }
   ]
 }
